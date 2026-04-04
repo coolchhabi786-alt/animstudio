@@ -1,0 +1,40 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - infra
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: OIDC Federated Login
+        id: azure-login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-federated-token: true
+
+      - name: Validate Bicep Files
+        run: |
+          az bicep build --files infra/main.bicep --outdir ./compiled
+
+      - name: Deploy Infrastructure
+        run: |
+          az deployment sub create \
+            --location eastus \
+            --template-file compiled/main.json \
+            --parameters @infra/parameters/${{ github.ref_name }}.json

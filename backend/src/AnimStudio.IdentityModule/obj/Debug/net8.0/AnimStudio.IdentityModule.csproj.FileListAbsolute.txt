@@ -1,0 +1,17 @@
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.csproj.AssemblyReference.cache
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.AssemblyInfoInputs.cache
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.AssemblyInfo.cs
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.csproj.CoreCompileInputs.cache
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\bin\Debug\net8.0\AnimStudio.IdentityModule.deps.json
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\bin\Debug\net8.0\AnimStudio.IdentityModule.runtimeconfig.json
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\bin\Debug\net8.0\AnimStudio.IdentityModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\bin\Debug\net8.0\AnimStudio.IdentityModule.pdb
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\bin\Debug\net8.0\AnimStudio.SharedKernel.dll
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\bin\Debug\net8.0\AnimStudio.SharedKernel.pdb
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStud.D3ABFF0E.Up2Date
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\refint\AnimStudio.IdentityModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.pdb
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.genruntimeconfig.cache
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\ref\AnimStudio.IdentityModule.dll

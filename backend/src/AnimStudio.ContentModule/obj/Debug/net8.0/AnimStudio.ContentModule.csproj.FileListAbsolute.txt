@@ -1,0 +1,15 @@
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\AnimStudio.ContentModule.csproj.AssemblyReference.cache
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\AnimStudio.ContentModule.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\AnimStudio.ContentModule.AssemblyInfoInputs.cache
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\AnimStudio.ContentModule.AssemblyInfo.cs
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\AnimStudio.ContentModule.csproj.CoreCompileInputs.cache
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\bin\Debug\net8.0\AnimStudio.ContentModule.deps.json
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\bin\Debug\net8.0\AnimStudio.ContentModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\bin\Debug\net8.0\AnimStudio.ContentModule.pdb
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\bin\Debug\net8.0\AnimStudio.SharedKernel.dll
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\bin\Debug\net8.0\AnimStudio.SharedKernel.pdb
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\AnimStud.BD553535.Up2Date
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\AnimStudio.ContentModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\refint\AnimStudio.ContentModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\AnimStudio.ContentModule.pdb
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\ref\AnimStudio.ContentModule.dll

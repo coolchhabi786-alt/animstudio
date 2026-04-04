@@ -1,0 +1,1 @@
+Please confirm if you'd like me to restart the entire implementation or continue building piece by piece using the write_file tool.

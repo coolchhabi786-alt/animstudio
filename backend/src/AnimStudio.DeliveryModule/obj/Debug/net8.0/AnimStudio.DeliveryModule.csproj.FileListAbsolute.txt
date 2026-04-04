@@ -1,0 +1,15 @@
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\AnimStudio.DeliveryModule.csproj.AssemblyReference.cache
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\AnimStudio.DeliveryModule.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\AnimStudio.DeliveryModule.AssemblyInfoInputs.cache
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\AnimStudio.DeliveryModule.AssemblyInfo.cs
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\AnimStudio.DeliveryModule.csproj.CoreCompileInputs.cache
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\bin\Debug\net8.0\AnimStudio.DeliveryModule.deps.json
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\bin\Debug\net8.0\AnimStudio.DeliveryModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\bin\Debug\net8.0\AnimStudio.DeliveryModule.pdb
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\bin\Debug\net8.0\AnimStudio.SharedKernel.dll
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\bin\Debug\net8.0\AnimStudio.SharedKernel.pdb
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\AnimStud.777EF24F.Up2Date
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\AnimStudio.DeliveryModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\refint\AnimStudio.DeliveryModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\AnimStudio.DeliveryModule.pdb
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\ref\AnimStudio.DeliveryModule.dll

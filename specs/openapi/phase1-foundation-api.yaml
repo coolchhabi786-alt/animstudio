@@ -1,0 +1,395 @@
+openapi: 3.1.0
+info:
+  title: AnimStudio API
+  version: 1.0.0
+  description: |-
+    AnimStudio API for managing authentication, teams, subscriptions, and billing.
+    Modular Monolith architecture with MediatR and Clean Architecture principles.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+      required:
+        - id
+        - email
+        - displayName
+    TeamDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        ownerId:
+          type: string
+          format: uuid
+      required:
+        - id
+        - name
+        - ownerId
+    PlanDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          type: number
+        stripePriceId:
+          type: string
+          description: Stripe Price ID used when creating a checkout session
+        episodesPerMonth:
+          type: integer
+        maxCharacters:
+          type: integer
+        maxTeamMembers:
+          type: integer
+        isDefault:
+          type: boolean
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - price
+        - episodesPerMonth
+    SubscriptionDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        planName:
+          type: string
+        status:
+          type: string
+          enum: [Active, PastDue, Cancelled, Trialing]
+        episodesUsedThisMonth:
+          type: integer
+        episodesPerMonth:
+          type: integer
+        currentPeriodEnd:
+          type: string
+          format: date-time
+        trialEndsAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelAtPeriodEnd:
+          type: boolean
+        stripeCustomerId:
+          type: string
+      required: [id, planName, status, episodesUsedThisMonth, episodesPerMonth, cancelAtPeriodEnd]
+    TeamMemberDto:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [Member, Editor, Owner]
+        joinedAt:
+          type: string
+          format: date-time
+      required: [userId, email, displayName, role]
+    InviteRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [Member, Editor, Owner]
+          default: Member
+      required: [email]
+    CheckoutRequest:
+      type: object
+      properties:
+        priceId:
+          type: string
+          description: Stripe Price ID (use PlanDto.stripePriceId)
+        successUrl:
+          type: string
+          format: uri
+        cancelUrl:
+          type: string
+          format: uri
+      required: [priceId, successUrl, cancelUrl]
+    PortalRequest:
+      type: object
+      properties:
+        returnUrl:
+          type: string
+          format: uri
+      required: [returnUrl]
+security:
+  - BearerAuth: []
+paths:
+  /api/v1/auth/me:
+    get:
+      summary: Get current authenticated user
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Successfully retrieved user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '401':
+          description: Unauthorized
+  /api/v1/users/profile:
+    put:
+      summary: Update user profile
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  type: string
+              required:
+                - displayName
+      responses:
+        '204':
+          description: Profile updated successfully
+        '400':
+          description: Validation error
+  /api/v1/teams:
+    post:
+      summary: Create a new team
+      tags:
+        - Teams
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                ownerId:
+                  type: string
+                  format: uuid
+              required:
+                - name
+                - ownerId
+      responses:
+        '201':
+          description: Team created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDto'
+        '400':
+          description: Validation error
+  /api/v1/teams/{id}:
+    get:
+      summary: Get team by ID
+      tags: [Teams]
+      security: [{BearerAuth: []}]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Team details
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/TeamDto'}
+        '401': {description: Unauthorized}
+        '403': {description: Forbidden - not a team member}
+        '404': {description: Team not found}
+  /api/v1/teams/{id}/members:
+    get:
+      summary: List team members
+      tags: [Teams]
+      security: [{BearerAuth: []}]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: List of team members
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/TeamMemberDto'}
+        '401': {description: Unauthorized}
+        '403': {description: Forbidden}
+  /api/v1/teams/{id}/invites:
+    post:
+      summary: Invite a member to the team
+      tags: [Teams]
+      security: [{BearerAuth: []}]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/InviteRequest'}
+      responses:
+        '204': {description: Invite sent}
+        '400': {description: Validation error}
+        '401': {description: Unauthorized}
+        '403': {description: Forbidden - must be Editor or Owner}
+        '422': {description: Team member limit reached}
+  /api/v1/teams/invites/{token}/accept:
+    post:
+      summary: Accept a team invite via token
+      tags: [Teams]
+      security: [{BearerAuth: []}]
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '204': {description: Invite accepted}
+        '400': {description: Invalid or expired token}
+        '401': {description: Unauthorized}
+  /api/v1/billing/plans:
+    get:
+      summary: List all available plans
+      tags: [Billing]
+      security: []
+      responses:
+        '200':
+          description: Available plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/PlanDto'}
+  /api/v1/billing/subscription:
+    get:
+      summary: Get current team subscription
+      tags: [Billing]
+      security: [{BearerAuth: []}]
+      responses:
+        '200':
+          description: Current subscription
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SubscriptionDto'}
+        '401': {description: Unauthorized}
+        '404': {description: No subscription found}
+  /api/v1/billing/subscription/cancel:
+    post:
+      summary: Cancel subscription
+      tags: [Billing]
+      security: [{BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                immediately:
+                  type: boolean
+                  default: false
+      responses:
+        '204': {description: Subscription cancelled}
+        '401': {description: Unauthorized}
+        '400': {description: Cancellation error}
+  /api/v1/billing/checkout:
+    post:
+      summary: Create a Stripe Checkout session
+      tags: [Billing]
+      security: [{BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CheckoutRequest'}
+      responses:
+        '200':
+          description: Checkout session URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: {type: string, format: uri}
+        '400': {description: Bad request}
+        '401': {description: Unauthorized}
+  /api/v1/billing/portal:
+    post:
+      summary: Create a Stripe Customer Portal session
+      tags: [Billing]
+      security: [{BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PortalRequest'}
+      responses:
+        '200':
+          description: Portal session URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: {type: string, format: uri}
+        '400': {description: Bad request}
+        '401': {description: Unauthorized}
+  /api/v1/billing/webhook/stripe:
+    post:
+      summary: Stripe webhook receiver (signature-validated)
+      tags: [Billing]
+      security: []
+      parameters:
+        - name: Stripe-Signature
+          in: header
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, description: Raw Stripe event payload}
+      responses:
+        '200': {description: Webhook processed}
+        '400': {description: Invalid signature or payload}

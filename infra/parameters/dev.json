@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "eastus"
+    },
+    "sqlAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": ""
+        },
+        "secretName": "SqlAdminPassword"
+      }
+    },
+    "hangfireSqlAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": ""
+        },
+        "secretName": "HangfireSqlAdminPassword"
+      }
+    }
+  }
+}

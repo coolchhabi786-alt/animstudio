@@ -1,0 +1,528 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Projects\\animstudio\\backend\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\behaviours\\cachingbehaviour.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\behaviours\\cachingbehaviour.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\behaviours\\validationbehaviour.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\behaviours\\validationbehaviour.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\hosted\\deadletterprocessor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\hosted\\deadletterprocessor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\hosted\\completionmessageprocessor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\hosted\\completionmessageprocessor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\filters\\validationexceptionfilter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\filters\\validationexceptionfilter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\controllers\\billingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\controllers\\billingcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F6A7B8C9-D0E1-2345-F012-456789012345}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\result.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\result.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\animstudio.sharedkernel.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\animstudio.sharedkernel.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.identitymodule\\animstudio.identitymodule.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|solutionrelative:src\\animstudio.identitymodule\\animstudio.identitymodule.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\behaviours\\transactionbehaviour.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\behaviours\\transactionbehaviour.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C3D4E5F6-A7B8-9012-CDEF-123456789012}|src\\AnimStudio.ContentModule\\AnimStudio.ContentModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.contentmodule\\contentmoduleregistration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C3D4E5F6-A7B8-9012-CDEF-123456789012}|src\\AnimStudio.ContentModule\\AnimStudio.ContentModule.csproj|solutionrelative:src\\animstudio.contentmodule\\contentmoduleregistration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C3D4E5F6-A7B8-9012-CDEF-123456789012}|src\\AnimStudio.ContentModule\\AnimStudio.ContentModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.contentmodule\\domain\\pipelinestage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C3D4E5F6-A7B8-9012-CDEF-123456789012}|src\\AnimStudio.ContentModule\\AnimStudio.ContentModule.csproj|solutionrelative:src\\animstudio.contentmodule\\domain\\pipelinestage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D4E5F6A7-B8C9-0123-DEF0-234567890123}|src\\AnimStudio.DeliveryModule\\AnimStudio.DeliveryModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.deliverymodule\\deliverymoduleregistration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D4E5F6A7-B8C9-0123-DEF0-234567890123}|src\\AnimStudio.DeliveryModule\\AnimStudio.DeliveryModule.csproj|solutionrelative:src\\animstudio.deliverymodule\\deliverymoduleregistration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.identitymodule\\identitymoduleregistration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|solutionrelative:src\\animstudio.identitymodule\\identitymoduleregistration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.identitymodule\\jobs\\usageresetjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|solutionrelative:src\\animstudio.identitymodule\\jobs\\usageresetjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.identitymodule\\application\\commands\\acceptteaminvite\\acceptteaminvitecommandvalidator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|solutionrelative:src\\animstudio.identitymodule\\application\\commands\\acceptteaminvite\\acceptteaminvitecommandvalidator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.identitymodule\\application\\commands\\acceptteaminvite\\acceptteaminvitecommandhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|solutionrelative:src\\animstudio.identitymodule\\application\\commands\\acceptteaminvite\\acceptteaminvitecommandhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.identitymodule\\application\\commands\\acceptteaminvite\\acceptteaminvitecommand.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B2C3D4E5-F6A7-8901-BCDE-F12345678901}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|solutionrelative:src\\animstudio.identitymodule\\application\\commands\\acceptteaminvite\\acceptteaminvitecommand.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\aggregateroot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\aggregateroot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\persistence\\shareddbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\persistence\\shareddbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\persistence\\migrations\\shareddbcontextmodelsnapshot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\persistence\\migrations\\shareddbcontextmodelsnapshot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\persistence\\migrations\\20260403121239_initialcreate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\persistence\\migrations\\20260403121239_initialcreate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\jobs\\purgedeletedentitiesjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\jobs\\purgedeletedentitiesjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\jobs\\outboxpublisherjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\jobs\\outboxpublisherjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\jobs\\deadletterretryjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\jobs\\deadletterretryjob.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\behaviours\\loggingbehaviour.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\behaviours\\loggingbehaviour.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\behaviours\\correlationidbehaviour.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\behaviours\\correlationidbehaviour.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E5F6A7B8-C9D0-1234-EF01-345678901234}|src\\AnimStudio.AnalyticsModule\\AnimStudio.AnalyticsModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.analyticsmodule\\analyticsmoduleregistration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E5F6A7B8-C9D0-1234-EF01-345678901234}|src\\AnimStudio.AnalyticsModule\\AnimStudio.AnalyticsModule.csproj|solutionrelative:src\\animstudio.analyticsmodule\\analyticsmoduleregistration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Program.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Program.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Program.cs",
+              "RelativeToolTip": "src\\AnimStudio.API\\Program.cs",
+              "ViewState": "AgIAAEIAAAAAAAAAAAAAAFkAAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T06:49:46.586Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "DeadLetterProcessor.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\DeadLetterProcessor.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Hosted\\DeadLetterProcessor.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\DeadLetterProcessor.cs",
+              "RelativeToolTip": "src\\AnimStudio.API\\Hosted\\DeadLetterProcessor.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T06:41:30.092Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CompletionMessageProcessor.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\CompletionMessageProcessor.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Hosted\\CompletionMessageProcessor.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\CompletionMessageProcessor.cs",
+              "RelativeToolTip": "src\\AnimStudio.API\\Hosted\\CompletionMessageProcessor.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T06:41:17.552Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ValidationExceptionFilter.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Filters\\ValidationExceptionFilter.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Filters\\ValidationExceptionFilter.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Filters\\ValidationExceptionFilter.cs",
+              "RelativeToolTip": "src\\AnimStudio.API\\Filters\\ValidationExceptionFilter.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T06:40:56.412Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "UsersController.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\UsersController.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Controllers\\UsersController.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\UsersController.cs",
+              "RelativeToolTip": "src\\AnimStudio.API\\Controllers\\UsersController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T06:40:54.326Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "BillingController.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\BillingController.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Controllers\\BillingController.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\BillingController.cs",
+              "RelativeToolTip": "src\\AnimStudio.API\\Controllers\\BillingController.cs",
+              "ViewState": "AgIAADUAAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T06:38:30.135Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Controllers\\AuthController.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "src\\AnimStudio.API\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAAB8AAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T06:38:21.655Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "CachingBehaviour.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\CachingBehaviour.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Behaviours\\CachingBehaviour.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\CachingBehaviour.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Behaviours\\CachingBehaviour.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:02:45.472Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Result.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Result.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Result.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Result.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Result.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAYwCYAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T05:09:35.749Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ValidationBehaviour.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\ValidationBehaviour.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Behaviours\\ValidationBehaviour.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\ValidationBehaviour.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Behaviours\\ValidationBehaviour.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:02:58.56Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "AnimStudio.IdentityModule.csproj",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj",
+              "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj",
+              "RelativeToolTip": "src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAABZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-04-03T14:13:26.963Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "AnimStudio.SharedKernel.csproj",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAEwA8AAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-04-03T14:13:17.212Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "ContentModuleRegistration.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\ContentModuleRegistration.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\ContentModuleRegistration.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\ContentModuleRegistration.cs",
+              "RelativeToolTip": "src\\AnimStudio.ContentModule\\ContentModuleRegistration.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:04:17.26Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "PipelineStage.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Domain\\PipelineStage.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Domain\\PipelineStage.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Domain\\PipelineStage.cs",
+              "RelativeToolTip": "src\\AnimStudio.ContentModule\\Domain\\PipelineStage.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:04:16.034Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "DeliveryModuleRegistration.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.DeliveryModule\\DeliveryModuleRegistration.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.DeliveryModule\\DeliveryModuleRegistration.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.DeliveryModule\\DeliveryModuleRegistration.cs",
+              "RelativeToolTip": "src\\AnimStudio.DeliveryModule\\DeliveryModuleRegistration.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:04:07.512Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "TransactionBehaviour.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\TransactionBehaviour.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Behaviours\\TransactionBehaviour.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\TransactionBehaviour.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Behaviours\\TransactionBehaviour.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:02:50.454Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "IdentityModuleRegistration.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\IdentityModuleRegistration.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\IdentityModuleRegistration.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\IdentityModuleRegistration.cs",
+              "RelativeToolTip": "src\\AnimStudio.IdentityModule\\IdentityModuleRegistration.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:04:01.201Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "UsageResetJob.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Jobs\\UsageResetJob.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Jobs\\UsageResetJob.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Jobs\\UsageResetJob.cs",
+              "RelativeToolTip": "src\\AnimStudio.IdentityModule\\Jobs\\UsageResetJob.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:58.667Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "AcceptTeamInviteCommandValidator.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandValidator.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandValidator.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandValidator.cs",
+              "RelativeToolTip": "src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandValidator.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:49.629Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "AcceptTeamInviteCommandHandler.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandHandler.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandHandler.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandHandler.cs",
+              "RelativeToolTip": "src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandHandler.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:48.443Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "AcceptTeamInviteCommand.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommand.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommand.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommand.cs",
+              "RelativeToolTip": "src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommand.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:46.733Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "AggregateRoot.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\AggregateRoot.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\AggregateRoot.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\AggregateRoot.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\AggregateRoot.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:33.089Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "SharedDbContext.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Persistence\\SharedDbContext.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Persistence\\SharedDbContext.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Persistence\\SharedDbContext.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Persistence\\SharedDbContext.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:21.863Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "SharedDbContextModelSnapshot.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\SharedDbContextModelSnapshot.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\SharedDbContextModelSnapshot.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\SharedDbContextModelSnapshot.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\SharedDbContextModelSnapshot.cs",
+              "ViewState": "AgIAAEYAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:14.58Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "20260403121239_InitialCreate.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\20260403121239_InitialCreate.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\20260403121239_InitialCreate.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\20260403121239_InitialCreate.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\20260403121239_InitialCreate.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:13.645Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "PurgeDeletedEntitiesJob.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Jobs\\PurgeDeletedEntitiesJob.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Jobs\\PurgeDeletedEntitiesJob.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Jobs\\PurgeDeletedEntitiesJob.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Jobs\\PurgeDeletedEntitiesJob.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:09.783Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "OutboxPublisherJob.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Jobs\\OutboxPublisherJob.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Jobs\\OutboxPublisherJob.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Jobs\\OutboxPublisherJob.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Jobs\\OutboxPublisherJob.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:08.901Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "DeadLetterRetryJob.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Jobs\\DeadLetterRetryJob.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Jobs\\DeadLetterRetryJob.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Jobs\\DeadLetterRetryJob.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Jobs\\DeadLetterRetryJob.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:03:03.174Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "LoggingBehaviour.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\LoggingBehaviour.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Behaviours\\LoggingBehaviour.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\LoggingBehaviour.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Behaviours\\LoggingBehaviour.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:02:49.282Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "CorrelationIdBehaviour.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\CorrelationIdBehaviour.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Behaviours\\CorrelationIdBehaviour.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\CorrelationIdBehaviour.cs",
+              "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Behaviours\\CorrelationIdBehaviour.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T14:02:47.812Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "AnalyticsModuleRegistration.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.AnalyticsModule\\AnalyticsModuleRegistration.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.AnalyticsModule\\AnalyticsModuleRegistration.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.AnalyticsModule\\AnalyticsModuleRegistration.cs",
+              "RelativeToolTip": "src\\AnimStudio.AnalyticsModule\\AnalyticsModuleRegistration.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-03T11:45:50.667Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
