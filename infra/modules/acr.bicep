@@ -1,30 +1,37 @@
-param location string
-param environment string
-param acrName string
-param containerAppIdentityObjectId string = ''
+param tier string
 
-resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
-  name: acrName
-  location: location
-  sku: {
-    name: (environment == 'dev') ? 'Basic' : 'Standard'
-  }
+resource acr 'Microsoft.ContainerRegistry/registries@2022-09-01' = {
+  name: 'AnimStudioACR'
+  location: resourceGroup().location
   properties: {
+    sku: {
+      name: tier
+    }
     adminUserEnabled: false
-    publicNetworkAccess: 'Enabled'
+    policies: {
+      quarantinePolicy: {
+        status: 'enabled'
+      }
+    }
   }
 }
 
-// Grant AcrPull to Container App managed identity (only when provided)
-resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(containerAppIdentityObjectId)) {
-  name: guid(acr.id, containerAppIdentityObjectId, 'AcrPull')
-  scope: acr
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-468b-a7be-63835916a4c8')
-    principalId: containerAppIdentityObjectId
-    principalType: 'ServicePrincipal'
+module rbacContainerApp './rbac.bicep' = {
+  name: 'AssignACRPullForContainerApp'
+  params: {
+    principalId: containerAppMI.outputs.principalId
+    roleDefinitionId: 'AcrPull'
+    scope: acr.id
   }
 }
 
-output acrId string = acr.id
+module rbacGitHub './rbac.bicep' = {
+  name: 'AssignACRPushForGitHubActions'
+  params: {
+    principalId: githubOIDC.outputs.principalId
+    roleDefinitionId: 'AcrPush'
+    scope: acr.id
+  }
+}
+
 output acrLoginServer string = acr.properties.loginServer

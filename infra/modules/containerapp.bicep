@@ -1,66 +1,49 @@
-param location string
-param environment string
-param appName string
-param environmentId string
-param acrLoginServer string
-param keyVaultUri string
+param environmentName string
+param containerAppName string
+param cpuCores int = 2
+param memoryInGiB int = 4
+param ingressInternal bool
 
-resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
-  name: appName
-  location: location
-  identity: {
-    type: 'SystemAssigned'
-  }
+resource containerApp 'Microsoft.App/containerApps@2022-10-01' = {
+  name: containerAppName
+  location: resourceGroup().location
   properties: {
-    managedEnvironmentId: environmentId
-    configuration: {
-      ingress: {
-        external: true
-        targetPort: 8080
-        transport: 'http'
-        allowInsecure: false
-      }
-      registries: [
-        {
-          server: acrLoginServer
-          identity: 'system'
-        }
-      ]
-      secrets: []
-    }
+    managedEnvironmentId: resourceId('Microsoft.App/managedEnvironments', environmentName)
     template: {
       containers: [
         {
-          name: 'animstudio-api'
-          image: '${acrLoginServer}/animstudio-api:latest'
+          name: containerAppName
+          image: 'animstudio.azurecr.io/animstudio-api:v1'
           resources: {
-            cpu: json((environment == 'dev') ? '0.5' : '2.0')
-            memory: (environment == 'dev') ? '1Gi' : '4Gi'
+            cpu: cpuCores
+            memory: memoryInGiB
           }
-          env: [
-            { name: 'ASPNETCORE_ENVIRONMENT', value: (environment == 'dev') ? 'Development' : 'Production' }
-            { name: 'Azure__KeyVaultUri', value: keyVaultUri }
-          ]
         }
       ]
       scale: {
-        minReplicas: (environment == 'dev') ? 0 : 1
-        maxReplicas: (environment == 'dev') ? 2 : 10
         rules: [
           {
-            name: 'http-scaler'
-            http: {
+            name: 'http-rule'
+            custom: {
+              type: 'http'
               metadata: {
-                concurrentRequests: '100'
+                concurrency: '50'
               }
             }
           }
         ]
+        minReplicas: 1
+        maxReplicas: 10
+      }
+    }
+    configuration: {
+      ingress: {
+        external: false
+        targetPort: 8080
+        transport: ingressInternal ? 'Internal' : 'Public'
       }
     }
   }
 }
 
-output appId string = containerApp.id
-output appHostname string = containerApp.properties.configuration.ingress.fqdn
-output principalId string = containerApp.identity.principalId
+output containerAppName string = containerApp.name

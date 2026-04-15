@@ -36,7 +36,7 @@ internal sealed class UpdateSubscriptionCommandHandler(
 
         await subscriptionRepository.UpdateSubscriptionAsync(subscription, cancellationToken);
 
-        await cacheService.RemoveAsync($"subscription:{subscription.TeamId}", cancellationToken);
+        await cacheService.InvalidateAsync($"subscription:{subscription.TeamId}", cancellationToken);
 
         return Result<bool>.Success(true);
     }

@@ -1,25 +1,33 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Billing Flow', () => {
-  test('Given billing page, When plans render, Then user should see all active plans', async ({ page }) => {
-    await page.goto('/settings/billing');
-    const plans = await page.locator('[data-testid="plan-card"]');
+test('GivenExistingPlan_WhenBillingPageIsLoaded_ThenDisplaysPlanDetails', async ({ page }) => {
+  // Arrange
+  await page.goto('/billing');
 
-    await expect(plans).toHaveCount(3); // Assume 3 plans as example
-    await expect(plans.first()).toContainText('$10 / month');
-  });
+  // Assert
+  await expect(page.locator('h2')).toHaveText(/Current Plan/);
+  await expect(page.locator('.plan-name')).toBeVisible();
+  await expect(page.locator('.usage-progress-bar')).toBeVisible();
+});
 
-  test('Given checkout request, When redirecting, Then Stripe checkout should appear', async ({ page }) => {
-    await page.goto('/settings/billing');
-    await page.click('[data-testid="checkout-button"]');
+test('GivenRedirectToCheckout_WhenUpgradeIsAttempted_ThenNavigatesToStripeCheckout', async ({ page }) => {
+  // Arrange
+  await page.goto('/billing');
 
-    await expect(page.url()).toContain('https://checkout.stripe.com');
-  });
+  // Act
+  await page.click("button:has-text('Upgrade')");
 
-  test('Given billing portal redirect, When redirect triggered, Then Stripe portal appears', async ({ page }) => {
-    await page.goto('/settings/billing');
-    await page.click('[data-testid="portal-button"]');
+  // Assert
+  await expect(page).toHaveURL(/stripe/i);
+});
 
-    await expect(page.url()).toContain('https://billing.stripe.com');
-  });
+test('GivenRedirectToPortal_WhenManageBillingIsClicked_ThenNavigatesToStripePortal', async ({ page }) => {
+  // Arrange
+  await page.goto('/billing');
+
+  // Act
+  await page.click("button:has-text('Manage Billing')");
+
+  // Assert
+  await expect(page).toHaveURL(/billingportal/i);
 });

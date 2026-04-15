@@ -13,3 +13,4 @@ C:\Projects\animstudio\backend\src\AnimStudio.AnalyticsModule\obj\Debug\net8.0\A
 C:\Projects\animstudio\backend\src\AnimStudio.AnalyticsModule\obj\Debug\net8.0\refint\AnimStudio.AnalyticsModule.dll
 C:\Projects\animstudio\backend\src\AnimStudio.AnalyticsModule\obj\Debug\net8.0\AnimStudio.AnalyticsModule.pdb
 C:\Projects\animstudio\backend\src\AnimStudio.AnalyticsModule\obj\Debug\net8.0\ref\AnimStudio.AnalyticsModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.AnalyticsModule\obj\Debug\net8.0\AnimStudio.AnalyticsModule.sourcelink.json

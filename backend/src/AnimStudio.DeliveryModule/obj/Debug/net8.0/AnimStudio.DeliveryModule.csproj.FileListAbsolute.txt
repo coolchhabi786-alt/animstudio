@@ -13,3 +13,4 @@ C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\An
 C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\refint\AnimStudio.DeliveryModule.dll
 C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\AnimStudio.DeliveryModule.pdb
 C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\ref\AnimStudio.DeliveryModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.DeliveryModule\obj\Debug\net8.0\AnimStudio.DeliveryModule.sourcelink.json

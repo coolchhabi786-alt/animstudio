@@ -13,3 +13,4 @@ C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\Ani
 C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\refint\AnimStudio.ContentModule.dll
 C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\AnimStudio.ContentModule.pdb
 C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\ref\AnimStudio.ContentModule.dll
+C:\Projects\animstudio\backend\src\AnimStudio.ContentModule\obj\Debug\net8.0\AnimStudio.ContentModule.sourcelink.json

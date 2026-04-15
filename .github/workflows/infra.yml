@@ -5,10 +5,9 @@ on:
   push:
     branches:
       - main
-      - infra
 
 jobs:
-  deploy-infra:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     permissions:
@@ -16,25 +15,24 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: OIDC Federated Login
-        id: azure-login
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          enable-federated-token: true
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        enable-oidc: true
 
-      - name: Validate Bicep Files
-        run: |
-          az bicep build --files infra/main.bicep --outdir ./compiled
+    - name: Validate Bicep templates
+      run: |
+        az bicep build --file infra/main.bicep
 
-      - name: Deploy Infrastructure
-        run: |
-          az deployment sub create \
-            --location eastus \
-            --template-file compiled/main.json \
-            --parameters @infra/parameters/${{ github.ref_name }}.json
+    - name: Deploy Bicep templates
+      run: |
+        az deployment sub create \
+          --location "eastus" \
+          --template-file infra/main.bicep \
+          --parameters @infra/parameters/prod.json

@@ -18,7 +18,7 @@ internal sealed class UpdateUserProfileCommandHandler(
         user.UpdateProfile(request.DisplayName, request.AvatarUrl);
         await userRepository.UpdateAsync(user, cancellationToken);
 
-        await cacheService.RemoveAsync($"user:{request.UserId}", cancellationToken);
+        await cacheService.InvalidateAsync($"user:{request.UserId}", cancellationToken);
 
         return Result<bool>.Success(true);
     }

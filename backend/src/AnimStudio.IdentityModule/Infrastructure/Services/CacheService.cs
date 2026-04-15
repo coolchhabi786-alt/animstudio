@@ -87,4 +87,10 @@ internal sealed class CacheService(
             "Consider injecting IConnectionMultiplexer for bulk key removal.", keyPrefix);
         await Task.CompletedTask;
     }
+
+    public Task InvalidateAsync(string key, CancellationToken cancellationToken = default)
+        => RemoveAsync(key, cancellationToken);
+
+    public Task InvalidateByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
+        => RemoveByPrefixAsync(prefix, cancellationToken);
 }

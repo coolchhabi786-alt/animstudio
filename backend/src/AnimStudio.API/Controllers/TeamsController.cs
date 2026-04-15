@@ -14,6 +14,17 @@ namespace AnimStudio.API.Controllers;
 [Authorize]
 public sealed class TeamsController(ISender mediator) : ControllerBase
 {
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMe(CancellationToken ct)
+    {
+        var teamIdClaim = User.FindFirst("animstudio_team_id")?.Value;
+        if (!Guid.TryParse(teamIdClaim, out var teamId))
+            return Unauthorized();
+
+        var result = await mediator.Send(new GetTeamQuery(teamId), ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(new { error = result.Error });
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateTeamRequest request, CancellationToken ct)
     {

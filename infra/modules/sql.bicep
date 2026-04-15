@@ -1,46 +1,38 @@
-param location string
-param environment string
-param serverName string
-@secure()
-param sqlAdminPassword string
+param tier string
+param vCoreCount int
+param zoneRedundant bool
 
-resource sqlServer 'Microsoft.Sql/servers@2022-11-01-preview' = {
-  name: serverName
-  location: location
+resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
+  name: 'AnimStudioSqlServer'
+  location: resourceGroup().location
   properties: {
-    administratorLogin: 'sqladmin'
-    administratorLoginPassword: sqlAdminPassword
-    version: '12.0'
-    minimalTlsVersion: '1.2'
-    publicNetworkAccess: 'Enabled'
+    administratorLogin: 'sqlAdmin'
+    administratorLoginPassword: 'securePa$$word123'
   }
 }
 
-resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2022-11-01-preview' = {
-  name: 'AllowAzureServices'
+resource sqlDb 'Microsoft.Sql/servers/databases@2022-02-01-preview' = {
+  name: 'AnimStudioDB'
   parent: sqlServer
   properties: {
-    startIpAddress: '0.0.0.0'
-    endIpAddress: '0.0.0.0'
+    collation: 'SQL_Latin1_General_CP1_CI_AS'
+    maxSizeBytes: 268435456000
+    zoneRedundant: zoneRedundant
+    sku: {
+      name: tier
+      tier: 'GeneralPurpose'
+      capacity: vCoreCount
+    }
   }
 }
 
-resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-11-01-preview' = {
-  name: 'AnimStudio'
-  parent: sqlServer
-  location: location
-  sku: {
-    name: (environment == 'dev') ? 'GP_S_Gen5_1' : 'GP_Gen5_2'
-    tier: 'GeneralPurpose'
-    family: 'Gen5'
-    capacity: (environment == 'dev') ? 1 : 2
-  }
+resource defenderSetting 'Microsoft.Sql/servers/databases/securityAlertPolicies@2022-05-01-preview' = {
+  name: sqlDb.name
+  parent: sqlDb
   properties: {
-    zoneRedundant: (environment == 'prod')
-    autoPauseDelay: (environment == 'dev') ? 60 : -1
-    requestedBackupStorageRedundancy: (environment == 'dev') ? 'Local' : 'Zone'
+    state: 'Enabled'
+    emailAccountAdmins: true
   }
 }
 
-output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
-output sqlServerId string = sqlServer.id
+output sqlConnectionString string = 'Server=${sqlServer.name}.database.windows.net;Database=${sqlDb.name};User ID=sqlAdmin;Password=securePa$$word123;'

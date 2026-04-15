@@ -1,0 +1,426 @@
+openapi: 3.1.0
+info:
+  title: AnimStudio – Phase 5 Script Workshop API
+  version: 5.0.0
+  description: >
+    OpenAPI 3.1 specification for the Script Workshop phase of AnimStudio.
+    Covers AI-powered screenplay generation, manual script editing, and
+    regeneration with director notes. Scripts store a JSON-serialised
+    Screenplay model produced by the Python ScriptwritingCrew engine.
+
+servers:
+  - url: https://api.animstudio.io/api/v1
+    description: Production
+  - url: https://localhost:7001/api/v1
+    description: Local development
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Microsoft Entra External ID JWT token
+
+  schemas:
+    DialogueLineDto:
+      type: object
+      required: [character, text, startTime, endTime]
+      properties:
+        character:
+          type: string
+          maxLength: 200
+          example: "Mr. Whiskers"
+          description: Exact roster name of the character speaking.
+        text:
+          type: string
+          maxLength: 2000
+          example: "Did someone say laser pointer?"
+          description: Spoken dialogue text (no stage directions).
+        startTime:
+          type: number
+          format: double
+          minimum: 0
+          example: 0.0
+          description: Start time in seconds from scene start.
+        endTime:
+          type: number
+          format: double
+          minimum: 0
+          example: 2.5
+          description: End time in seconds from scene start.
+
+    SceneDto:
+      type: object
+      required: [sceneNumber, visualDescription, emotionalTone, dialogue]
+      properties:
+        sceneNumber:
+          type: integer
+          minimum: 1
+          example: 1
+        visualDescription:
+          type: string
+          maxLength: 4000
+          example: "A cozy living room with sunlight streaming through lace curtains. Mr. Whiskers lounges on a plush armchair."
+        emotionalTone:
+          type: string
+          maxLength: 100
+          example: "Happy"
+          description: "One of: Happy, Sad, Suspenseful, Funny, Dramatic, Calm, or custom tone."
+        dialogue:
+          type: array
+          items:
+            $ref: '#/components/schemas/DialogueLineDto'
+          description: Ordered list of dialogue lines in this scene.
+
+    ScreenplayDto:
+      type: object
+      required: [title, scenes]
+      properties:
+        title:
+          type: string
+          maxLength: 500
+          example: "The Purr-fect Prankster"
+        scenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SceneDto'
+          minItems: 1
+          description: Ordered list of scenes in the screenplay.
+
+    ScriptDto:
+      type: object
+      required: [id, episodeId, title, screenplay, isManuallyEdited, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        episodeId:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        title:
+          type: string
+          maxLength: 500
+          example: "The Purr-fect Prankster"
+        screenplay:
+          $ref: '#/components/schemas/ScreenplayDto'
+        isManuallyEdited:
+          type: boolean
+          example: false
+          description: True if user has saved manual edits via PUT endpoint.
+        directorNotes:
+          type: string
+          maxLength: 5000
+          nullable: true
+          example: "Make the second scene more dramatic with lightning effects."
+          description: Optional notes passed to the AI engine during regeneration.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    JobDto:
+      type: object
+      required: [id, episodeId, jobType, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        episodeId:
+          type: string
+          format: uuid
+        jobType:
+          type: string
+          example: "Script"
+        status:
+          type: string
+          example: "Queued"
+        createdAt:
+          type: string
+          format: date-time
+
+    GenerateScriptRequest:
+      type: object
+      properties:
+        directorNotes:
+          type: string
+          maxLength: 5000
+          nullable: true
+          description: Optional high-level guidance for the AI scriptwriter.
+
+    SaveScriptRequest:
+      type: object
+      required: [screenplay]
+      properties:
+        screenplay:
+          $ref: '#/components/schemas/ScreenplayDto'
+
+    RegenerateScriptRequest:
+      type: object
+      properties:
+        directorNotes:
+          type: string
+          maxLength: 5000
+          nullable: true
+          description: Optional notes to influence the regenerated script.
+
+    ErrorResponse:
+      type: object
+      required: [error, code]
+      properties:
+        error:
+          type: string
+          description: Human-readable error message.
+        code:
+          type: string
+          description: Machine-readable error code.
+          example: "NOT_FOUND"
+
+paths:
+  /episodes/{id}/script:
+    post:
+      operationId: generateScript
+      summary: Enqueue AI script generation
+      description: >
+        Enqueues an AI scriptwriting job for the episode. Validates that at least
+        one attached character has TrainingStatus=Ready. Returns 202 with the
+        queued job details.
+      tags: [Script]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Episode ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateScriptRequest'
+            example:
+              directorNotes: "Focus on comedy with physical humor."
+      responses:
+        '202':
+          description: Script generation job enqueued successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDto'
+              example:
+                id: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                episodeId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                jobType: Script
+                status: Queued
+                createdAt: "2026-04-10T12:00:00Z"
+        '400':
+          description: Validation error — no ready characters or invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "At least one character must have TrainingStatus 'Ready' before generating a script."
+                code: CHARACTERS_NOT_READY
+        '401':
+          description: Unauthorized — missing or invalid JWT.
+        '403':
+          description: Forbidden — user is not a team member.
+        '404':
+          description: Episode not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Episode not found."
+                code: NOT_FOUND
+        '500':
+          description: Internal server error.
+
+    get:
+      operationId: getScript
+      summary: Get current episode script
+      description: >
+        Returns the current script for the episode, including the fully parsed
+        screenplay structure. Returns 404 if no script has been generated yet.
+      tags: [Script]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Episode ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Script found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScriptDto'
+              example:
+                id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                episodeId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                title: "The Purr-fect Prankster"
+                screenplay:
+                  title: "The Purr-fect Prankster"
+                  scenes:
+                    - sceneNumber: 1
+                      visualDescription: "Living room, sunlight through curtains."
+                      emotionalTone: Happy
+                      dialogue:
+                        - character: "Mr. Whiskers"
+                          text: "Did someone say laser pointer?"
+                          startTime: 0.0
+                          endTime: 2.5
+                isManuallyEdited: false
+                directorNotes: null
+                createdAt: "2026-04-10T12:00:00Z"
+                updatedAt: "2026-04-10T12:01:00Z"
+        '401':
+          description: Unauthorized — missing or invalid JWT.
+        '403':
+          description: Forbidden — user is not a team member.
+        '404':
+          description: Episode not found or no script generated yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "No script has been generated for this episode yet."
+                code: NO_SCRIPT
+        '500':
+          description: Internal server error.
+
+    put:
+      operationId: saveScript
+      summary: Save manual script edits
+      description: >
+        Saves user edits to the screenplay JSON. Marks the script as manually edited.
+        Validates that every character referenced in dialogue lines exists in the
+        episode's character roster (case-insensitive).
+      tags: [Script]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Episode ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveScriptRequest'
+            example:
+              screenplay:
+                title: "The Purr-fect Prankster"
+                scenes:
+                  - sceneNumber: 1
+                    visualDescription: "A cozy living room."
+                    emotionalTone: Happy
+                    dialogue:
+                      - character: "Mr. Whiskers"
+                        text: "I've upgraded my pranks!"
+                        startTime: 0.0
+                        endTime: 3.0
+      responses:
+        '200':
+          description: Script saved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScriptDto'
+        '400':
+          description: Validation error — invalid characters or malformed screenplay.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCharacters:
+                  value:
+                    error: "Characters not found in episode roster: UnknownCat."
+                    code: INVALID_CHARACTERS
+        '401':
+          description: Unauthorized — missing or invalid JWT.
+        '403':
+          description: Forbidden — user is not a team member.
+        '404':
+          description: Episode not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable entity — screenplay structure is invalid.
+        '500':
+          description: Internal server error.
+
+  /episodes/{id}/script/regenerate:
+    post:
+      operationId: regenerateScript
+      summary: Regenerate script with director notes
+      description: >
+        Re-enqueues an AI scriptwriting job with optional director notes attached.
+        If a script already exists, the director notes are saved on it before
+        re-queuing. Validates that at least one character is Ready.
+      tags: [Script]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Episode ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegenerateScriptRequest'
+            example:
+              directorNotes: "Make scene 2 more dramatic. Add thunder sound effects."
+      responses:
+        '202':
+          description: Script regeneration job enqueued successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDto'
+        '400':
+          description: Validation error — no ready characters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "At least one character must have TrainingStatus 'Ready' before generating a script."
+                code: CHARACTERS_NOT_READY
+        '401':
+          description: Unauthorized — missing or invalid JWT.
+        '403':
+          description: Forbidden — user is not a team member.
+        '404':
+          description: Episode not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.

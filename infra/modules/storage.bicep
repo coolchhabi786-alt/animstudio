@@ -1,53 +1,50 @@
-param location string
-param environment string
-param storageAccountName string
+param privateEndpointEnabled bool
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: storageAccountName
-  location: location
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
+  name: 'animstudiostorage'
+  location: resourceGroup().location
   sku: {
-    name: (environment == 'dev') ? 'Standard_LRS' : 'Standard_ZRS'
+    name: privateEndpointEnabled ? 'Standard_ZRS' : 'Standard_LRS'
+    tier: 'Standard'
   }
   kind: 'StorageV2'
   properties: {
-    supportsHttpsTrafficOnly: true
-    minimumTlsVersion: 'TLS1_2'
-    allowBlobPublicAccess: false
     accessTier: 'Hot'
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Allow'
-    }
   }
 }
 
-resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
-  name: 'default'
+resource assetsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-09-01' = {
+  name: 'assets'
   parent: storageAccount
   properties: {
-    deleteRetentionPolicy: {
-      enabled: true
-      days: (environment == 'prod') ? 30 : 7
-    }
+    publicAccess: 'Blob'
   }
 }
 
-resource assetsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  name: 'assets'
-  parent: blobService
-  properties: {
-    publicAccess: 'None'
-  }
-}
-
-resource finalsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+resource finalsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2022-09-01' = {
   name: 'finals'
-  parent: blobService
+  parent: storageAccount
   properties: {
     publicAccess: 'None'
   }
 }
 
-output storageAccountId string = storageAccount.id
+resource privateEndpoint 'Microsoft.Network/privateEndpoints@2022-07-01' = if (privateEndpointEnabled) {
+  name: '${storageAccount.name}-pe'
+  location: resourceGroup().location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', 'animstudio-vnet', 'storage-subnet')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'StorageConnection'
+        properties: {
+          privateLinkServiceId: storageAccount.id
+        }
+      }
+    ]
+  }
+}
+
 output storageAccountName string = storageAccount.name
-output blobConnectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'

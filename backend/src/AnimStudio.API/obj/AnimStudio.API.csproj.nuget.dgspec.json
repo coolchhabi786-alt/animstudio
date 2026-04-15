@@ -145,6 +145,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Asp.Versioning.Mvc": {
+              "target": "Package",
+              "version": "[8.1.0, )"
+            },
             "AspNetCore.HealthChecks.Redis": {
               "target": "Package",
               "version": "[8.0.1, )"
@@ -289,9 +293,21 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.9.0, )"
+            },
+            "FluentValidation.DependencyInjectionExtensions": {
+              "target": "Package",
+              "version": "[11.9.0, )"
+            },
             "MediatR": {
               "target": "Package",
               "version": "[12.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Relational": {
+              "target": "Package",
+              "version": "[8.0.0, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",

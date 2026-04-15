@@ -3,6 +3,7 @@ C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\An
 C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.AssemblyInfoInputs.cache
 C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.AssemblyInfo.cs
 C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.csproj.CoreCompileInputs.cache
+C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\obj\Debug\net8.0\AnimStudio.IdentityModule.sourcelink.json
 C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\bin\Debug\net8.0\AnimStudio.IdentityModule.deps.json
 C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\bin\Debug\net8.0\AnimStudio.IdentityModule.runtimeconfig.json
 C:\Projects\animstudio\backend\src\AnimStudio.IdentityModule\bin\Debug\net8.0\AnimStudio.IdentityModule.dll

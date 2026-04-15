@@ -1,0 +1,61 @@
+# .gitignore for AnimStudio Backend (.NET 8, Visual Studio)
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+
+# Rider
+.idea/
+*.sln.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Database
+*.mdf
+*.ldf
+*.db
+
+# Test results
+TestResults/
+
+# NCrunch
+*.ncrunch*
+
+# Others
+*.cache
+*.pdb
+*.tmp
+*.bak
+*.swp
+
+# Azure Pipeline
+*.publishsettings
+
+# Local secrets
+secrets.json
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
+
+# Certificates & private keys
+*.pfx
+*.p12
+*.key
+*.pem
+
+# Ignore migrations snapshot if needed
+# src/AnimStudio.SharedKernel/Persistence/Migrations/*ModelSnapshot.cs

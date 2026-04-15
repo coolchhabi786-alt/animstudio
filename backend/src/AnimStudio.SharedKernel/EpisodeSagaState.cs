@@ -1,30 +1,31 @@
-using System;
+using AnimStudio.SharedKernel.Enums;
 
 namespace AnimStudio.SharedKernel
 {
     /// <summary>
-    /// Represents the state of an episode saga.
+    /// Saga state for an episode's pipeline run — lives in shared.SagaStates.
+    /// Tracks which pipeline stage is currently running, retry counts, and
+    /// whether a compensating action is in progress.
     /// </summary>
     public class EpisodeSagaState
     {
-        /// <summary>
-        /// Gets or sets the unique identifier for the saga state.
-        /// </summary>
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        /// <summary>
-        /// Gets or sets the current status of the saga.
-        /// </summary>
-        public string Status { get; set; } = "Pending";
+        /// <summary>The episode this saga tracks.</summary>
+        public Guid EpisodeId { get; set; }
 
-        /// <summary>
-        /// Gets or sets the serialized data representing the saga's progress.
-        /// </summary>
-        public string Data { get; set; } = string.Empty;
+        /// <summary>Current stage of the pipeline (stored as string for readability).</summary>
+        public PipelineStage CurrentStage { get; set; } = PipelineStage.Idle;
 
-        /// <summary>
-        /// Gets or sets the timestamp of the last update.
-        /// </summary>
-        public DateTimeOffset LastUpdated { get; set; } = DateTimeOffset.UtcNow;
+        public int RetryCount { get; set; }
+
+        public string? LastError { get; set; }
+
+        public DateTimeOffset StartedAt { get; set; } = DateTimeOffset.UtcNow;
+
+        public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+        /// <summary>True when a compensating/rollback flow is active.</summary>
+        public bool IsCompensating { get; set; }
     }
 }

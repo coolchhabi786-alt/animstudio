@@ -1,42 +1,24 @@
-param location string
-param environment string
-param serverName string
-@secure()
-param sqlAdminPassword string
-
-resource hangfireSqlServer 'Microsoft.Sql/servers@2022-11-01-preview' = {
-  name: serverName
-  location: location
+resource hangfireSqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
+  name: 'AnimStudioHangfireSqlServer'
+  location: resourceGroup().location
   properties: {
-    administratorLogin: 'sqladmin'
-    administratorLoginPassword: sqlAdminPassword
-    version: '12.0'
-    minimalTlsVersion: '1.2'
-    publicNetworkAccess: 'Enabled'
+    administratorLogin: 'hangfireAdmin'
+    administratorLoginPassword: 'secureHangfirePa$$word123'
   }
 }
 
-resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2022-11-01-preview' = {
-  name: 'AllowAzureServices'
+resource hangfireDatabase 'Microsoft.Sql/servers/databases@2022-02-01-preview' = {
+  name: 'HangfireDB'
   parent: hangfireSqlServer
   properties: {
-    startIpAddress: '0.0.0.0'
-    endIpAddress: '0.0.0.0'
+    collation: 'SQL_Latin1_General_CP1_CI_AS'
+    maxSizeBytes: 2147483648
+    sku: {
+      name: 'Basic'
+      tier: 'GeneralPurpose'
+      capacity: 1
+    }
   }
 }
 
-resource hangfireSqlDatabase 'Microsoft.Sql/servers/databases@2022-11-01-preview' = {
-  name: 'AnimStudio_Hangfire'
-  parent: hangfireSqlServer
-  location: location
-  sku: {
-    name: (environment == 'dev') ? 'Basic' : 'S1'
-    tier: (environment == 'dev') ? 'Basic' : 'Standard'
-  }
-  properties: {
-    requestedBackupStorageRedundancy: (environment == 'dev') ? 'Local' : 'Zone'
-  }
-}
-
-output sqlServerFqdn string = hangfireSqlServer.properties.fullyQualifiedDomainName
-output sqlServerId string = hangfireSqlServer.id
+output hangfireConnectionString string = 'Server=${hangfireSqlServer.name}.database.windows.net;Database=${hangfireDatabase.name};User ID=hangfireAdmin;Password=secureHangfirePa$$word123;'

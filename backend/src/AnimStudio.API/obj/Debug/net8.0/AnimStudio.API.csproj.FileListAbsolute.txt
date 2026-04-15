@@ -221,4 +221,8 @@ C:\Projects\animstudio\backend\src\AnimStudio.API\bin\Debug\net8.0\zh-Hant\Micro
 C:\Projects\animstudio\backend\src\AnimStudio.API\bin\Debug\net8.0\Azure.Core.Amqp.dll
 C:\Projects\animstudio\backend\src\AnimStudio.API\bin\Debug\net8.0\Azure.Messaging.ServiceBus.dll
 C:\Projects\animstudio\backend\src\AnimStudio.API\bin\Debug\net8.0\Microsoft.Azure.Amqp.dll
+C:\Projects\animstudio\backend\src\AnimStudio.API\obj\Debug\net8.0\AnimStudio.API.sourcelink.json
+C:\Projects\animstudio\backend\src\AnimStudio.API\bin\Debug\net8.0\Asp.Versioning.Abstractions.dll
+C:\Projects\animstudio\backend\src\AnimStudio.API\bin\Debug\net8.0\Asp.Versioning.Http.dll
+C:\Projects\animstudio\backend\src\AnimStudio.API\bin\Debug\net8.0\Asp.Versioning.Mvc.dll
 C:\Projects\animstudio\backend\src\AnimStudio.API\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

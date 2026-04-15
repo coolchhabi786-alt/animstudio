@@ -1,36 +1,33 @@
 import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/accept-invite", "/api/auth"];
-
-export default auth(function middleware(req) {
-  const { pathname } = req.nextUrl;
-
-  // Allow public paths through
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
+// next-auth v5: export auth as the middleware function directly.
+// The callback receives the augmented NextRequest with req.auth set.
+export default auth((req) => {
+  // ── Development: allow all routes without authentication ──────────────────
+  // This lets developers navigate freely without needing Azure AD or a sign-in.
+  if (process.env.NODE_ENV === "development") {
+    return; // undefined = continue to the requested route
   }
 
-  // next-auth v5 exposes auth on the request object in the auth() callback
-  const session = req.auth;
+  const { pathname } = req.nextUrl;
+  const isAuthenticated = !!req.auth;
 
-  if (!session) {
+  // Public routes — never redirect
+  const isPublicRoute =
+    pathname === "/" ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/signup") ||
+    pathname.startsWith("/accept-invite") ||
+    pathname.startsWith("/api/auth"); // next-auth internal endpoints
+
+  if (!isAuthenticated && !isPublicRoute) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    return Response.redirect(loginUrl);
   }
-
-  const response = NextResponse.next();
-
-  // Forward team context header if present (e.g. set by client)
-  const teamId = req.headers.get("x-team-id");
-  if (teamId) {
-    response.headers.set("x-team-id", teamId);
-  }
-
-  return response;
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Skip Next.js internals, static files, and edge runtimes
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

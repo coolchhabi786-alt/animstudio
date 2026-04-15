@@ -16,7 +16,7 @@ public sealed class RecurringJobsHostedService(
     public Task StartAsync(CancellationToken cancellationToken)
     {
         // Queue: critical — outbox publisher every minute
-        jobs.AddOrUpdate<OutboxPublisherJob>(
+            jobs.AddOrUpdate<OutboxPublisherJob>(
             "outbox-publisher",
             "critical",
             j => j.ExecuteAsync(CancellationToken.None),

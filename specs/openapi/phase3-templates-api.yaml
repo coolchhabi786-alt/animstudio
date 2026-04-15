@@ -1,0 +1,228 @@
+openapi: 3.1.0
+info:
+  title: AnimStudio Templates & Style Library API
+  description: Phase 3 — Template and visual style library endpoints
+  version: 3.0.0
+
+servers:
+  - url: http://localhost:5001/api/v1
+    description: Local development
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Genre:
+      type: string
+      enum: [Kids, Comedy, Drama, Horror, Romance, SciFi, Marketing, Fantasy]
+
+    Style:
+      type: string
+      enum:
+        - Pixar3D
+        - Anime
+        - WatercolorIllustration
+        - ComicBook
+        - Realistic
+        - PhotoStorybook
+        - RetroCartoon
+        - Cyberpunk
+
+    TemplateDto:
+      type: object
+      required: [id, title, genre, description, plotStructure, defaultStyle, sortOrder, isActive]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 200
+          example: Kids Superhero Adventure
+        genre:
+          $ref: '#/components/schemas/Genre'
+        description:
+          type: string
+          maxLength: 1000
+          example: Classic hero's journey for a young superhero discovering their powers.
+        plotStructure:
+          type: object
+          description: JSON with acts, beats, and suggested scene counts
+          additionalProperties: true
+          example:
+            acts:
+              - name: Act 1
+                description: Hero discovers powers
+                beats: 2
+              - name: Act 2
+                description: Villain threatens the city
+                beats: 4
+              - name: Act 3
+                description: Hero saves the day
+                beats: 2
+        defaultStyle:
+          $ref: '#/components/schemas/Style'
+        previewVideoUrl:
+          type: string
+          format: uri
+          nullable: true
+        thumbnailUrl:
+          type: string
+          format: uri
+          nullable: true
+        sortOrder:
+          type: integer
+          minimum: 0
+        isActive:
+          type: boolean
+
+    StylePresetDto:
+      type: object
+      required: [id, style, displayName, description, fluxStylePromptSuffix, isActive]
+      properties:
+        id:
+          type: string
+          format: uuid
+        style:
+          $ref: '#/components/schemas/Style'
+        displayName:
+          type: string
+          maxLength: 100
+          example: Pixar 3D
+        description:
+          type: string
+          maxLength: 500
+          example: Vibrant 3D animation with Pixar-style characters and cinematic lighting.
+        sampleImageUrl:
+          type: string
+          format: uri
+          nullable: true
+        fluxStylePromptSuffix:
+          type: string
+          maxLength: 500
+          example: >-
+            vibrant Pixar 3D animation style, smooth subsurface scattering,
+            cinematic lighting, shallow depth of field, 4K render
+        isActive:
+          type: boolean
+
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+
+paths:
+  /templates:
+    get:
+      operationId: getTemplates
+      summary: List all active episode templates, optionally filtered by genre
+      tags: [Templates]
+      parameters:
+        - name: genre
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Genre'
+          description: Filter templates by genre
+      responses:
+        '200':
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TemplateDto'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /templates/{id}:
+    get:
+      operationId: getTemplateById
+      summary: Get a single template by ID
+      tags: [Templates]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Template found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDto'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Template not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /styles:
+    get:
+      operationId: getStylePresets
+      summary: List all active visual style presets
+      tags: [Templates]
+      responses:
+        '200':
+          description: List of style presets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StylePresetDto'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'

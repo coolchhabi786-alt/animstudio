@@ -1,28 +1,32 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env
+dotenv.config();
+
+const baseURL = process.env.E2E_BASE_URL || 'http://localhost:3000';
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: './e2e',
   timeout: 30 * 1000,
   expect: {
     timeout: 5000,
   },
-  reporter: 'html',
-  use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
-    trace: 'on-first-retry',
-  },
+  fullyParallel: true,
+  retries: process.env.CI ? 2 : 0,
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'Chromium',
+      use: { ...devices['Desktop Chrome'], baseURL },
     },
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: 'Firefox',
+      use: { ...devices['Desktop Firefox'], baseURL },
     },
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: 'Webkit',
+      use: { ...devices['Desktop Safari'], baseURL },
     },
   ],
+  reporter: 'html',
 });

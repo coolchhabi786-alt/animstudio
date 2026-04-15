@@ -1,41 +1,35 @@
-using AnimStudio.SharedKernel;
+using System;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace AnimStudio.API;
 
-/// <summary>
-/// Catches unhandled exceptions and returns RFC 7807 Problem Details responses.
-/// Registered via <c>app.UseExceptionHandler()</c>.
-/// </summary>
-internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
-    : IExceptionHandler
+public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
-    public async ValueTask<bool> TryHandleAsync(
-        HttpContext httpContext,
-        Exception exception,
-        CancellationToken cancellationToken)
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        var (statusCode, title) = exception switch
+        logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
+
+        var statusCode = exception switch
         {
-            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
-            KeyNotFoundException => (StatusCodes.Status404NotFound, "Resource Not Found"),
-            InvalidOperationException => (StatusCodes.Status400BadRequest, "Invalid Operation"),
-            _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred"),
+            ArgumentNullException => (int)HttpStatusCode.BadRequest,
+            UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
+            _ => (int)HttpStatusCode.InternalServerError,
         };
 
-        logger.LogError(exception, "Unhandled exception: {Title} [HTTP {Status}]", title, statusCode);
-
         httpContext.Response.StatusCode = statusCode;
-        await httpContext.Response.WriteAsJsonAsync(
-            new ProblemDetails
-            {
-                Status = statusCode,
-                Title = title,
-                Detail = exception.Message,
-                Instance = httpContext.Request.Path,
-            },
-            cancellationToken);
+        httpContext.Response.ContentType = "application/problem+json";
+
+        await httpContext.Response.WriteAsJsonAsync(new
+        {
+            title = "An error occurred",
+            detail = exception.Message,
+            status = statusCode
+        }, cancellationToken);
 
         return true;
     }

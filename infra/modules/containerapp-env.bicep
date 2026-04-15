@@ -1,55 +1,39 @@
-param location string
-param environmentName string
-param vnetAddressPrefix string = '10.0.0.0/16'
-param subnetPrefix string = '10.0.0.0/23'
-
-resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: '${environmentName}-logs'
-  location: location
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: logAnalyticsWorkspaceName
+  location: resourceGroup().location
   properties: {
-    sku: { name: 'PerGB2018' }
     retentionInDays: 30
   }
 }
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
-  name: '${environmentName}-vnet'
-  location: location
+resource vnet 'Microsoft.Network/virtualNetworks@2022-07-01' existing = {
+  name: vnetName
+}
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = {
+  name: subnetName
+  parent: vnet
   properties: {
-    addressSpace: {
-      addressPrefixes: [ vnetAddressPrefix ]
-    }
-    subnets: [
-      {
-        name: 'containerapps'
-        properties: {
-          addressPrefix: subnetPrefix
-          delegations: []
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Enabled'
-        }
-      }
-    ]
+    addressPrefix: subnetPrefix
+    privateEndpointNetworkPolicies: 'Disabled'
+    privateLinkServiceNetworkPolicies: 'Disabled'
   }
 }
 
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2023-05-01' = {
-  name: environmentName
-  location: location
+resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = {
+  name: '${containerAppEnvironmentName}'
+  location: resourceGroup().location
   properties: {
     appLogsConfiguration: {
-      destination: 'log-analytics'
+      destination: "log-analytics"
       logAnalyticsConfiguration: {
-        customerId: logAnalytics.properties.customerId
-        sharedKey: logAnalytics.listKeys().primarySharedKey
+        customerId: logAnalyticsWorkspace.properties.customerId
       }
     }
     vnetConfiguration: {
-      infrastructureSubnetId: vnet.properties.subnets[0].id
-      internal: false
+      infrastructureSubnetId: subnet.id
     }
   }
 }
 
-output environmentId string = containerAppEnv.id
-output vnetId string = vnet.id
+output environmentName string = containerAppEnvironment.name

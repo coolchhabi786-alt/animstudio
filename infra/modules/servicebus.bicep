@@ -1,49 +1,72 @@
-param location string
-param environment string
-param namespaceName string
+param privateEndpointEnabled bool
 
 resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' = {
-  name: namespaceName
-  location: location
-  sku: {
-    name: (environment == 'dev') ? 'Standard' : 'Premium'
-    tier: (environment == 'dev') ? 'Standard' : 'Premium'
-  }
+  name: 'AnimStudioServiceBus'
+  location: resourceGroup().location
   properties: {
-    zoneRedundant: (environment == 'prod')
-    minimumTlsVersion: '1.2'
-  }
-
-  resource jobsQueue 'queues' = {
-    name: 'jobs'
-    properties: {
-      lockDuration: 'PT5M'
-      maxDeliveryCount: 3
-      requiresSession: false
-    }
-  }
-
-  resource completionsQueue 'queues' = {
-    name: 'completions'
-    properties: {
-      lockDuration: 'PT5M'
-      maxDeliveryCount: 3
-    }
-  }
-
-  resource deadLetterQueue 'queues' = {
-    name: 'deadletter-retry'
-    properties: {
-      lockDuration: 'PT5M'
-      maxDeliveryCount: 10
+    sku: {
+      name: 'Standard'
     }
   }
 }
 
-resource sbRootKey 'Microsoft.ServiceBus/namespaces/authorizationRules@2022-10-01-preview' existing = {
-  name: 'RootManageSharedAccessKey'
+resource jobsQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' = {
+  name: 'jobs-queue'
   parent: serviceBusNamespace
+  properties: {
+    lockDuration: 'PT5M'
+    maxDeliveryCount: 3
+    requiresDuplicateDetection: false
+  }
 }
 
-output serviceBusNamespaceId string = serviceBusNamespace.id
-output primaryConnectionString string = sbRootKey.listKeys().primaryConnectionString
+resource completionsQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' = {
+  name: 'completions-queue'
+  parent: serviceBusNamespace
+  properties: {
+    lockDuration: 'PT5M'
+    maxDeliveryCount: 3
+  }
+}
+
+resource deadletterRetryQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' = {
+  name: 'deadletter-retry-queue'
+  parent: serviceBusNamespace
+  properties: {
+    lockDuration: 'PT5M'
+    maxDeliveryCount: 10
+  }
+}
+
+// ── Phase 4: Character LoRA Training queue ────────────────────────────────────
+resource characterTrainingQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' = {
+  name: 'character-training'
+  parent: serviceBusNamespace
+  properties: {
+    lockDuration: 'PT30M'    // LoRA training can take 15+ min — generous lock
+    maxDeliveryCount: 3
+    requiresDuplicateDetection: true
+    duplicateDetectionHistoryTimeWindow: 'PT1H'
+    defaultMessageTimeToLive: 'P1D'
+  }
+}
+
+resource privateEndpoint 'Microsoft.Network/privateEndpoints@2022-07-01' = if (privateEndpointEnabled) {
+  name: 'AnimStudioServiceBus-pe'
+  location: resourceGroup().location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', 'animstudio-vnet', 'servicebus-subnet')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'ServiceBusConnection'
+        properties: {
+          privateLinkServiceId: serviceBusNamespace.id
+        }
+      }
+    ]
+  }
+}
+
+output serviceBusConnectionString string = 'Endpoint=sb://${serviceBusNamespace.name}.servicebus.windows.net/'

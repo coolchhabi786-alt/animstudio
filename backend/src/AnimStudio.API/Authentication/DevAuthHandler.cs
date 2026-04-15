@@ -22,7 +22,7 @@ public sealed class DevAuthHandler(
 
     // Fixed dev identifiers — matches the seeded user in local DB
     public static readonly Guid DevUserId = Guid.Parse("00000000-0000-0000-0000-000000000001");
-    public static readonly Guid DevTeamId = Guid.Parse("00000000-0000-0000-0000-000000000002");
+    public static readonly Guid DevTeamId = Guid.Parse("C0000001-0000-0000-0000-000000000001");
     public const string DevUserEmail = "dev@animstudio.local";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()

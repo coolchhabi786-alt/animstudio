@@ -1,0 +1,294 @@
+openapi: 3.1.0
+info:
+  title: AnimStudio – Phase 6 Storyboard Studio API
+  version: 6.0.0
+  description: >
+    OpenAPI 3.1 specification for the Storyboard Studio phase of AnimStudio.
+    Enqueues storyboard planning and generation jobs for an episode, exposes
+    the generated shot grid, and supports per-shot regeneration and per-shot
+    style override. Uses SignalR for real-time shot-update notifications.
+
+servers:
+  - url: https://api.animstudio.io/api/v1
+    description: Production
+  - url: https://localhost:7001/api/v1
+    description: Local development
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Microsoft Entra External ID JWT token
+
+  schemas:
+    StoryboardShotDto:
+      type: object
+      required:
+        - id
+        - storyboardId
+        - sceneNumber
+        - shotIndex
+        - description
+        - regenerationCount
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Shot identifier.
+        storyboardId:
+          type: string
+          format: uuid
+          description: Parent storyboard identifier.
+        sceneNumber:
+          type: integer
+          minimum: 1
+          example: 1
+          description: One-based scene number mirroring the screenplay.
+        shotIndex:
+          type: integer
+          minimum: 0
+          example: 0
+          description: Zero-based shot position within the scene (0..4 max).
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://cdn.animstudio.io/storyboards/abc.png"
+          description: CDN URL of the generated shot image. Null until generation completes.
+        description:
+          type: string
+          maxLength: 2000
+          example: "Close-up of Mr. Whiskers stalking the laser dot on the hardwood floor."
+          description: Human-readable shot description from the storyboard plan.
+        styleOverride:
+          type: string
+          maxLength: 500
+          nullable: true
+          example: "anime cinematic, rim lighting"
+          description: Optional per-shot style override applied during regeneration.
+        regenerationCount:
+          type: integer
+          minimum: 0
+          example: 0
+          description: Number of times this specific shot has been regenerated.
+        updatedAt:
+          type: string
+          format: date-time
+
+    StoryboardDto:
+      type: object
+      required: [id, episodeId, screenplayTitle, shots, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        episodeId:
+          type: string
+          format: uuid
+        screenplayTitle:
+          type: string
+          example: "Laser Pointer Heist"
+        directorNotes:
+          type: string
+          maxLength: 5000
+          nullable: true
+        shots:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoryboardShotDto'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    JobDto:
+      type: object
+      required: [id, episodeId, type, status, queuedAt, attemptNumber]
+      properties:
+        id: { type: string, format: uuid }
+        episodeId: { type: string, format: uuid }
+        type: { type: string, example: "StoryboardPlan" }
+        status: { type: string, example: "Pending" }
+        payload: { type: string, nullable: true }
+        result: { type: string, nullable: true }
+        errorMessage: { type: string, nullable: true }
+        queuedAt: { type: string, format: date-time }
+        startedAt: { type: string, format: date-time, nullable: true }
+        completedAt: { type: string, format: date-time, nullable: true }
+        attemptNumber: { type: integer, example: 1 }
+
+    GenerateStoryboardRequest:
+      type: object
+      properties:
+        directorNotes:
+          type: string
+          maxLength: 5000
+          nullable: true
+
+    RegenerateShotRequest:
+      type: object
+      properties:
+        styleOverride:
+          type: string
+          maxLength: 500
+          nullable: true
+
+    UpdateShotStyleRequest:
+      type: object
+      required: [styleOverride]
+      properties:
+        styleOverride:
+          type: string
+          maxLength: 500
+          nullable: true
+
+    ProblemDetails:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code: { type: string }
+
+paths:
+  /episodes/{id}/storyboard:
+    post:
+      operationId: generateStoryboard
+      summary: Enqueue storyboard planning + generation jobs
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateStoryboardRequest'
+      responses:
+        '202':
+          description: Job accepted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobDto' }
+        '400':
+          description: Prerequisite not met (e.g. SCRIPT_NOT_READY).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '401': { description: Not authenticated }
+        '403': { description: Forbidden – caller is not a team member }
+        '404':
+          description: Episode not found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '422':
+          description: Validation failed.
+
+    get:
+      operationId: getStoryboard
+      summary: Returns the current storyboard with all shots
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoryboardDto' }
+        '404':
+          description: No storyboard has been generated for this episode yet.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '401': { description: Not authenticated }
+        '403': { description: Forbidden }
+
+  /storyboard/shots/{shotId}/regenerate:
+    post:
+      operationId: regenerateShot
+      summary: Re-queue a single shot for regeneration
+      description: >
+        Increments RegenerationCount on the shot and queues a StoryboardGen
+        job targeted at the single shot. If the shot has been regenerated
+        more than 3 times, a warning code REGEN_LIMIT_WARNING is returned
+        in addition to the job (the operation still succeeds).
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - in: path
+          name: shotId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegenerateShotRequest'
+      responses:
+        '202':
+          description: Regeneration job accepted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobDto' }
+        '400':
+          description: Invalid state.
+        '401': { description: Not authenticated }
+        '403': { description: Forbidden }
+        '404':
+          description: Shot not found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '422':
+          description: Validation failed.
+
+  /storyboard/shots/{shotId}/style:
+    put:
+      operationId: updateShotStyle
+      summary: Update a shot's style override and re-queue its regeneration
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - in: path
+          name: shotId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateShotStyleRequest'
+      responses:
+        '202':
+          description: Style override saved; regeneration job queued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobDto' }
+        '400':
+          description: Invalid state.
+        '401': { description: Not authenticated }
+        '403': { description: Forbidden }
+        '404':
+          description: Shot not found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        '422':
+          description: Validation failed.

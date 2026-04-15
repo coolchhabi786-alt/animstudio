@@ -1,31 +1,24 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentParameters.json#",
+  "$schema": "https://schema.management.azure.com/schemas/2020-06-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "environmentName": {
-      "value": "prod"
+    "logAnalyticsWorkspaceName": {
+      "value": "animstudio-law-prod"
     },
-    "location": {
-      "value": "eastus"
+    "vnetName": {
+      "value": "animstudio-vnet-prod"
     },
-    "sqlAdminPassword": {
-      "reference": {
-        "keyVault": {
-          "id": ""
-        },
-        "secretName": "SqlAdminPassword"
-      }
+    "tier": {
+      "value": "Standard"
     },
-    "hangfireSqlAdminPassword": {
-      "reference": {
-        "keyVault": {
-          "id": ""
-        },
-        "secretName": "HangfireSqlAdminPassword"
-      }
+    "unitCount": {
+      "value": 1
     },
-    "containerAppIdentityObjectId": {
-      "value": ""
+    "wafPolicyMode": {
+      "value": "Prevention"
+    },
+    "privateEndpointEnabled": {
+      "value": true
     }
   }
 }

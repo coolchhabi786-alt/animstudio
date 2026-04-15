@@ -1,63 +1,47 @@
-param location string
-param environment string
-param keyVaultName string
-param tenantId string
-@secure()
-param sqlConnectionString string
-@secure()
-param hangfireConnectionString string
-@secure()
-param redisConnectionString string
-@secure()
-param serviceBusConnectionString string
-@secure()
-param blobConnectionString string
+param enablePurgeProtection bool
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
-  name: keyVaultName
-  location: location
+var secretNames = [
+  'SqlConnectionString',
+  'HangfireSqlConnectionString',
+  'RedisConnectionString',
+  'StripeSecretKey',
+  'StripeWebhookSecret',
+  'ServiceBusConnectionString',
+  'SignalRConnectionString',
+  'AzureOpenAIKey',
+  'AzureOpenAIEndpoint',
+  'FalApiKey',
+  'AzureCommunicationServicesConnectionString'
+]
+
+resource keyVault 'Microsoft.KeyVault/vaults@2022-11-01' = {
+  name: 'AnimStudioKeyVault'
+  location: resourceGroup().location
   properties: {
     sku: {
       name: 'standard'
-      family: 'A'
+      tier: 'standard'
     }
-    tenantId: tenantId
-    enableRbacAuthorization: true
+    tenantId: subscription().tenantId
+    accessPolicies: []
     enableSoftDelete: true
-    softDeleteRetentionInDays: (environment == 'prod') ? 90 : 7
-    enablePurgeProtection: (environment == 'prod')
+    enablePurgeProtection: enablePurgeProtection
   }
 }
 
-resource secretSql 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  name: 'ConnectionStrings--DefaultConnection'
+resource secrets 'Microsoft.KeyVault/vaults/secrets@2022-11-01' = [for secretName in secretNames: {
+  name: secretName
   parent: keyVault
-  properties: { value: sqlConnectionString }
-}
+  properties: {
+    value: 'PLACEHOLDER_VALUE_${secretName}'
+  }
+}]
 
-resource secretHangfire 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  name: 'ConnectionStrings--HangfireConnection'
-  parent: keyVault
-  properties: { value: hangfireConnectionString }
+module rbac './rbac.bicep' = {
+  name: 'AssignKeyVaultRBAC'
+  params: {
+    principalId: containerAppMI.outputs.principalId
+    roleDefinitionId: 'Key Vault Secrets User'
+    scope: keyVault.id
+  }
 }
-
-resource secretRedis 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  name: 'ConnectionStrings--Redis'
-  parent: keyVault
-  properties: { value: redisConnectionString }
-}
-
-resource secretServiceBus 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  name: 'ConnectionStrings--ServiceBus'
-  parent: keyVault
-  properties: { value: serviceBusConnectionString }
-}
-
-resource secretBlob 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  name: 'ConnectionStrings--BlobStorage'
-  parent: keyVault
-  properties: { value: blobConnectionString }
-}
-
-output keyVaultId string = keyVault.id
-output keyVaultUri string = keyVault.properties.vaultUri

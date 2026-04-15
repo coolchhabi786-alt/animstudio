@@ -27,23 +27,36 @@ namespace AnimStudio.SharedKernel.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Data")
+                    b.Property<string>("CurrentStage")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTimeOffset>("LastUpdated")
+                    b.Property<Guid>("EpisodeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsCompensating")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("StartedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Status");
+                    b.HasIndex("EpisodeId")
+                        .IsUnique();
 
-                    b.ToTable("EpisodeSagaStates", "shared");
+                    b.ToTable("SagaStates", "shared");
                 });
 
             modelBuilder.Entity("AnimStudio.SharedKernel.OutboxMessage", b =>

@@ -10,3 +10,4 @@ C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\Anim
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\refint\AnimStudio.SharedKernel.dll
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.pdb
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\ref\AnimStudio.SharedKernel.dll
+C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.sourcelink.json

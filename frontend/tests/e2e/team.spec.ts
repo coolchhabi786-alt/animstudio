@@ -1,26 +1,34 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Team Management Flow', () => {
-  test('Given team creation, When form is submitted, Then new team should be listed', async ({ page }) => {
-    await page.goto('/settings/team');
-    await page.fill('[data-testid="team-name-input"]', 'Test Team');
-    await page.click('[data-testid="create-team-button"]');
+test('GivenValidTeamData_WhenCreatingTeam_ThenAddsTeamSuccessfully', async ({ page }) => {
+  // Arrange
+  await page.goto('/settings/team');
 
-    await expect(page.locator('[data-testid="team-list"]').first()).toContainText('Test Team');
-  });
+  // Act
+  await page.fill('input[name="teamName"]', 'New Team Name');
+  await page.click('button:has-text("Create Team")');
 
-  test('Given member invitation, When email is submitted, Then invite should be sent', async ({ page }) => {
-    await page.goto('/settings/team');
-    await page.fill('[data-testid="invite-email-input"]', 'invitee@example.com');
-    await page.click('[data-testid="send-invite-button"]');
+  // Assert
+  await expect(page.locator('.team-name')).toHaveText('New Team Name');
+});
 
-    await expect(page.locator('[data-testid="invite-success-message"]')).toContainText('Invite sent successfully');
-  });
+test('GivenValidInviteToken_WhenInviteAccepted_ThenUserJoinsTeam', async ({ page }) => {
+  // Arrange
+  const inviteToken = process.env.TEST_TEAM_INVITE_TOKEN || 'dummy-token';
+  await page.goto(`/accept-invite?token=${inviteToken}`);
 
-  test('Given accepted invite token, When clicked, Then user should join team', async ({ page }) => {
-    const inviteToken = 'validInviteToken123';
-    await page.goto(`/accept-invite?token=${inviteToken}`);
+  // Act
+  await page.click('button:has-text("Accept")');
 
-    await expect(page.locator('[data-testid="team-dashboard"]')).toContainText('Welcome to the team');
-  });
+  // Assert
+  await expect(page.locator('.team-members')).toContainText('You');
+});
+
+test('GivenExistingTeam_WhenTeamPageLoaded_ThenDisplaysTeamDetails', async ({ page }) => {
+  // Arrange
+  await page.goto('/settings/team');
+
+  // Assert
+  await expect(page.locator('.team-name')).toBeVisible();
+  await expect(page.locator('.team-members')).toBeVisible();
 });

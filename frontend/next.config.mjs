@@ -1,33 +1,34 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+
+  // Redirect next-auth v5 beta internal pages that can appear transiently
+  // (e.g. /auth/new-user after first Credentials sign-in, /auth/signup, etc.)
+  async redirects() {
+    return [
+      { source: "/auth/signup",   destination: "/signup",    permanent: false },
+      { source: "/auth/new-user", destination: "/dashboard", permanent: false },
+      { source: "/auth/signin",   destination: "/login",     permanent: false },
+      { source: "/auth/error",    destination: "/login",     permanent: false },
+    ];
+  },
+
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "X-XSS-Protection", value: "1; mode=block" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate, stale-while-revalidate",
+          },
         ],
       },
     ];
   },
-  async rewrites() {
-    return [
-      {
-        source: "/api/backend/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001"}/:path*`,
-      },
-    ];
-  },
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "*.blob.core.windows.net",
-      },
-    ],
+  env: {
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001",
   },
 };
 

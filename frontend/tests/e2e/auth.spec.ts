@@ -1,27 +1,30 @@
 import { test, expect } from '@playwright/test';
 
-const fakeEmail = `user-${Date.now()}@example.com`;
-const fakePassword = 'SecurePassword123';
+test('GivenValidCredentials_WhenLoginIsAttempted_ThenRedirectsToDashboard', async ({ page }) => {
+  // Arrange
+  await page.goto('/login');
 
-// Test login flow
+  // Act
+  await page.fill('input[name="email"]', process.env.TEST_USER_EMAIL || 'test@example.com');
+  await page.fill('input[name="password"]', process.env.TEST_USER_PASSWORD || 'password123');
+  await page.click('button[type="submit"]');
 
-test.describe('Auth Flow', () => {
-  test('Given valid credentials, When logging in, Then user should see dashboard', async ({ page }) => {
-    await page.goto('/login');
-    await page.fill('[data-testid="email"]', process.env.TEST_USER_EMAIL || fakeEmail);
-    await page.fill('[data-testid="password"]', process.env.TEST_USER_PASSWORD || fakePassword);
-    await page.click('[data-testid="login-button"]');
+  // Assert
+  await expect(page).toHaveURL('/dashboard');
+  await expect(page.locator('h1')).toHaveText('Welcome');
+});
 
-    expect(await page.url()).toContain('/dashboard');
-  });
+test('GivenValidInviteToken_WhenSignupIsAttempted_ThenCreatesAccount', async ({ page }) => {
+  // Arrange
+  const inviteToken = process.env.TEST_INVITE_TOKEN || 'dummy-token';
+  await page.goto(`/signup?invite=${inviteToken}`);
 
-  test('Given invalid credentials, When logging in, Then error message should display', async ({ page }) => {
-    await page.goto('/login');
-    await page.fill('[data-testid="email"]', 'fakeuser@example.com');
-    await page.fill('[data-testid="password"]', 'notarealpassword');
-    await page.click('[data-testid="login-button"]');
+  // Act
+  await page.fill('input[name="email"]', 'newuser@example.com');
+  await page.fill('input[name="password"]', 'securepassword');
+  await page.click('button[type="submit"]');
 
-    expect(await page.textContent('[data-testid="error-message"]')).toContain('Invalid credentials');
-  });
-
-  test('Given user signup, When form fills correct', () =>default & signup/new redirection?
+  // Assert
+  await expect(page).toHaveURL('/dashboard');
+  await expect(page.locator('h1')).toHaveText('Welcome');
+});

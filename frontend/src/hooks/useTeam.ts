@@ -5,7 +5,7 @@ import { TeamDto, TeamMemberDto } from "@/types";
 export function useTeam() {
   const { data: team, error: teamError, isLoading: teamLoading } = useQuery<TeamDto>({
     queryKey: ["team"],
-    queryFn: () => apiFetch<TeamDto>("/api/v1/teams/me"),
+    queryFn: () => apiFetch<TeamDto>("/api/teams/me"),
   });
 
   const {
@@ -14,7 +14,7 @@ export function useTeam() {
     isLoading: membersLoading,
   } = useQuery<TeamMemberDto[]>({
     queryKey: ["teamMembers", team?.id],
-    queryFn: () => apiFetch<TeamMemberDto[]>(`/api/v1/teams/${team!.id}/members`),
+    queryFn: () => apiFetch<TeamMemberDto[]>(`/api/teams/${team!.id}/members`),
     enabled: !!team,
   });
 

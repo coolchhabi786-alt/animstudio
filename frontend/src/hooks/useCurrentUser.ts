@@ -5,12 +5,14 @@ import { UserDto } from "@/types";
 export function useCurrentUser() {
   const { data, error, isLoading } = useQuery<UserDto>({
     queryKey: ["currentUser"],
-    queryFn: () => apiFetch<UserDto>("/api/v1/auth/me"),
+    queryFn: () => apiFetch<UserDto>("/api/auth/me"),
   });
 
   return {
+    data,
     user: data,
     error,
+    isLoading,
     loading: isLoading,
   };
 }

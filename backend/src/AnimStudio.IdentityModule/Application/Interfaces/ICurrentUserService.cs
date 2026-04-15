@@ -1,11 +1,11 @@
-namespace AnimStudio.IdentityModule.Application.Interfaces;
+using System;
 
-/// <summary>Provides current authenticated user identity to application services.</summary>
-public interface ICurrentUserService
+namespace AnimStudio.IdentityModule.Application.Interfaces
 {
-    Guid GetCurrentUserId();
-    string GetCurrentUserEmail();
-    /// <summary>Returns the teamId from the X-Team-Id claim or header, or Guid.Empty if not present.</summary>
-    Guid GetCurrentTeamId();
-    bool IsAuthenticated { get; }
+    public interface ICurrentUserService
+    {
+        Guid GetCurrentUserId();
+        string GetCurrentUserEmail();
+        Guid GetCurrentTeamId();
+    }
 }

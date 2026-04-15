@@ -1,59 +1,63 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 
-const signupSchema = z.object({
-  email: z.string().email(),
-  name: z.string().min(1, "Name is required"),
-});
-
-type SignupFormValues = z.infer<typeof signupSchema>;
-
+/**
+ * Signup page.
+ *
+ * In DEVELOPMENT — Azure AD and Stripe are not required. Use the Dev Login
+ * button on the login page to sign in instantly.
+ *
+ * In PRODUCTION — this page will initiate a Stripe checkout flow. The
+ * /api/billing/checkout Next.js route handler needs to be implemented when
+ * Stripe keys are configured.
+ */
 export default function SignupPage() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
-  });
+  const isDev = process.env.NODE_ENV === "development";
 
-  const router = useRouter();
+  if (isDev) {
+    return (
+      <div className="space-y-6 text-center">
+        <h1 className="text-2xl font-bold">Create your account</h1>
+        <p className="text-gray-600 text-sm">
+          You&apos;re running in <strong>development mode</strong>. No Azure AD
+          or Stripe setup is needed.
+        </p>
+        <p className="text-gray-600 text-sm">
+          Click <strong>Dev Login</strong> on the login page to sign in
+          instantly as the seeded dev user.
+        </p>
+        <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+          <Link href="/login">Go to Dev Login →</Link>
+        </Button>
+      </div>
+    );
+  }
 
-  const onSubmit = async (data: SignupFormValues) => {
-    try {
-      const response = await fetch("/api/v1/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const result = await response.json();
-      router.push(result.redirectUrl);
-    } catch {
-      console.error("Signup failed");
-    }
-  };
-
+  // ── Production: Stripe checkout (implement when Stripe is configured) ──────
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <form onSubmit={handleSubmit(onSubmit)} className="p-6 bg-white rounded shadow w-96">
-        <h1 className="text-xl font-medium mb-6">Sign up for AnimStudio</h1>
-        <Label>Email</Label>
-        <Input type="email" {...register("email")} aria-invalid={!!errors.email} />
-        {errors.email && <span className='text-red-500'>{errors.email.message}</span>}
-
-        <Label className="mt-4">Name</Label>
-        <Input type="text" {...register("name")} aria-invalid={!!errors.name} />
-        {errors.name && <span className='text-red-500'>{errors.name.message}</span>}
-
-        <Button type="submit" className="mt-6">Start Free Trial</Button>
-      </form>
-    </main>
+    <div className="space-y-6 text-center">
+      <h1 className="text-2xl font-bold">Create your account</h1>
+      <p className="text-gray-600 text-sm">
+        Choose a plan to get started. You&apos;ll be redirected to our secure
+        checkout.
+      </p>
+      <Button
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+        onClick={() =>
+          (window.location.href =
+            "mailto:hello@animstudio.io?subject=Sign+Up+Request")
+        }
+      >
+        Contact Us to Sign Up
+      </Button>
+      <p className="text-xs text-gray-400">
+        Already have an account?{" "}
+        <Link href="/login" className="text-blue-500 hover:underline">
+          Sign in
+        </Link>
+      </p>
+    </div>
   );
 }

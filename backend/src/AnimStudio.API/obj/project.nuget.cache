@@ -1,9 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "wgZKh39g7sY=",
+  "dgSpecHash": "nirj/s02px0=",
   "success": true,
   "projectFilePath": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\AnimStudio.API.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Vaibhav\\.nuget\\packages\\asp.versioning.abstractions\\8.1.0\\asp.versioning.abstractions.8.1.0.nupkg.sha512",
+    "C:\\Users\\Vaibhav\\.nuget\\packages\\asp.versioning.http\\8.1.0\\asp.versioning.http.8.1.0.nupkg.sha512",
+    "C:\\Users\\Vaibhav\\.nuget\\packages\\asp.versioning.mvc\\8.1.0\\asp.versioning.mvc.8.1.0.nupkg.sha512",
     "C:\\Users\\Vaibhav\\.nuget\\packages\\aspnetcore.healthchecks.redis\\8.0.1\\aspnetcore.healthchecks.redis.8.0.1.nupkg.sha512",
     "C:\\Users\\Vaibhav\\.nuget\\packages\\aspnetcore.healthchecks.sqlserver\\8.0.0\\aspnetcore.healthchecks.sqlserver.8.0.0.nupkg.sha512",
     "C:\\Users\\Vaibhav\\.nuget\\packages\\azure.communication.email\\1.0.1\\azure.communication.email.1.0.1.nupkg.sha512",

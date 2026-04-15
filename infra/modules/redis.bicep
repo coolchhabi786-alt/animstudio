@@ -1,24 +1,36 @@
-param location string
-param environment string
-param redisName string
+param redisTier string
+param enableGeoReplication bool = false
+param privateEndpointEnabled bool
 
-resource redis 'Microsoft.Cache/Redis@2023-08-01' = {
-  name: redisName
-  location: location
+resource redis 'Microsoft.Cache/Redis@2022-09-01' = {
+  name: 'AnimStudioCache'
+  location: resourceGroup().location
   properties: {
     sku: {
-      name: (environment == 'dev') ? 'Basic' : 'Standard'
+      name: redisTier
       family: 'C'
-      capacity: (environment == 'dev') ? 0 : 1
+      capacity: redisTier == 'Standard' ? 2 : 1
     }
-    enableNonSslPort: false
-    minimumTlsVersion: '1.2'
-    redisConfiguration: {
-      maxmemoryPolicy: 'allkeys-lru'
+    enableGeoReplication: enableGeoReplication
+  }
+}
+
+resource privateEndpoint 'Microsoft.Network/privateEndpoints@2022-07-01' = if (privateEndpointEnabled) {
+  name: '${redis.name}-pe'
+  location: resourceGroup().location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', 'animstudio-vnet', 'redis-subnet')
     }
+    privateLinkServiceConnections: [
+      {
+        name: '${redis.name}-pls'
+        properties: {
+          privateLinkServiceId: redis.id
+        }
+      }
+    ]
   }
 }
 
 output redisId string = redis.id
-output redisHostname string = redis.properties.hostName
-output redisPrimaryKey string = redis.listKeys().primaryKey

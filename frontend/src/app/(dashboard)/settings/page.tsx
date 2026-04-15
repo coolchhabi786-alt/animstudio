@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api-client";
-import { useState } from "react";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const profileSchema = z.object({
   displayName: z.string().min(1, "Name is required"),
@@ -19,41 +20,50 @@ export default function SettingsPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
   });
 
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      await apiFetch("/api/v1/users/profile", {
+      await apiFetch("/api/users/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      setSuccessMessage("Profile updated successfully.");
-    } catch (error) {
-      setSuccessMessage(null);
-      console.error("Failed to update profile.");
+      toast.success("Profile updated successfully.");
+    } catch {
+      // apiFetch already shows a toast on error
     }
   };
 
   return (
-    <main className="p-6 bg-gray-100 min-h-screen">
-      <form onSubmit={handleSubmit(onSubmit)} className="p-6 bg-white rounded shadow w-96">
-        <h1 className="text-xl font-medium mb-6">Update Profile</h1>
-        <Label>Name</Label>
-        <Input type="text" {...register("displayName")} aria-invalid={!!errors.displayName} />
-        {errors.displayName && <span className='text-red-500'>{errors.displayName.message}</span>}
-
-        <Button type="submit" className="mt-6">Save</Button>
-
-        {successMessage && (
-          <div className="mt-4 text-green-500">{successMessage}</div>
-        )}
-      </form>
+    <main className="p-6">
+      <Card className="max-w-md">
+        <CardHeader>
+          <CardTitle>Update Profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Name</Label>
+              <Input
+                id="displayName"
+                type="text"
+                {...register("displayName")}
+                aria-invalid={!!errors.displayName}
+              />
+              {errors.displayName && (
+                <p className="text-sm text-destructive">{errors.displayName.message}</p>
+              )}
+            </div>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving…" : "Save"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </main>
   );
 }

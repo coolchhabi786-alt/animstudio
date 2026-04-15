@@ -1,21 +1,29 @@
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export const metadata = {
-  title: "Home | AnimStudio",
-  description: "Create stunning animations with AnimStudio."
+  title: "AnimStudio - Create Stunning Animations",
+  description: "Simplify your animation workflow with AnimStudio. Create projects, manage episodes, and bring your ideas to life.",
 };
 
-export default function HomePage() {
+export default async function HomePage() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <section className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to AnimStudio</h1>
-        <p className="text-lg text-gray-600 mb-6">
-          Start your animation journey with our intuitive platform.
+    <main className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <section className="text-center py-10">
+        <h1 className="text-4xl font-bold text-blue-800">
+          Welcome to AnimStudio
+        </h1>
+        <p className="mt-4 text-lg text-gray-600">
+          Streamline your animation workflow and create stunning episodes.
         </p>
-        <Button asChild variant="default">
-          <a href="/signup">Get Started</a>
-        </Button>
+        <div className="mt-6">
+          <Link
+            href="/signup"
+            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-300"
+            aria-label="Sign up for AnimStudio"
+          >
+            Get Started
+          </Link>
+        </div>
       </section>
     </main>
   );

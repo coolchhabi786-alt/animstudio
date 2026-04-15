@@ -1,0 +1,374 @@
+openapi: 3.1.0
+info:
+  title: AnimStudio – Phase 4 Character Studio API
+  version: 4.0.0
+  description: >
+    OpenAPI 3.1 specification for the Character Studio phase of AnimStudio.
+    Covers LoRA character creation, team library, training status, and episode
+    character attachment/detachment.
+
+servers:
+  - url: https://api.animstudio.io/api/v1
+    description: Production
+  - url: https://localhost:7001/api/v1
+    description: Local development
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Microsoft Entra External ID JWT token
+
+  schemas:
+    CharacterDto:
+      type: object
+      required: [id, teamId, name, trainingStatus, trainingProgressPercent, creditsCost, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        teamId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 200
+          example: "Professor Whiskerbolt"
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+          example: "A wise, eccentric orange tabby with round glasses and a lab coat."
+        styleDna:
+          type: string
+          maxLength: 4000
+          nullable: true
+          example: "anime, vibrant colors, expressive eyes, 2D flat design"
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+        loraWeightsUrl:
+          type: string
+          format: uri
+          nullable: true
+        triggerWord:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "PROF_WHISKERBOLT"
+        trainingStatus:
+          $ref: '#/components/schemas/TrainingStatus'
+        trainingProgressPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 0
+        creditsCost:
+          type: integer
+          minimum: 0
+          example: 50
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TrainingStatus:
+      type: string
+      enum: [Draft, PoseGeneration, TrainingQueued, Training, Ready, Failed]
+      example: Draft
+
+    CreateCharacterRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: "Professor Whiskerbolt"
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+        styleDna:
+          type: string
+          maxLength: 4000
+          nullable: true
+          description: >
+            Free-text style guidance for LoRA training (e.g. "anime, pastel palette,
+            big expressive eyes"). Passed verbatim to the AI pipeline.
+
+    PagedCharactersResponse:
+      type: object
+      required: [items, totalCount, page, pageSize]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CharacterDto'
+        totalCount:
+          type: integer
+          example: 42
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+
+    AttachCharacterRequest:
+      type: object
+      required: [characterId]
+      properties:
+        characterId:
+          type: string
+          format: uuid
+
+    JobAcceptedResponse:
+      type: object
+      required: [jobId, characterId, message]
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        characterId:
+          type: string
+          format: uuid
+        message:
+          type: string
+          example: "Character training queued. Estimated time: 15 minutes."
+        estimatedCreditsCost:
+          type: integer
+          example: 50
+
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        traceId:
+          type: string
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    PageSizeParam:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+paths:
+  /characters:
+    post:
+      operationId: createCharacter
+      summary: Enqueue LoRA training for a new character
+      tags: [Characters]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCharacterRequest'
+            example:
+              name: "Professor Whiskerbolt"
+              description: "Wise orange tabby with round glasses"
+              styleDna: "anime, vibrant, 2D flat, expressive eyes"
+      responses:
+        '202':
+          description: Training job accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAcceptedResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '402':
+          description: Insufficient credits
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+    get:
+      operationId: listCharacters
+      summary: List team character library (paginated)
+      tags: [Characters]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+      responses:
+        '200':
+          description: Paginated character list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedCharactersResponse'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /characters/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      operationId: getCharacter
+      summary: Get single character with training status
+      tags: [Characters]
+      responses:
+        '200':
+          description: Character found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CharacterDto'
+        '404':
+          description: Character not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorized
+
+    delete:
+      operationId: deleteCharacter
+      summary: Soft-delete a character (cannot delete if in active episode)
+      tags: [Characters]
+      responses:
+        '204':
+          description: Deleted
+        '409':
+          description: Character is attached to one or more active episodes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Not found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /episodes/{episodeId}/characters:
+    parameters:
+      - name: episodeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      operationId: attachCharacterToEpisode
+      summary: Attach an existing character to an episode
+      tags: [Episode Characters]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachCharacterRequest'
+      responses:
+        '201':
+          description: Character attached
+        '400':
+          description: Character not Ready or already attached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Episode or Character not found
+        '401':
+          description: Unauthorized
+
+    get:
+      operationId: listEpisodeCharacters
+      summary: List all characters attached to an episode
+      tags: [Episode Characters]
+      responses:
+        '200':
+          description: List of characters for the episode
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CharacterDto'
+        '404':
+          description: Episode not found
+        '401':
+          description: Unauthorized
+
+  /episodes/{episodeId}/characters/{charId}:
+    parameters:
+      - name: episodeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: charId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    delete:
+      operationId: detachCharacterFromEpisode
+      summary: Detach a character from an episode
+      tags: [Episode Characters]
+      responses:
+        '204':
+          description: Detached
+        '404':
+          description: Episode or character link not found
+        '401':
+          description: Unauthorized

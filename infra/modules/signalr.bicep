@@ -1,27 +1,24 @@
-param location string
-param environment string
-param signalRName string
+param unitCount int
 
-resource signalR 'Microsoft.SignalRService/signalR@2023-02-01' = {
-  name: signalRName
-  location: location
-  sku: {
-    name: (environment == 'dev') ? 'Free_F1' : 'Standard_S1'
-    capacity: 1
-  }
+resource signalR 'Microsoft.SignalRService/signalR@2022-08-01' = {
+  name: 'AnimStudioSignalR'
+  location: resourceGroup().location
   properties: {
+    sku: {
+      name: 'Standard'
+      tier: 'Standard'
+      capacity: unitCount
+    }
+    externalSettings: {
+      defaultDomainEnabled: true
+    }
     features: [
-      { flag: 'ServiceMode', value: 'Default' }
-      { flag: 'EnableConnectivityLogs', value: 'True' }
+      {
+        flag: 'ServiceMode'
+        value: 'Serverless'
+      }
     ]
-    cors: {
-      allowedOrigins: ['*']
-    }
-    tls: {
-      clientCertEnabled: false
-    }
   }
 }
 
-output signalRId string = signalR.id
-output signalRHostname string = signalR.properties.hostName
+output signalRConnectionString string = 'Endpoint=https://${signalR.properties.hostName};AccessKey=signalRAccessKeyValue;'

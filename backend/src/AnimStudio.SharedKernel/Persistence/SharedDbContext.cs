@@ -32,12 +32,12 @@ public sealed class SharedDbContext : DbContext
 
         modelBuilder.Entity<EpisodeSagaState>(b =>
         {
-            b.ToTable("EpisodeSagaStates", "shared");
+            b.ToTable("SagaStates", "shared");
             b.HasKey(s => s.Id);
             b.Property(s => s.Id).ValueGeneratedNever();
-            b.Property(s => s.Status).IsRequired().HasMaxLength(100);
-            b.Property(s => s.Data).HasColumnType("nvarchar(max)");
-            b.HasIndex(s => s.Status);
+            b.Property(s => s.CurrentStage).HasConversion<string>().IsRequired().HasMaxLength(50);
+            b.Property(s => s.LastError).HasMaxLength(2000);
+            b.HasIndex(s => s.EpisodeId).IsUnique();
         });
     }
 }

@@ -30,7 +30,7 @@ internal sealed class CancelSubscriptionCommandHandler(
         subscription.Cancel(immediately: request.Immediately);
         await subscriptionRepository.UpdateSubscriptionAsync(subscription, cancellationToken);
 
-        await cacheService.RemoveAsync($"subscription:{request.TeamId}", cancellationToken);
+        await cacheService.InvalidateAsync($"subscription:{request.TeamId}", cancellationToken);
 
         return Result<bool>.Success(true);
     }

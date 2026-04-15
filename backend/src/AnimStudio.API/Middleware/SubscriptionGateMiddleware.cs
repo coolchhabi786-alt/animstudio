@@ -6,9 +6,12 @@ namespace AnimStudio.API.Middleware;
 /// <summary>
 /// Blocks requests to subscription-gated API paths when the team's subscription
 /// is not in an active/trialing state. Exempt paths (auth, billing, health) pass through.
+/// In Development the check is skipped entirely so all endpoints are testable without
+/// a Stripe subscription.
 /// </summary>
 public sealed class SubscriptionGateMiddleware(
     RequestDelegate next,
+    IWebHostEnvironment env,
     ILogger<SubscriptionGateMiddleware> logger)
 {
     private static readonly string[] ExemptPrefixes =
@@ -19,11 +22,20 @@ public sealed class SubscriptionGateMiddleware(
         "/hangfire",
         "/hubs",
         "/swagger",
-        "/.well-known",  // Chrome DevTools probes and ACME challenge endpoints
+        "/.well-known",  // Chrome DevTools probes and ACME challenge endpoints 
     ];
 
     public async Task InvokeAsync(HttpContext context, ISubscriptionRepository subscriptionRepository)
     {
+        // ── Dev bypass ────────────────────────────────────────────────────────
+        // In Development all endpoints are open so the full flow can be tested
+        // without a real Stripe subscription. Remove/disable for staging/prod.
+        if (env.IsDevelopment())
+        {
+            await next(context);
+            return;
+        }
+
         var path = context.Request.Path.Value ?? string.Empty;
         if (ExemptPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
         {

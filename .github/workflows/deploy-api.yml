@@ -1,4 +1,4 @@
-name: Deploy AnimStudio API
+name: Deploy API
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - backend
 
 jobs:
-  deploy-api:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     permissions:
@@ -15,33 +15,45 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout Backend Code
-        uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: '8.0.x'
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
 
-      - name: Restore Dependencies
-        run: dotnet restore
+    - name: Restore NuGet Packages
+      run: dotnet restore
 
-      - name: Build and Test
-        run: |
-          dotnet build --no-restore --configuration Release
-          dotnet test --no-build --configuration Release
+    - name: Build Project
+      run: dotnet build --no-restore --configuration Release
 
-      - name: Build Docker Image
-        run: |
-          docker build . -t animstudioacr.azurecr.io/animstudio-api:${{ github.sha }}
+    - name: Run Tests
+      run: dotnet test --no-build --configuration Release
 
-      - name: Push Docker Image to ACR
-        run: |
-          az acr login --name animstudioacr
-          docker push animstudioacr.azurecr.io/animstudio-api:${{ github.sha }}
+    - name: Build Docker Image
+      run: |
+        docker build -t animstudio.azurecr.io/animstudio-api:${{ github.sha }} -f backend/Dockerfile .
 
-      - name: Blue-Green Deploy Container App
-        run: |
-          az containerapp revision set-traffic --name AnimStudioAPI \
-            --revisions "${{ github.sha }}=0" --revision-weight "latest=100" \
-            --resource-group animstudio-rg
+    - name: Push Docker Image
+      run: |
+        az acr login --name AnimStudioACR
+        docker push animstudio.azurecr.io/animstudio-api:${{ github.sha }}
+
+    - name: Update Container App with Blue-Green Deployment
+      run: |
+        az containerapp update \
+          --name AnimStudio.API \
+          --image animstudio.azurecr.io/animstudio-api:${{ github.sha }} \
+          --revision-suffix "${{ github.sha }}" \
+          --location "eastus" \
+          --cpu 2 --memory 4Gi
+
+    - name: Smoke Test Container App
+      run: |
+        RESPONSE=$(curl --write-out '%{http_code}' --silent --output /dev/null http://animstudio.api.internal.azurecontainerapp.io/health/ready)
+        if [[ "$RESPONSE" != "200" ]]; then
+           az containerapp revision deactivate --name AnimStudio.API --revision "0-${{ github.sha }}"
+           exit 1
+        fi

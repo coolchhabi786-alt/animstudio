@@ -1,12 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "KUHtdqRD0fU=",
+  "dgSpecHash": "SyHrns7/gc0=",
   "success": true,
   "projectFilePath": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\AnimStudio.ContentModule.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Vaibhav\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\Vaibhav\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",
     "C:\\Users\\Vaibhav\\.nuget\\packages\\fluentvalidation\\11.9.0\\fluentvalidation.11.9.0.nupkg.sha512",
+    "C:\\Users\\Vaibhav\\.nuget\\packages\\fluentvalidation.dependencyinjectionextensions\\11.9.0\\fluentvalidation.dependencyinjectionextensions.11.9.0.nupkg.sha512",
     "C:\\Users\\Vaibhav\\.nuget\\packages\\hangfire.core\\1.8.12\\hangfire.core.1.8.12.nupkg.sha512",
     "C:\\Users\\Vaibhav\\.nuget\\packages\\mediatr\\12.2.0\\mediatr.12.2.0.nupkg.sha512",
     "C:\\Users\\Vaibhav\\.nuget\\packages\\mediatr.contracts\\2.0.1\\mediatr.contracts.2.0.1.nupkg.sha512",

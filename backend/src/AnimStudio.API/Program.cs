@@ -1,12 +1,13 @@
 using AnimStudio.AnalyticsModule;
 using AnimStudio.API;
+using Asp.Versioning;
 using AnimStudio.API.Authentication;
 using AnimStudio.API.Filters;
 using AnimStudio.API.Hosted;
 using AnimStudio.API.Hubs;
-using AnimStudio.API.Middleware;
-using AnimStudio.API.Services;
+using AnimStudio.API.Middleware;using AnimStudio.API.Services;
 using AnimStudio.ContentModule;
+using AnimStudio.ContentModule.Infrastructure.Persistence;
 using AnimStudio.DeliveryModule;
 using AnimStudio.IdentityModule;
 using AnimStudio.IdentityModule.Domain.Entities;
@@ -262,8 +263,14 @@ try
               .AllowCredentials()));
 
     // ── 17. API Versioning ────────────────────────────────────────────────────
-    // (Simplified — Asp.Versioning.Http not added to csproj yet; controllers use [Route("api/[controller]")])
-    // TODO Phase 2: add Asp.Versioning.Mvc package and configure versioned routes
+    builder.Services
+        .AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ReportApiVersions = true;
+        })
+        .AddMvc(); // registers the {version:apiVersion} route constraint
 
     // ── 18. Rate Limiting — 5 tiers ───────────────────────────────────────────
     builder.Services.AddRateLimiter(opts =>
@@ -355,6 +362,16 @@ try
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
 
+    // ── Phase 4 — Character Studio ────────────────────────────────────────────
+    // Register ICharacterProgressNotifier implementation (SignalR adapter in API layer)
+    builder.Services.AddScoped<AnimStudio.ContentModule.Application.Interfaces.ICharacterProgressNotifier,
+        AnimStudio.API.Services.SignalRCharacterProgressNotifier>();
+
+    // ── Phase 6 — Storyboard Studio ───────────────────────────────────────────
+    // Register IStoryboardShotNotifier implementation (SignalR adapter in API layer)
+    builder.Services.AddScoped<AnimStudio.ContentModule.Application.Interfaces.IStoryboardShotNotifier,
+        AnimStudio.API.Services.SignalRStoryboardShotNotifier>();
+
     // ─────────────────────────────────────────────────────────────────────────
     var app = builder.Build();
 
@@ -368,6 +385,8 @@ try
             await identityDb.Database.MigrateAsync();
             var sharedDb = scope.ServiceProvider.GetRequiredService<SharedDbContext>();
             await sharedDb.Database.MigrateAsync();
+            var contentDb = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
+            await contentDb.Database.MigrateAsync();
             Log.Information("Database migrations applied successfully");
 
             if (app.Environment.IsDevelopment())
@@ -413,6 +432,7 @@ try
 
     app.MapControllers().RequireRateLimiting("authenticated");
     app.MapHub<ProgressHub>("/hubs/progress").RequireAuthorization();
+    app.MapHub<CharacterProgressHub>("/hubs/character-training").RequireAuthorization();
     app.MapHealthChecks("/health/live",  new() { Predicate = _ => false }).AllowAnonymous();
     app.MapHealthChecks("/health/ready", new() { Predicate = c => c.Tags.Contains("ready") }).AllowAnonymous();
     app.MapHealthChecks("/health").AllowAnonymous();
@@ -460,6 +480,19 @@ static async Task SeedDevDataAsync(IdentityDbContext db)
             id: Guid.NewGuid(),
             teamId: devTeamId,
             planId: starterPlanId));
+    }
+    else
+    {
+        // If an existing subscription is in a non-active state (e.g., Cancelled from a previous
+        // test run), reset it to Active so all API endpoints pass the subscription gate.
+        var existingSub = await db.Subscriptions.FirstAsync(s => s.TeamId == devTeamId);
+        if (existingSub.Status != SubscriptionStatus.Active &&
+            existingSub.Status != SubscriptionStatus.Trialing)
+        {
+            existingSub.Status = SubscriptionStatus.Active;
+            existingSub.CurrentPeriodEnd = DateTimeOffset.UtcNow.AddMonths(1);
+            existingSub.CancelAtPeriodEnd = false;
+        }
     }
 
     await db.SaveChangesAsync();
