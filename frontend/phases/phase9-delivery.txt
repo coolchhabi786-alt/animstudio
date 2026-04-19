@@ -1,0 +1,33 @@
+Build post-production rendering, CDN delivery, and export options.
+
+DATABASE:
+  - Render (Id, EpisodeId, Status, FinalVideoUrl, CdnUrl,
+    DurationSeconds, AspectRatio[SixteenNine|NineSixteen|OneOne],
+    CaptionsSrtUrl, CreatedAt, CompletedAt)
+  - Update Episode: add LatestRenderId[FK, nullable]
+
+BACKEND:
+  - RenderController:
+    POST /episodes/{id}/render → enqueue PostProd job (body: {aspectRatio})
+    GET /episodes/{id}/renders → render history list
+    GET /renders/{id} → single render with CDN URL (signed, 30-day expiry)
+    GET /renders/{id}/srt → download SRT captions file
+  - CdnService: generates signed Azure CDN URLs with 30-day token expiry
+  - SrtGeneratorService: converts dialogue timeline from Screenplay → SRT format
+  - AspectRatioService: passes aspect ratio param to ffmpeg post-prod stage
+  - SignalR: RenderProgress(episodeId, percent, stage),
+             RenderComplete(episodeId, cdnUrl)
+
+FRONTEND:
+  - studio/[id]/render/page.tsx: Post-Production page
+    - Aspect ratio selector (3 options with visual preview thumbnails)
+    - Render button + status: queued → assembling → mixing → done
+    - Live progress bar driven by SignalR RenderProgress
+    - Final video player (full width) once complete
+    - Download buttons: Video (MP4), Captions (SRT)
+    - Render history: previous renders list with timestamps + re-render option
+  - components/render/aspect-ratio-picker.tsx: visual card selector
+  - components/render/render-progress.tsx: SignalR-driven stage labels + bar
+  - components/render/video-player.tsx: HTML5 video with controls, poster frame
+  - components/render/download-bar.tsx: MP4 + SRT download buttons
+  - hooks/use-renders.ts: TanStack Query for renders + SignalR render events

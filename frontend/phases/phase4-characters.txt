@@ -1,0 +1,35 @@
+Build the Character Studio — LoRA training pipeline with real-time progress.
+
+DATABASE:
+  - Character (Id, TeamId, Name, Description, StyleDna, ImageUrl,
+    LoraWeightsUrl, TriggerWord,
+    TrainingStatus[Draft|PoseGeneration|TrainingQueued|Training|Ready|Failed],
+    TrainingProgressPercent, CreditsCost, CreatedAt, UpdatedAt)
+  - EpisodeCharacter (EpisodeId, CharacterId) — many-to-many link
+
+BACKEND:
+  - CharactersController:
+    POST /characters → enqueue CharacterDesign job (returns 202 + jobId)
+    GET /characters → team character library (paginated)
+    GET /characters/{id} → single character with training status
+    DELETE /characters/{id} → soft delete (can't delete if used in active episode)
+    POST /episodes/{id}/characters → attach existing character to episode
+    DELETE /episodes/{id}/characters/{charId} → detach
+  - CharacterTrainingService: handles job completion messages for character stages,
+    updates TrainingStatus + LoraWeightsUrl, broadcasts SignalR to team
+  - CharacterProgressHub: SignalR group = team-{teamId},
+    method: CharacterTrainingUpdate(characterId, status, percent, stage)
+  - Credit validation: check team has enough credits before queuing training
+
+FRONTEND:
+  - studio/[id]/characters/page.tsx: character studio page
+    - Left panel: "Create Character" form (name, description + style guidance)
+    - Right panel: character card gallery (grid) with training status badge
+  - components/character/character-form.tsx: react-hook-form + zod, style guidance
+    textarea with prompt tips tooltip
+  - components/character/character-card.tsx: thumbnail image, name, status badge
+    (Draft/Training/Ready/Failed), training progress bar, cost label
+  - components/character/training-badge.tsx: animated pulsing badge during training,
+    green checkmark when Ready
+  - hooks/use-characters.ts: TanStack Query CRUD + character-training SignalR subscription
+  - Cost estimate shown before confirming: "Training this character costs ~X credits"

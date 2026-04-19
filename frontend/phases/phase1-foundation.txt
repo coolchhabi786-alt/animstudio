@@ -1,0 +1,373 @@
+﻿Build the complete production-ready foundation of the AnimStudio SaaS platform.
+Use a MODULAR MONOLITH architecture: one deployable .NET 8 Container App with 4
+internal bounded-context modules. Each module has its own Clean Architecture layers
+(Domain / Application / Infrastructure) and EF Core DbContext scoped to its own
+SQL schema. Modules communicate ONLY via MediatR Notifications (domain events) --
+never via direct type references to another module's internals.
+
+=== SOLUTION STRUCTURE (.NET 8 -- 6 projects total) ===
+
+PROJECT 1 -- AnimStudio.SharedKernel (no external dependencies):
+  Entity<TId> base class:
+    Id, CreatedAt, UpdatedAt, IsDeleted, DeletedAt, DeletedByUserId,
+    RowVersion (byte[], concurrency token)
+  AggregateRoot<TId>: extends Entity, holds List<IDomainEvent>, AddDomainEvent()
+  IDomainEvent: marker interface (implements INotification for MediatR)
+  IModuleRegistration: one per module, registers services into IServiceCollection
+  Result<T>: discriminated union (IsSuccess, Value, Error, ErrorCode)
+  PaginatedList<T>: Items, TotalCount, PageNumber, PageSize
+  ICacheKey: interface for cacheable queries -- CacheKey string, TTL TimeSpan
+  OutboxMessage:
+    Id[guid], EventType, Payload[json], Status[Pending|Delivered|Failed],
+    OccurredAt, ProcessedAt, RetryCount -- stored in shared.OutboxMessages
+  EpisodeSagaState:
+    Id, EpisodeId, CurrentStage[enum PipelineStage], RetryCount,
+    LastError, StartedAt, UpdatedAt -- stored in shared.SagaStates
+
+PROJECT 2 -- AnimStudio.IdentityModule:
+  Domain/:
+    User (Id[Guid], Email[ValueObject], DisplayName, ExternalId[Entra sub],
+      CreatedAt, LastLoginAt) -- extends AggregateRoot<Guid>
+    Team (Id, Name, OwnerId, CreatedAt) -- extends AggregateRoot<Guid>
+    TeamMember (TeamId, UserId, Role[Owner|Editor|Viewer], JoinedAt, InviteToken,
+      InviteExpiresAt, InviteAcceptedAt)
+    Plan (Id, Name, StripePriceId, EpisodesPerMonth[-1=unlimited],
+      MaxCharacters, MaxTeamMembers, Price, IsActive, IsDefault)
+    Subscription (Id, TeamId, PlanId, StripeSubscriptionId, StripeCustomerId,
+      Status[Active|PastDue|Cancelled|Trialing], CurrentPeriodStart,
+      CurrentPeriodEnd, UsageEpisodesThisMonth, UsageResetAt)
+    Domain Events (all implement IDomainEvent):
+      UserRegistered, TeamCreated, TeamMemberInvited, TeamMemberJoined,
+      SubscriptionActivated, SubscriptionUpgraded, SubscriptionCancelled
+    Value Objects: Email (regex validation, lower-cased), TeamRole (enum + display name)
+    Domain Exceptions:
+      DomainException (base), TeamMemberLimitExceededException,
+      EpisodeLimitExceededException, FeatureNotAvailableException(tier, feature)
+  Application/:
+    MediatR Pipeline Behaviours (registered globally for ALL modules via SharedKernel):
+      ValidationBehaviour<TRequest, TResponse>:
+        runs FluentValidation before handler
+      LoggingBehaviour<TRequest, TResponse>:
+        log entry + exit + duration via Serilog
+      CorrelationIdBehaviour<TRequest, TResponse>:
+        injects correlationId from AsyncLocal into scope
+      CachingBehaviour<TRequest, TResponse>:
+        reads from Redis for IRequest + ICacheKey queries
+      TransactionBehaviour<TRequest, TResponse>:
+        wraps write commands in EF Core SaveChanges + OutboxMessage flush (one tx)
+    Commands + Handlers:
+      RegisterUser, CreateTeam, InviteTeamMember, AcceptTeamInvite,
+      UpdateUserProfile, UpdateSubscription, CancelSubscription
+    Queries + Handlers (all implement ICacheKey):
+      GetCurrentUser        (key: user:{userId},              TTL 10min)
+      GetTeam               (key: team:{teamId},              TTL 10min)
+      GetTeamMembers        (key: team:{teamId}:members,      TTL 5min)
+      GetSubscription       (key: subscription:{teamId},      TTL 5min)
+      GetAllPlans           (key: plans:all,                  TTL 1hr)
+      CheckFeatureAccess    (key: feature:{teamId}:{feature}, TTL 5min)
+    DTOs: UserDto, TeamDto, TeamMemberDto, SubscriptionDto, PlanDto
+    Validators: FluentValidation for all commands (email, name length, token)
+    Interfaces: IUserRepository, ITeamRepository, ISubscriptionRepository,
+      IStripeService, IEmailService, ICurrentUserService, ICacheService
+    IdentityModuleRegistration: implements IModuleRegistration
+  Infrastructure/:
+    IdentityDbContext (schema prefix: identity.*):
+      Tables: identity.Users, identity.Teams, identity.TeamMembers,
+              identity.Plans, identity.Subscriptions, identity.ProcessedStripeEvents
+    Repository<T, TId> base:
+      GetByIdAsync, AddAsync, UpdateAsync, DeleteAsync (soft-delete flag)
+      EF Core global query filter: entity => !entity.IsDeleted
+    Concrete repos: UserRepository, TeamRepository, SubscriptionRepository
+    StripeService:
+      CreateCustomer, CreateCheckoutSession (success/cancel URLs),
+      CreatePortalSession, CancelSubscription, HandleWebhookEvent.
+      Webhook events: checkout.session.completed,
+        customer.subscription.updated, customer.subscription.deleted,
+        invoice.payment_failed.
+      Idempotency: check ProcessedStripeEvents before processing any event.
+    EmailService: Azure Communication Services SDK (EmailClient)
+      Sends invite email: recipient name, invite link, team name, expiry date.
+    CurrentUserService: reads JWT claims via IHttpContextAccessor
+      (sub -> ExternalId, email, subscription-tier custom claim)
+    CacheService: IDistributedCache (Redis) + IResiliencePipelineProvider "redis"
+      GetOrSetAsync<T>: Redis GET -> on miss call factory -> SET with TTL
+      InvalidateAsync(key): DEL
+      InvalidateByPrefixAsync(prefix): SCAN + DEL all matching keys
+
+PROJECT 3 -- AnimStudio.ContentModule (Phase 2+ features live here):
+  Domain/: Project, Episode stubs; PipelineStage enum:
+    Idle, CharacterDesign, LoraTraining, Script, Storyboard,
+    Voice, Animation, PostProduction, Done, Failed
+  Application/: handler stub for SubscriptionActivated event
+  Infrastructure/: ContentDbContext (schema prefix: content.*) -- empty in Phase 1
+  ContentModuleRegistration: IModuleRegistration stub
+
+PROJECT 4 -- AnimStudio.DeliveryModule (Phase 9+):
+  DeliveryModuleRegistration stub, DeliveryDbContext (schema: delivery.*)
+
+PROJECT 5 -- AnimStudio.AnalyticsModule (Phase 12):
+  AnalyticsModuleRegistration stub, AnalyticsDbContext (schema: analytics.*)
+PROJECT 6 -- AnimStudio.API (thin host -- ZERO business logic):
+  Program.cs bootstrap (strict order):
+   1. Serilog: JSON stdout + Application Insights sinks.
+      Enrichers: CorrelationId, UserId, TeamId, MachineName, ApplicationVersion.
+      Destructuring: scrub password/token/secret/key fields.
+   2. OpenTelemetry: traces (ActivitySource per module, prefix animstudio.*)
+      + metrics -> Azure Application Insights OTLP exporter.
+   3. Azure Key Vault config provider via Managed Identity (no stored credentials).
+   4. Register all 4 modules: IModuleRegistration.Register() for each.
+   5. EF Core: all 4 DbContexts with Azure SQL connection strings from Key Vault.
+      EnableSensitiveDataLogging = false in production.
+   6. MediatR 12: scan all 5 module assemblies + SharedKernel.
+      Pipeline behaviours in order:
+      CorrelationIdBehaviour -> LoggingBehaviour -> ValidationBehaviour ->
+      CachingBehaviour -> TransactionBehaviour.
+   7. FluentValidation: scan all module assemblies, fail fast = false.
+   8. Hangfire:
+      AddHangfire(config => config.UseSqlServerStorage(hangfireSqlConnectionString))
+      AddHangfireServer(options => options.Queues = ["critical","default","low"])
+      Recurring jobs registered in IHostedService.StartAsync:
+        OutboxPublisherJob:      Cron.MinuteInterval(1),  queue: critical
+        UsageResetJob:           "0 0 * * *",             queue: default
+        DeadLetterRetryJob:      Cron.MinuteInterval(5),  queue: default
+        PurgeDeletedEntitiesJob: "0 2 1 * *",             queue: low
+   9. Redis: AddStackExchangeRedisCache() with connection string from Key Vault.
+      ICacheService registered as scoped.
+  10. Azure Service Bus: ServiceBusClient singleton from Key Vault.
+      Hosted services:
+        CompletionMessageProcessor: listens "completions" -> mediator.Publish
+        DeadLetterProcessor: listens DLQ -> log + Application Insights alert
+  11. Azure SignalR: AddSignalR() + AddAzureSignalR() from Key Vault.
+  12. Stripe: StripeClient with API key from Key Vault.
+  13. Polly v8 resilience pipelines (Microsoft.Extensions.Resilience):
+      "fal-client":   timeout 60s, retry(2 exp backoff 2s), circuit-breaker(5/30s)
+      "azure-openai": timeout 30s, retry(2 exp backoff 1s), bulkhead(10 concur, 20 queue)
+      "stripe-http":  timeout 15s, retry(3 linear 1s)
+      "redis":        timeout 500ms, fallback(execute DB query, log warning)
+      Resolved via IResiliencePipelineProvider<string>.
+  14. Auth: AddAuthentication(JwtBearer), Entra External ID authority + audience.
+      OnTokenValidated: upsert User record, set TeamId claim from DB lookup.
+  15. Authorization policies:
+      RequireTeamMember: ClaimTypes.TeamId + membership check
+      RequireTeamEditor: role=Editor or Owner
+      RequireTeamOwner:  role=Owner
+      RequireAdminRole:  custom admin claim (Entra app role)
+  16. CORS: frontend origin (appsettings) with credentials + SignalR headers.
+  17. API Versioning: Asp.Versioning.Http, default v1.0, format "v{major}",
+      version in URL path, deprecation headers on older versions.
+  18. Rate Limiting (ASP.NET Core built-in, fixed window):
+      "anonymous": 10 req/min  per IP
+      "basic":     60 req/min  per UserId JWT claim
+      "pro":       200 req/min per UserId JWT claim
+      "studio":    500 req/min per UserId JWT claim
+      "webhook":   unlimited, Stripe IP range allow-list only
+      Tier resolved from subscription-tier JWT claim -> policy name.
+  19. Swagger/OpenAPI: Bearer security definition, XML doc comments,
+      versioned Swagger documents per API version.
+  20. Health checks:
+      AddDbContextCheck<IdentityDbContext>  ("identity-db", tags: ["ready"])
+      AddDbContextCheck<ContentDbContext>   ("content-db",  tags: ["ready"])
+      AddDbContextCheck<DeliveryDbContext>  ("delivery-db", tags: ["ready"])
+      AddRedis(redisConnection,             "redis",        tags: ["ready"])
+      AddAzureServiceBusQueue("jobs",       "service-bus-jobs", tags: ["ready"])
+      AddAzureSignalR("signalr",            tags: ["ready"])
+
+  Middleware pipeline (order critical):
+    UseForwardedHeaders()            -- trust X-Forwarded-For from Azure Front Door
+    UseCorrelationIdMiddleware()     -- generate/propagate X-Correlation-Id header
+    UseSerilogRequestLogging()       -- structured HTTP access log
+    UseHsts() + UseHttpsRedirection()
+    UseRateLimiter()
+    UseAuthentication()
+    UseAuthorization()
+    UseSubscriptionGateMiddleware()  -- 402 on tier limit exceeded
+    MapControllers()
+    MapHub<ProgressHub>("/hubs/progress")
+    MapHealthChecks("/health/live",  Predicate = _ => false)
+    MapHealthChecks("/health/ready", Predicate = c => c.Tags.Contains("ready"))
+    MapHealthChecks("/health",       requireAdminPolicy)
+    MapHangfireDashboard("/hangfire", requireAdminPolicy)
+    MapSwagger().RequireAuthorization()
+
+  CorrelationIdMiddleware:
+    Read X-Correlation-Id header (or generate UUID v7), store in ICorrelationIdAccessor,
+    add to response header, set in Serilog scope.
+
+  SubscriptionGateMiddleware:
+    On every POST/PUT/DELETE /api/v*/episodes or /api/v*/characters:
+    Send CheckFeatureAccess query (Redis-cached 5min TTL).
+    If exceeded -> 402 ProblemDetails:
+    { type: "https://animstudio.io/errors/subscription-limit",
+      title: "Subscription limit exceeded", status: 402,
+      upgradeUrl: "/settings/billing", currentTier, requiredTier }
+
+  GlobalExceptionHandler (IExceptionHandler):
+    DomainException                -> 400
+    ValidationException            -> 422 with field errors array
+    FeatureNotAvailableException   -> 402
+    UnauthorisedAccessException    -> 403
+    EntityNotFoundException        -> 404
+    all others                     -> 500 with correlationId for support reference
+
+  Controllers (all: [ApiVersion("1.0")], [Authorize], mediator.Send()):
+    AuthController:    GET  /api/v1/auth/me
+    UsersController:   PUT  /api/v1/users/profile
+    TeamsController:   POST /api/v1/teams
+                       GET  /api/v1/teams/{id}
+                       GET  /api/v1/teams/{id}/members
+                       POST /api/v1/teams/{id}/invites
+                       POST /api/v1/teams/invites/{token}/accept
+    BillingController: GET  /api/v1/billing/plans
+                       GET  /api/v1/billing/subscription
+                       POST /api/v1/billing/checkout
+                       POST /api/v1/billing/portal
+                       POST /api/v1/billing/webhook         [AllowAnonymous]
+
+  Hubs/ProgressHub (/hubs/progress) -- stub Phase 1, full in Phase 2:
+    Groups: episode-{id}, team-{teamId}
+    Client methods: ProgressUpdate, CharacterTrainingUpdate,
+                    ClipReady, RenderProgress, RenderComplete
+=== CROSS-CUTTING: Outbox Pattern ===
+TransactionBehaviour intercepts every write command:
+  1. Begin EF Core transaction
+  2. Execute handler (aggregates raise domain events via AddDomainEvent)
+  3. Serialize each IDomainEvent to OutboxMessage (EventType + Payload JSON)
+  4. Save OutboxMessages + business data atomically in ONE transaction
+  5. Commit -- full rollback on any failure; event is never half-written
+
+OutboxPublisherJob (Hangfire, every 1 minute, queue: critical):
+  SELECT TOP 50 FROM shared.OutboxMessages WHERE Status=Pending ORDER BY OccurredAt ASC
+  FOR EACH message:
+    Deserialize Payload -> resolve INotificationHandler via EventType
+    Publish via mediator.Publish()
+    On success: UPDATE Status=Delivered, ProcessedAt=NOW()
+    On failure: UPDATE RetryCount++; if RetryCount>=5: Status=Failed, alert AppInsights
+
+=== CROSS-CUTTING: Resilience (Polly v8) ===
+IResiliencePipelineProvider<string> pipelines:
+  "service-bus": retry(3, exp backoff + jitter) + circuit-breaker(5 failures, 30s)
+  "http-ai-api": timeout(60s) + retry(2, exp backoff) + bulkhead(10 concurrent, 20 queue)
+  "http-stripe": timeout(15s) + retry(3, linear 1s) + circuit-breaker(10 failures, 60s)
+  "redis":       timeout(500ms) + fallback(log warning, return null / execute DB fallback)
+
+=== CROSS-CUTTING: Redis Cache (ICacheService) ===
+Cache key patterns and TTLs:
+  user:{userId}                TTL 10min  -- invalidated by UserRegistered, ProfileUpdated
+  team:{teamId}                TTL 10min  -- invalidated by TeamCreated, MemberJoined/Left
+  team:{teamId}:members        TTL 5min   -- invalidated by MemberJoined/Left
+  subscription:{teamId}        TTL 5min   -- invalidated by SubscriptionActivated/Updated
+  feature:{teamId}:{feature}   TTL 5min   -- invalidated by SubscriptionActivated/Updated
+  plans:all                    TTL 1hr    -- invalidated on Plan admin update
+  templates:all                TTL 1hr    -- invalidated on Template admin update (Phase 3)
+
+=== FRONTEND (Next.js 14 App Router + shadcn/ui) ===
+All API URLs versioned: base /api/v1/
+lib/correlation.ts: UUID v7 in sessionStorage, inject X-Correlation-Id header
+lib/api-client.ts: Authorization + X-Correlation-Id + X-Team-Id headers on all requests
+error.tsx per route: graceful error boundaries with retry button
+middleware.ts: attach X-Team-Id from Zustand auth-store currentTeamId
+
+Layout and pages:
+  app/(auth)/login/page.tsx          -- sign in with Microsoft (next-auth signIn)
+  app/(auth)/signup/page.tsx         -- create account -> Stripe checkout -> onboard
+  app/(auth)/accept-invite/page.tsx  -- accept team invite via token
+  app/(studio)/layout.tsx            -- sidebar nav + top bar shell
+  app/(studio)/dashboard/page.tsx    -- project grid, usage meter, subscription badge
+  app/(studio)/settings/profile/page.tsx   -- display name update form
+  app/(studio)/settings/team/page.tsx      -- team list, invite form, role management
+  app/(studio)/settings/billing/page.tsx   -- plan cards, Stripe Customer Portal embed
+
+Components:
+  components/layout/sidebar.tsx, top-bar.tsx
+  components/billing/plan-card.tsx, usage-meter.tsx
+  components/team/invite-form.tsx, member-row.tsx
+
+Lib & hooks:
+  lib/auth.ts           -- next-auth v5: Entra External ID provider, JWT+session callbacks
+  lib/api-client.ts     -- Authorization + X-Correlation-Id + X-Team-Id headers
+  lib/correlation.ts    -- UUID v7 generator + sessionStorage store
+  lib/stripe-client.ts  -- loadStripe() singleton
+  hooks/use-current-user.ts   -- TanStack Query: GET /api/v1/auth/me
+  hooks/use-team.ts           -- TanStack Query: GET /api/v1/teams/{id}
+  hooks/use-subscription.ts   -- TanStack Query: GET /api/v1/billing/subscription
+  stores/auth-store.ts        -- Zustand: currentTeamId, setCurrentTeam
+  types/api.ts                -- TypeScript interfaces matching all backend DTOs
+
+=== INFRASTRUCTURE (Azure Bicep -- v3 revised) ===
+infra/modules/:
+  containerapp-env.bicep  -- Container Apps Environment, VNET integration (/24 subnet),
+                             Log Analytics workspace
+  containerapp.bicep      -- AnimStudio.API Container App:
+                             min replicas 1 (dev), max 10 (prod)
+                             system-assigned Managed Identity
+                             ingress: internal (Private Link from Front Door only)
+                             KEDA HTTP scaler
+                             resource: 0.5 CPU/1Gi (dev), 2 CPU/4Gi (prod)
+  redis.bicep             -- Azure Cache for Redis:
+                             C1 Basic (dev), C2 Standard geo-replicated (prod)
+                             private endpoint prod, access key -> Key Vault
+  frontdoor.bicep         -- Azure Front Door Premium (WAF + DDoS + global routing):
+                             Origins: api-origin (Container App Private Link),
+                                      web-origin (Static Web Apps),
+                                      media-origin (Blob Storage)
+                             Routes:
+                               /api/*  -> api-origin (no cache)
+                               /hubs/* -> api-origin, WebSockets enabled (no cache)
+                               / and SSR pages -> web-origin
+                               *.mp4, *.srt, *.png, *.jpg -> media-origin (cache 30 days)
+                             WAF Policy (Prevention prod, Detection dev):
+                               Microsoft_DefaultRuleSet 2.1 + OWASP 3.2
+                               Custom: SQL injection body block, XSS query-string block,
+                                 rate-limit 100req/10min per IP on /api/v1/auth/*
+                             DDoS Protection Standard on Front Door profile
+  sql.bicep               -- Azure SQL Server + Database:
+                             Serverless General Purpose (auto-pause 1hr) dev
+                             General Purpose 2 vCore zone-redundant prod
+                             Private endpoint prod, Defender for SQL prod
+                             4 schemas: identity.* content.* delivery.* analytics.*
+  hangfire-sql.bicep      -- Separate Azure SQL Database for Hangfire storage
+  servicebus.bicep        -- Queues: jobs (lock 5min, maxDelivery 3),
+                             completions (lock 5min, maxDelivery 3), deadletter-retry
+                             Private endpoint prod
+  signalr.bicep           -- Free (dev), Standard 1-unit (prod)
+  storage.bicep           -- LRS (dev), ZRS (prod): containers: assets, finals
+                             Private endpoint for finals container prod
+  keyvault.bicep          -- Soft-delete + purge protection, secrets:
+                             SqlConnectionString, HangfireSqlConnectionString,
+                             RedisConnectionString, StripeSecretKey, StripeWebhookSecret,
+                             ServiceBusConnectionString, SignalRConnectionString,
+                             AzureOpenAIKey, AzureOpenAIEndpoint, FalApiKey,
+                             AzureCommunicationServicesConnectionString
+                             RBAC: Container App MI -> Key Vault Secrets User
+  acr.bicep               -- Basic (dev), Standard (prod):
+                             Container App MI -> AcrPull, GitHub Actions SP -> AcrPush
+infra/parameters/dev.json   -- min SKUs, public endpoints, WAF Detection mode
+infra/parameters/prod.json  -- prod SKUs, private endpoints, WAF Prevention, DDoS
+
+CI/CD (.github/workflows/):
+  infra.yml       -- workflow_dispatch + push main/infra/**:
+                     az login OIDC federated (no stored credentials)
+                     bicep build --lint all modules
+                     az deployment sub create
+  deploy-api.yml  -- push main/backend/**:
+                     dotnet restore + build + test (all test projects)
+                     docker build -> push to ACR with git SHA tag
+                     az containerapp update --image {acr}/{image}:{sha}
+                     Blue-green: new revision at 0%
+                       -> smoke test: curl /health/ready on new revision URL
+                       -> 200: az containerapp ingress traffic set --revision-weight new=100
+                       -> fail: az containerapp revision deactivate (auto rollback)
+  deploy-web.yml  -- push main/frontend/**:
+                     npm ci + npm run build
+                     Azure/static-web-apps-deploy action
+
+SEED DATA (IdentityDbContext.OnModelCreating HasData):
+  { Id: guid1, Name: "Basic",  StripePriceId: "price_basic",  Price: 19,
+    EpisodesPerMonth: 3,  MaxCharacters: 5,  MaxTeamMembers: 1,
+    IsDefault: true,  IsActive: true }
+  { Id: guid2, Name: "Pro",    StripePriceId: "price_pro",    Price: 49,
+    EpisodesPerMonth: 15, MaxCharacters: 20, MaxTeamMembers: 5,
+    IsDefault: false, IsActive: true }
+  { Id: guid3, Name: "Studio", StripePriceId: "price_studio", Price: 149,
+    EpisodesPerMonth: -1, MaxCharacters: -1, MaxTeamMembers: -1,
+    IsDefault: false, IsActive: true }

@@ -1,0 +1,195 @@
+openapi: 3.1.0
+info:
+  title: AnimStudio — Phase 8 Animation Studio API
+  version: 1.0.0
+  description: |
+    Animation Studio endpoints: estimate cost, approve & enqueue animation jobs,
+    list generated clips, and issue signed Blob URLs for single clips.
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Animation
+    description: Animation cost estimate, approval, and clip retrieval
+
+paths:
+  /episodes/{episodeId}/animation/estimate:
+    get:
+      tags: [Animation]
+      summary: Compute cost estimate for animating the episode
+      operationId: getAnimationEstimate
+      parameters:
+        - $ref: '#/components/parameters/EpisodeId'
+        - in: query
+          name: backend
+          required: false
+          schema:
+            $ref: '#/components/schemas/AnimationBackend'
+          description: Backend to price against (defaults to Kling)
+      responses:
+        '200':
+          description: Itemised cost breakdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnimationEstimateDto'
+        '404':
+          description: Episode or storyboard not found
+
+  /episodes/{episodeId}/animation:
+    get:
+      tags: [Animation]
+      summary: List all animation clips for the episode
+      operationId: getAnimationClips
+      parameters:
+        - $ref: '#/components/parameters/EpisodeId'
+      responses:
+        '200':
+          description: Clips with status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnimationClipDto'
+    post:
+      tags: [Animation]
+      summary: Approve estimate and enqueue animation job
+      operationId: approveAnimation
+      parameters:
+        - $ref: '#/components/parameters/EpisodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveAnimationRequest'
+      responses:
+        '202':
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnimationJobDto'
+        '400':
+          description: Validation error
+        '409':
+          description: Animation already in progress or completed
+
+  /episodes/{episodeId}/animation/clips/{clipId}:
+    get:
+      tags: [Animation]
+      summary: Issue a signed Blob URL for a single clip
+      operationId: getAnimationClipSignedUrl
+      parameters:
+        - $ref: '#/components/parameters/EpisodeId'
+        - in: path
+          name: clipId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Signed URL with TTL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedClipUrlDto'
+        '404':
+          description: Clip not found
+
+components:
+  parameters:
+    EpisodeId:
+      in: path
+      name: episodeId
+      required: true
+      schema: { type: string, format: uuid }
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AnimationBackend:
+      type: string
+      enum: [Kling, Local]
+      description: Which animation backend will execute the job
+
+    AnimationStatus:
+      type: string
+      enum: [PendingApproval, Approved, Running, Completed, Failed, Cancelled]
+
+    ClipStatus:
+      type: string
+      enum: [Pending, Rendering, Ready, Failed]
+
+    AnimationEstimateDto:
+      type: object
+      required: [episodeId, backend, shotCount, unitCostUsd, totalCostUsd, breakdown]
+      properties:
+        episodeId: { type: string, format: uuid }
+        backend: { $ref: '#/components/schemas/AnimationBackend' }
+        shotCount: { type: integer, minimum: 0 }
+        unitCostUsd: { type: number, format: double, minimum: 0 }
+        totalCostUsd: { type: number, format: double, minimum: 0 }
+        breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnimationEstimateLineItem'
+
+    AnimationEstimateLineItem:
+      type: object
+      required: [sceneNumber, shotIndex, unitCostUsd]
+      properties:
+        sceneNumber: { type: integer, minimum: 1 }
+        shotIndex: { type: integer, minimum: 0 }
+        storyboardShotId: { type: string, format: uuid }
+        unitCostUsd: { type: number, format: double, minimum: 0 }
+
+    ApproveAnimationRequest:
+      type: object
+      required: [backend]
+      properties:
+        backend: { $ref: '#/components/schemas/AnimationBackend' }
+
+    AnimationJobDto:
+      type: object
+      required: [id, episodeId, backend, estimatedCostUsd, status, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        episodeId: { type: string, format: uuid }
+        backend: { $ref: '#/components/schemas/AnimationBackend' }
+        estimatedCostUsd: { type: number, format: double }
+        actualCostUsd: { type: number, format: double, nullable: true }
+        approvedByUserId: { type: string, format: uuid, nullable: true }
+        approvedAt: { type: string, format: date-time, nullable: true }
+        status: { $ref: '#/components/schemas/AnimationStatus' }
+        createdAt: { type: string, format: date-time }
+
+    AnimationClipDto:
+      type: object
+      required: [id, episodeId, sceneNumber, shotIndex, status, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        episodeId: { type: string, format: uuid }
+        sceneNumber: { type: integer, minimum: 1 }
+        shotIndex: { type: integer, minimum: 0 }
+        storyboardShotId: { type: string, format: uuid, nullable: true }
+        clipUrl: { type: string, nullable: true }
+        durationSeconds: { type: number, format: double, nullable: true }
+        status: { $ref: '#/components/schemas/ClipStatus' }
+        createdAt: { type: string, format: date-time }
+
+    SignedClipUrlDto:
+      type: object
+      required: [clipId, url, expiresAt]
+      properties:
+        clipId: { type: string, format: uuid }
+        url: { type: string }
+        expiresAt: { type: string, format: date-time }

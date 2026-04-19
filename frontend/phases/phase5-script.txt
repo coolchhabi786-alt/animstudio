@@ -1,0 +1,31 @@
+Build the Script Workshop for screenplay generation and editing.
+
+DATABASE:
+  - Script (Id, EpisodeId, Title, RawJson[JSON — Screenplay model],
+    IsManuallyEdited, DirectorNotes, CreatedAt, UpdatedAt)
+
+BACKEND:
+  - ScriptController:
+    POST /episodes/{id}/script → enqueue Scriptwriting job (returns 202)
+    GET /episodes/{id}/script → return current script or 404
+    PUT /episodes/{id}/script → save manual edits (marks IsManuallyEdited=true)
+    POST /episodes/{id}/script/regenerate → re-enqueue with optional director notes
+  - ScriptDto: maps Screenplay Pydantic model → C# record
+  - Validation: all characters in edited script must exist in EpisodeCharacters
+
+FRONTEND:
+  - studio/[id]/script/page.tsx: Script Workshop
+    - Top bar: "Generate Script" button (disabled if characters not ready),
+      regenerate with notes button, edit toggle
+    - Scene cards: expandable accordion per scene, scene description,
+      emotional tone badge
+    - Dialogue table: per scene, character avatar + name, dialogue text (editable),
+      start_time + end_time fields (editable in edit mode)
+    - Stats: total scenes, total lines, estimated duration
+  - components/script/scene-card.tsx: scene header with number + tone badge,
+    dialogue table, expand/collapse
+  - components/script/dialogue-row.tsx: character selector dropdown (from roster),
+    editable text area, timing inputs
+  - components/script/regenerate-dialog.tsx: director's notes textarea, confirm button
+  - components/script/script-stats.tsx: scene count, dialogue count, duration
+  - hooks/use-script.ts: TanStack Query for script + mutation for save

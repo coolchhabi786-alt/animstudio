@@ -1,0 +1,28 @@
+Build the Voice Studio for voice assignment and preview.
+
+DATABASE:
+  - VoiceAssignment (Id, EpisodeId, CharacterId, VoiceName, Language,
+    VoiceCloneUrl[nullable, Studio tier], UpdatedAt)
+  - Built-in voices enum: Alloy, Echo, Fable, Onyx, Nova, Shimmer
+
+BACKEND:
+  - VoiceController:
+    GET /episodes/{id}/voices → all character voice assignments
+    PUT /episodes/{id}/voices → batch update voice assignments
+    POST /voices/preview → TTS preview (returns signed Blob URL, 60s expiry)
+    POST /voices/clone → upload audio sample for voice cloning (Studio tier only)
+  - VoicePreviewService: calls Azure OpenAI TTS → uploads to tmp Blob → returns URL
+  - VoiceCloneService: stub for ElevenLabs / Azure custom voice integration
+  - Tier guard: voice cloning requires Studio subscription
+
+FRONTEND:
+  - studio/[id]/voice/page.tsx: Voice Studio
+    - Character list: each row has avatar, name, voice picker dropdown,
+      language selector, preview button, audio player
+    - Preview button triggers TTS call → plays audio inline (HTML5 audio element)
+    - Voice clone section (Studio tier): upload audio file button + status
+  - components/voice/voice-picker.tsx: shadcn/ui Select with voice name + gender labels
+  - components/voice/audio-preview-player.tsx: HTML5 audio, play/pause, waveform viz
+  - components/voice/language-selector.tsx: flag icons + language name dropdown
+  - components/voice/voice-clone-upload.tsx: drag-and-drop + tier gate lock
+  - hooks/use-voice-assignments.ts: TanStack Query for assignments + preview mutation

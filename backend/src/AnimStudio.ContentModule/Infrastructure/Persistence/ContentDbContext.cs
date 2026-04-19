@@ -28,6 +28,13 @@ public sealed class ContentDbContext : DbContext
     public DbSet<Storyboard> Storyboards => Set<Storyboard>();
     public DbSet<StoryboardShot> StoryboardShots => Set<StoryboardShot>();
 
+    // ── Phase 7 — Voice Studio ─────────────────────────────────────────────
+    public DbSet<VoiceAssignment> VoiceAssignments => Set<VoiceAssignment>();
+
+    // ── Phase 8 — Animation Studio ─────────────────────────────────────────
+    public DbSet<AnimationJob> AnimationJobs => Set<AnimationJob>();
+    public DbSet<AnimationClip> AnimationClips => Set<AnimationClip>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -180,13 +187,16 @@ public sealed class ContentDbContext : DbContext
             b.HasIndex(s => s.EpisodeId).IsUnique(); // one storyboard per episode
 
             // Aggregate ownership — shots load via backing field.
-            b.HasMany(typeof(StoryboardShot), "_shots")
+            // Map the public navigation property and instruct EF to use the
+            // private backing field for property access. Using the expression
+            // avoids EF inferring the field twice which caused the conflict.
+            b.HasMany(s => s.Shots)
                 .WithOne()
                 .HasForeignKey(nameof(StoryboardShot.StoryboardId))
                 .OnDelete(DeleteBehavior.Cascade);
 
             b.Metadata
-                .FindNavigation("_shots")!
+                .FindNavigation(nameof(Storyboard.Shots))!
                 .SetPropertyAccessMode(PropertyAccessMode.Field);
         });
 
@@ -207,6 +217,60 @@ public sealed class ContentDbContext : DbContext
             b.HasQueryFilter(s => !s.IsDeleted);
             b.HasIndex(s => s.StoryboardId);
             b.HasIndex(s => new { s.StoryboardId, s.SceneNumber, s.ShotIndex }).IsUnique();
+        });
+
+        // ── VoiceAssignment (Phase 7) ──────────────────────────────────────────
+        modelBuilder.Entity<VoiceAssignment>(b =>
+        {
+            b.ToTable("VoiceAssignments", "content");
+            b.HasKey(v => v.Id);
+            b.Property(v => v.Id).ValueGeneratedNever();
+            b.Property(v => v.EpisodeId).IsRequired();
+            b.Property(v => v.CharacterId).IsRequired();
+            b.Property(v => v.VoiceName).IsRequired().HasMaxLength(100);
+            b.Property(v => v.Language).IsRequired().HasMaxLength(10).HasDefaultValue("en-US");
+            b.Property(v => v.VoiceCloneUrl).HasMaxLength(2048);
+            b.Property(v => v.RowVersion).IsRowVersion();
+            b.HasIndex(v => v.EpisodeId);
+            b.HasIndex(v => new { v.EpisodeId, v.CharacterId }).IsUnique();
+        });
+
+        // ── AnimationJob (Phase 8) ─────────────────────────────────────────────
+        modelBuilder.Entity<AnimationJob>(b =>
+        {
+            b.ToTable("AnimationJobs", "content");
+            b.HasKey(j => j.Id);
+            b.Property(j => j.Id).ValueGeneratedNever();
+            b.Property(j => j.EpisodeId).IsRequired();
+            b.Property(j => j.Backend).HasConversion<string>().IsRequired().HasMaxLength(20);
+            b.Property(j => j.Status).HasConversion<string>().IsRequired().HasMaxLength(30);
+            b.Property(j => j.EstimatedCostUsd).HasPrecision(10, 4);
+            b.Property(j => j.ActualCostUsd).HasPrecision(10, 4);
+            b.Property(j => j.RowVersion).IsRowVersion();
+            b.HasQueryFilter(j => !j.IsDeleted);
+            b.HasIndex(j => j.EpisodeId);
+            b.HasIndex(j => j.Status);
+        });
+
+        // ── AnimationClip (Phase 8) ────────────────────────────────────────────
+        modelBuilder.Entity<AnimationClip>(b =>
+        {
+            b.ToTable("AnimationClips", "content");
+            b.HasKey(c => c.Id);
+            b.Property(c => c.Id).ValueGeneratedNever();
+            b.Property(c => c.EpisodeId).IsRequired();
+            b.Property(c => c.SceneNumber).IsRequired();
+            b.Property(c => c.ShotIndex).IsRequired();
+            b.Property(c => c.ClipUrl).HasMaxLength(2048);
+            b.Property(c => c.Status).HasConversion<string>().IsRequired().HasMaxLength(20);
+            b.Property(c => c.RowVersion).IsRowVersion();
+            b.HasQueryFilter(c => !c.IsDeleted);
+            b.HasIndex(c => c.EpisodeId);
+            b.HasIndex(c => new { c.EpisodeId, c.SceneNumber, c.ShotIndex }).IsUnique();
+            b.HasOne<StoryboardShot>()
+                .WithMany()
+                .HasForeignKey(c => c.StoryboardShotId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

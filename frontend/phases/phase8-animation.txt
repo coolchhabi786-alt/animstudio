@@ -1,0 +1,31 @@
+Build the Animation Studio with cost estimation and per-shot clip preview.
+
+DATABASE:
+  - AnimationJob (Id, EpisodeId, Backend[Kling|Local], EstimatedCostUsd,
+    ActualCostUsd, ApprovedByUserId, ApprovedAt, Status, CreatedAt)
+  - AnimationClip (Id, EpisodeId, SceneNumber, ShotIndex,
+    StoryboardShotId, ClipUrl, DurationSeconds, Status, CreatedAt)
+
+BACKEND:
+  - AnimationController:
+    GET /episodes/{id}/animation/estimate → shot count × backend rate, itemised breakdown
+    POST /episodes/{id}/animation → approve + enqueue (body: {backend: "kling"|"local"})
+    GET /episodes/{id}/animation → all clips with status
+    GET /episodes/{id}/animation/clips/{clipId} → signed Blob URL for a single clip
+  - AnimationEstimateService: counts shots from Storyboard, calculates cost
+  - Backend rates: kling=$0.056/clip, local=$0
+  - SignalR: ClipReady(episodeId, sceneNumber, shotIndex, clipUrl) per clip
+
+FRONTEND:
+  - studio/[id]/animation/page.tsx: Animation Studio
+    - Cost estimate card: backend selector (Kling / Local), itemised table
+      (scene × shots × rate), total cost, approve button
+    - Approval confirmation dialog with cost summary
+    - Progress: overall progress bar (clips done / total)
+    - Clip previews: accordion per scene, video player for each ready clip
+  - components/animation/cost-estimate-card.tsx: backend radio toggle,
+    shots breakdown table, total in bold, credits balance remaining
+  - components/animation/clip-player.tsx: video element, loop controls,
+    loading skeleton, error placeholder
+  - components/animation/approval-dialog.tsx: cost + shot count summary, confirm
+  - hooks/use-animation.ts: estimate query, approval mutation, SignalR ClipReady subscription

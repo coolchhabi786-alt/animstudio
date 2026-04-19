@@ -1,0 +1,35 @@
+Build the timeline editor for shot reordering, trimming, transitions, and music.
+
+DATABASE:
+  - TimelineTrack (Id, EpisodeId, TrackType[Video|Audio|Music|Text], SortOrder)
+  - TimelineClip (Id, TrackId, SourceId[AnimationClip or AudioTrack id],
+    StartMs, EndMs, TrimStartMs, TrimEndMs, TransitionIn[Cut|Fade|Dissolve],
+    TransitionDuration, SortOrder)
+  - MusicTrack (Id, TeamId, Name, Url, DurationSeconds, IsStock)
+  - TextOverlay (Id, EpisodeId, Text, FontSize, Color, PositionX, PositionY,
+    StartMs, EndMs, Animation[FadeIn|SlideUp|None])
+
+BACKEND:
+  - TimelineController:
+    GET /episodes/{id}/timeline → full timeline with all tracks + clips
+    PUT /episodes/{id}/timeline → save reordered/trimmed timeline
+    POST /episodes/{id}/timeline/preview → queue low-res preview render
+  - MusicController: GET /music/stock (10 curated tracks), POST /music/upload
+  - TextOverlayController: CRUD for text overlays
+  - TimelineRenderService: translates timeline model → ffmpeg filter graph commands
+
+FRONTEND:
+  - studio/[id]/timeline/page.tsx: Timeline Editor
+    - Top bar: play/pause, zoom in/out, undo/redo
+    - Track lanes: Video lane (shot thumbnails), Audio lane (waveform), Music lane, Text lane
+    - Drag-and-drop reorder via @dnd-kit/core
+    - Shot trimming: left/right handle drag on clips
+    - Transition selector: right-click clip → choose transition
+    - Music panel: stock track picker, volume slider, auto-duck toggle
+    - Text overlay panel: add title card, position, animation picker
+  - components/timeline/timeline-ruler.tsx: time markers with zoom
+  - components/timeline/clip-track.tsx: draggable clips with DndKit
+  - components/timeline/trim-handle.tsx: drag handles for trim
+  - components/timeline/music-panel.tsx: track list, volume, auto-duck
+  - components/timeline/text-overlay-panel.tsx: overlay form
+  - hooks/use-timeline.ts: timeline state (Zustand + server sync)

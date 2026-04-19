@@ -372,6 +372,22 @@ try
     builder.Services.AddScoped<AnimStudio.ContentModule.Application.Interfaces.IStoryboardShotNotifier,
         AnimStudio.API.Services.SignalRStoryboardShotNotifier>();
 
+    // ── Phase 7 — Voice Studio ─────────────────────────────────────────────────
+    // Register voice preview (Azure OpenAI TTS) and voice clone (stub) services
+    builder.Services.AddScoped<AnimStudio.ContentModule.Application.Interfaces.IVoicePreviewService,
+        AnimStudio.API.Services.VoicePreviewService>();
+    builder.Services.AddScoped<AnimStudio.ContentModule.Application.Interfaces.IVoiceCloneService,
+        AnimStudio.API.Services.VoiceCloneService>();
+
+    // ── Phase 8 — Animation Studio ─────────────────────────────────────────────
+    // Cost estimator, clip-URL signer, and SignalR notifier for ClipReady events.
+    builder.Services.AddScoped<AnimStudio.ContentModule.Application.Interfaces.IAnimationEstimateService,
+        AnimStudio.API.Services.AnimationEstimateService>();
+    builder.Services.AddScoped<AnimStudio.ContentModule.Application.Interfaces.IClipUrlSigner,
+        AnimStudio.API.Services.BlobClipUrlSigner>();
+    builder.Services.AddScoped<AnimStudio.ContentModule.Application.Interfaces.IAnimationClipNotifier,
+        AnimStudio.API.Services.SignalRAnimationClipNotifier>();
+
     // ─────────────────────────────────────────────────────────────────────────
     var app = builder.Build();
 

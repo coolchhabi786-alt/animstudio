@@ -1,0 +1,281 @@
+openapi: "3.1.0"
+info:
+  title: AnimStudio API — Phase 7 Voice Studio
+  version: "1.0.0"
+  description: Voice assignment, TTS preview, and voice cloning endpoints.
+
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local dev
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    BuiltInVoice:
+      type: string
+      enum: [Alloy, Echo, Fable, Onyx, Nova, Shimmer]
+      description: OpenAI TTS built-in voice names.
+
+    VoiceAssignmentDto:
+      type: object
+      required: [id, episodeId, characterId, characterName, voiceName, language, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        episodeId:
+          type: string
+          format: uuid
+        characterId:
+          type: string
+          format: uuid
+        characterName:
+          type: string
+          description: Denormalised from Character entity for display.
+        voiceName:
+          type: string
+          description: Built-in voice name or custom clone name.
+        language:
+          type: string
+          example: en-US
+        voiceCloneUrl:
+          type: string
+          nullable: true
+          description: Signed Blob URL to the custom voice clone audio sample (Studio tier only).
+        updatedAt:
+          type: string
+          format: date-time
+
+    VoiceAssignmentRequest:
+      type: object
+      required: [characterId, voiceName, language]
+      properties:
+        characterId:
+          type: string
+          format: uuid
+        voiceName:
+          type: string
+          maxLength: 100
+        language:
+          type: string
+          maxLength: 10
+          example: en-US
+        voiceCloneUrl:
+          type: string
+          nullable: true
+          maxLength: 2048
+
+    BatchUpdateVoicesRequest:
+      type: object
+      required: [assignments]
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: "#/components/schemas/VoiceAssignmentRequest"
+          minItems: 1
+          maxItems: 50
+
+    VoicePreviewRequest:
+      type: object
+      required: [text, voiceName]
+      properties:
+        text:
+          type: string
+          maxLength: 500
+          description: Text to synthesise (max 500 chars).
+        voiceName:
+          type: string
+          description: Built-in voice name to preview.
+        language:
+          type: string
+          default: en-US
+
+    VoicePreviewResponse:
+      type: object
+      required: [audioUrl, expiresAt]
+      properties:
+        audioUrl:
+          type: string
+          format: uri
+          description: Signed Blob URL to the TTS audio file (60-second expiry).
+        expiresAt:
+          type: string
+          format: date-time
+
+    VoiceCloneRequest:
+      type: object
+      required: [characterId]
+      properties:
+        characterId:
+          type: string
+          format: uuid
+        audioSampleUrl:
+          type: string
+          format: uri
+          description: URL to uploaded audio sample for voice cloning.
+
+    VoiceCloneResponse:
+      type: object
+      required: [voiceCloneUrl, status]
+      properties:
+        voiceCloneUrl:
+          type: string
+          format: uri
+        status:
+          type: string
+          enum: [Pending, Processing, Ready, Failed]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+
+paths:
+  /episodes/{id}/voices:
+    get:
+      operationId: getVoiceAssignments
+      summary: Get all character voice assignments for an episode
+      tags: [Voice]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Voice assignments for the episode.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VoiceAssignmentDto"
+        "404":
+          description: Episode not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized.
+        "403":
+          description: Forbidden — not a team member.
+
+    put:
+      operationId: batchUpdateVoiceAssignments
+      summary: Batch update voice assignments for an episode
+      tags: [Voice]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchUpdateVoicesRequest"
+      responses:
+        "200":
+          description: Updated voice assignments.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VoiceAssignmentDto"
+        "400":
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Episode or character not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized.
+        "403":
+          description: Forbidden.
+
+  /voices/preview:
+    post:
+      operationId: previewVoice
+      summary: Generate a TTS audio preview
+      description: Calls Azure OpenAI TTS, uploads to tmp Blob, returns a signed URL with 60-second expiry.
+      tags: [Voice]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoicePreviewRequest"
+      responses:
+        "200":
+          description: Audio preview URL.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoicePreviewResponse"
+        "400":
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized.
+
+  /voices/clone:
+    post:
+      operationId: cloneVoice
+      summary: Upload audio sample for voice cloning (Studio tier only)
+      description: Initiates a voice cloning process using the uploaded audio sample. Requires Studio subscription tier.
+      tags: [Voice]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoiceCloneRequest"
+      responses:
+        "202":
+          description: Voice cloning initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoiceCloneResponse"
+        "400":
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Studio tier required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized.

@@ -41,6 +41,13 @@ public sealed class ContentModuleRegistration : IModuleRegistration
         // Phase 6 — Storyboard Studio
         services.AddScoped<IStoryboardRepository, StoryboardRepository>();
 
+        // Phase 7 — Voice Studio
+        services.AddScoped<IVoiceAssignmentRepository, VoiceAssignmentRepository>();
+
+        // Phase 8 — Animation Studio
+        services.AddScoped<IAnimationJobRepository, AnimationJobRepository>();
+        services.AddScoped<IAnimationClipRepository, AnimationClipRepository>();
+
         // ── FluentValidation — scan this module's validators ───────────────────
         services.AddValidatorsFromAssembly(typeof(ContentModuleRegistration).Assembly, includeInternalTypes: true);
     }

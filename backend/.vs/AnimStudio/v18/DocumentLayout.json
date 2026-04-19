@@ -3,6 +3,18 @@
   "WorkspaceRootPath": "C:\\Projects\\animstudio\\backend\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{298DC340-F0C8-4669-94CB-C9BA98684CDE}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\hosted\\recurringjobshostedservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{298DC340-F0C8-4669-94CB-C9BA98684CDE}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\hosted\\recurringjobshostedservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{298DC340-F0C8-4669-94CB-C9BA98684CDE}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\controllers\\projectscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{298DC340-F0C8-4669-94CB-C9BA98684CDE}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\controllers\\projectscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{298DC340-F0C8-4669-94CB-C9BA98684CDE}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\controllers\\storyboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{298DC340-F0C8-4669-94CB-C9BA98684CDE}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\controllers\\storyboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{05CAFCF7-4116-4599-8180-E16D75394C6C}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.sharedkernel\\persistence\\migrations\\shareddbcontextmodelsnapshot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{05CAFCF7-4116-4599-8180-E16D75394C6C}|src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj|solutionrelative:src\\animstudio.sharedkernel\\persistence\\migrations\\shareddbcontextmodelsnapshot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -41,10 +53,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{7C73A20A-2198-41B7-A331-CAC1F87AB5AD}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.identitymodule\\infrastructure\\repositories\\subscriptionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{7C73A20A-2198-41B7-A331-CAC1F87AB5AD}|src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj|solutionrelative:src\\animstudio.identitymodule\\infrastructure\\repositories\\subscriptionrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{298DC340-F0C8-4669-94CB-C9BA98684CDE}|src\\AnimStudio.API\\AnimStudio.API.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.api\\hosted\\recurringjobshostedservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{298DC340-F0C8-4669-94CB-C9BA98684CDE}|src\\AnimStudio.API\\AnimStudio.API.csproj|solutionrelative:src\\animstudio.api\\hosted\\recurringjobshostedservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Projects\\animstudio\\backend\\scripts\\seed-dev-data.sql||{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}",
@@ -225,6 +233,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{9BAFACA8-8744-45CE-B9E3-EF9C283403F7}|src\\AnimStudio.ContentModule\\AnimStudio.ContentModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.contentmodule\\migrations\\20260410120000_phase5script.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9BAFACA8-8744-45CE-B9E3-EF9C283403F7}|src\\AnimStudio.ContentModule\\AnimStudio.ContentModule.csproj|solutionrelative:src\\animstudio.contentmodule\\migrations\\20260410120000_phase5script.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9BAFACA8-8744-45CE-B9E3-EF9C283403F7}|src\\AnimStudio.ContentModule\\AnimStudio.ContentModule.csproj|c:\\projects\\animstudio\\backend\\src\\animstudio.contentmodule\\infrastructure\\persistence\\contentdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9BAFACA8-8744-45CE-B9E3-EF9C283403F7}|src\\AnimStudio.ContentModule\\AnimStudio.ContentModule.csproj|solutionrelative:src\\animstudio.contentmodule\\infrastructure\\persistence\\contentdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -234,35 +246,37 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "IdentityDbContextModelSnapshot.cs",
-              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Infrastructure\\Persistence\\Migrations\\IdentityDbContextModelSnapshot.cs",
-              "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Infrastructure\\Persistence\\Migrations\\IdentityDbContextModelSnapshot.cs",
-              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Infrastructure\\Persistence\\Migrations\\IdentityDbContextModelSnapshot.cs",
-              "RelativeToolTip": "src\\AnimStudio.IdentityModule\\Infrastructure\\Persistence\\Migrations\\IdentityDbContextModelSnapshot.cs",
-              "ViewState": "AgIAAKAAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Title": "ProjectsController.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\ProjectsController.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Controllers\\ProjectsController.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\ProjectsController.cs",
+              "RelativeToolTip": "src\\AnimStudio.API\\Controllers\\ProjectsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-14T15:15:36.512Z",
+              "WhenOpened": "2026-04-18T04:07:10.902Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "seed-dev-data-delta.sql",
-              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\scripts\\seed-dev-data-delta.sql",
-              "RelativeDocumentMoniker": "scripts\\seed-dev-data-delta.sql",
-              "ToolTip": "C:\\Projects\\animstudio\\backend\\scripts\\seed-dev-data-delta.sql",
-              "RelativeToolTip": "scripts\\seed-dev-data-delta.sql",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2026-04-12T08:46:05.589Z"
+              "DocumentIndex": 2,
+              "Title": "StoryboardController.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\StoryboardController.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Controllers\\StoryboardController.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\StoryboardController.cs",
+              "RelativeToolTip": "src\\AnimStudio.API\\Controllers\\StoryboardController.cs",
+              "ViewState": "AgIAAEUAAAAAAAAAAAAYwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-18T04:04:52.115Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 55,
+              "DocumentIndex": 57,
               "Title": "20260410120000_Phase5Script.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Migrations\\20260410120000_Phase5Script.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Migrations\\20260410120000_Phase5Script.cs",
@@ -274,7 +288,32 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 54,
+              "DocumentIndex": 0,
+              "Title": "RecurringJobsHostedService.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
+              "RelativeToolTip": "src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAawBIAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-05T11:36:23.904Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 58,
+              "Title": "ContentDbContext.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Infrastructure\\Persistence\\ContentDbContext.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Infrastructure\\Persistence\\ContentDbContext.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Infrastructure\\Persistence\\ContentDbContext.cs",
+              "RelativeToolTip": "src\\AnimStudio.ContentModule\\Infrastructure\\Persistence\\ContentDbContext.cs",
+              "ViewState": "AgIAAL8AAAAAAAAAAIBJwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-18T04:12:29.822Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 56,
               "Title": "ContentDbContextModelSnapshot.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Migrations\\ContentDbContextModelSnapshot.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Migrations\\ContentDbContextModelSnapshot.cs",
@@ -286,7 +325,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "SharedDbContextModelSnapshot.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\SharedDbContextModelSnapshot.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\SharedDbContextModelSnapshot.cs",
@@ -294,12 +333,34 @@
               "RelativeToolTip": "src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\SharedDbContextModelSnapshot.cs",
               "ViewState": "AgIAAEAAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-03T14:03:14.58Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-03T14:03:14.58Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 10,
+              "Title": "seed-dev-data-delta.sql",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\scripts\\seed-dev-data-delta.sql",
+              "RelativeDocumentMoniker": "scripts\\seed-dev-data-delta.sql",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\scripts\\seed-dev-data-delta.sql",
+              "RelativeToolTip": "scripts\\seed-dev-data-delta.sql",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-04-12T08:46:05.589Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "IdentityDbContextModelSnapshot.cs",
+              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Infrastructure\\Persistence\\Migrations\\IdentityDbContextModelSnapshot.cs",
+              "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Infrastructure\\Persistence\\Migrations\\IdentityDbContextModelSnapshot.cs",
+              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Infrastructure\\Persistence\\Migrations\\IdentityDbContextModelSnapshot.cs",
+              "RelativeToolTip": "src\\AnimStudio.IdentityModule\\Infrastructure\\Persistence\\Migrations\\IdentityDbContextModelSnapshot.cs",
+              "ViewState": "AgIAAKAAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-14T15:15:36.512Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Program.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Program.cs",
@@ -311,7 +372,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 7,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\appsettings.json",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\appsettings.json",
@@ -323,7 +384,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "CharactersController.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\CharactersController.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Controllers\\CharactersController.cs",
@@ -336,7 +397,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 8,
               "Title": "20260405075112_Phase3Templates.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Migrations\\20260405075112_Phase3Templates.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Migrations\\20260405075112_Phase3Templates.cs",
@@ -348,7 +409,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 9,
               "Title": "20260405120000_Phase4Characters.Designer.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Migrations\\20260405120000_Phase4Characters.Designer.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Migrations\\20260405120000_Phase4Characters.Designer.cs",
@@ -360,7 +421,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 53,
+              "DocumentIndex": 55,
               "Title": "20260410120000_Phase5Script.Designer.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Migrations\\20260410120000_Phase5Script.Designer.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Migrations\\20260410120000_Phase5Script.Designer.cs",
@@ -372,7 +433,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 11,
               "Title": "ContentModuleRegistration.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\ContentModuleRegistration.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\ContentModuleRegistration.cs",
@@ -384,7 +445,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 19,
               "Title": "ICharacterRepository.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Application\\Interfaces\\ICharacterRepository.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Application\\Interfaces\\ICharacterRepository.cs",
@@ -396,7 +457,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 16,
               "Title": "GetSubscriptionQueryHandler.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Queries\\GetSubscription\\GetSubscriptionQueryHandler.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Application\\Queries\\GetSubscription\\GetSubscriptionQueryHandler.cs",
@@ -408,7 +469,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 14,
               "Title": "BillingController.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\BillingController.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Controllers\\BillingController.cs",
@@ -416,23 +477,12 @@
               "RelativeToolTip": "src\\AnimStudio.API\\Controllers\\BillingController.cs",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAABUAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-04T06:38:30.135Z"
+              "WhenOpened": "2026-04-04T06:38:30.135Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "RecurringJobsHostedService.cs",
-              "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
-              "RelativeDocumentMoniker": "src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
-              "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
-              "RelativeToolTip": "src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAABIAAAAMAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-05T11:36:23.904Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 12,
               "Title": "SubscriptionRepository.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Infrastructure\\Repositories\\SubscriptionRepository.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Infrastructure\\Repositories\\SubscriptionRepository.cs",
@@ -440,11 +490,12 @@
               "RelativeToolTip": "src\\AnimStudio.IdentityModule\\Infrastructure\\Repositories\\SubscriptionRepository.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-11T13:20:40.621Z"
+              "WhenOpened": "2026-04-11T13:20:40.621Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 13,
               "Title": "seed-dev-data.sql",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\scripts\\seed-dev-data.sql",
               "RelativeDocumentMoniker": "scripts\\seed-dev-data.sql",
@@ -455,7 +506,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 20,
               "Title": "IDomainEvent.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\IDomainEvent.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\IDomainEvent.cs",
@@ -467,7 +518,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 15,
               "Title": "DevAuthHandler.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Authentication\\DevAuthHandler.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Authentication\\DevAuthHandler.cs",
@@ -475,11 +526,12 @@
               "RelativeToolTip": "src\\AnimStudio.API\\Authentication\\DevAuthHandler.cs",
               "ViewState": "AgIAAAgAAAAAAAAAAAApwBgAAABcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-05T07:24:25.494Z"
+              "WhenOpened": "2026-04-05T07:24:25.494Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 17,
               "Title": "ITemplateRepositories.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Application\\Interfaces\\ITemplateRepositories.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Application\\Interfaces\\ITemplateRepositories.cs",
@@ -491,7 +543,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 18,
               "Title": "ICharacterProgressNotifier.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Application\\Interfaces\\ICharacterProgressNotifier.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Application\\Interfaces\\ICharacterProgressNotifier.cs",
@@ -503,7 +555,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 21,
               "Title": "PipelineStage.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Enums\\PipelineStage.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Enums\\PipelineStage.cs",
@@ -515,7 +567,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 22,
               "Title": "DomainEvent.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Events\\DomainEvent.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Events\\DomainEvent.cs",
@@ -527,7 +579,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 52,
+              "DocumentIndex": 54,
               "Title": ".gitignore",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\.gitignore",
               "RelativeDocumentMoniker": ".gitignore",
@@ -539,7 +591,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 23,
               "Title": "CharacterProgressHub.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hubs\\CharacterProgressHub.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Hubs\\CharacterProgressHub.cs",
@@ -551,7 +603,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 27,
               "Title": "AuthController.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Controllers\\AuthController.cs",
@@ -563,7 +615,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 26,
               "Title": "ValidationExceptionFilter.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Filters\\ValidationExceptionFilter.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Filters\\ValidationExceptionFilter.cs",
@@ -575,7 +627,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 25,
               "Title": "CompletionMessageProcessor.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\CompletionMessageProcessor.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Hosted\\CompletionMessageProcessor.cs",
@@ -587,7 +639,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 24,
               "Title": "DeadLetterProcessor.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\DeadLetterProcessor.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Hosted\\DeadLetterProcessor.cs",
@@ -599,7 +651,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 28,
               "Title": "AnalyticsModuleRegistration.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.AnalyticsModule\\AnalyticsModuleRegistration.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.AnalyticsModule\\AnalyticsModuleRegistration.cs",
@@ -611,7 +663,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 31,
               "Title": "ContentQueries.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Application\\Queries\\ContentQueries.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Application\\Queries\\ContentQueries.cs",
@@ -623,7 +675,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 30,
               "Title": "UpdateProjectCommand.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Application\\Commands\\UpdateProject\\UpdateProjectCommand.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Application\\Commands\\UpdateProject\\UpdateProjectCommand.cs",
@@ -635,7 +687,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 29,
               "Title": "UpdateSubscriptionCommandHandler.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Commands\\UpdateSubscription\\UpdateSubscriptionCommandHandler.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Application\\Commands\\UpdateSubscription\\UpdateSubscriptionCommandHandler.cs",
@@ -647,7 +699,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 34,
               "Title": "20260403121239_InitialCreate.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\20260403121239_InitialCreate.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Persistence\\Migrations\\20260403121239_InitialCreate.cs",
@@ -659,7 +711,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 33,
               "Title": "SharedDbContext.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Persistence\\SharedDbContext.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Persistence\\SharedDbContext.cs",
@@ -671,7 +723,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 32,
               "Title": "DeliveryModuleRegistration.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.DeliveryModule\\DeliveryModuleRegistration.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.DeliveryModule\\DeliveryModuleRegistration.cs",
@@ -683,7 +735,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 35,
               "Title": "UsersController.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Controllers\\UsersController.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Controllers\\UsersController.cs",
@@ -695,7 +747,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 36,
               "Title": "CachingBehaviour.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\CachingBehaviour.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Behaviours\\CachingBehaviour.cs",
@@ -707,7 +759,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 37,
               "Title": "Result.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Result.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Result.cs",
@@ -719,7 +771,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 38,
               "Title": "ValidationBehaviour.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\ValidationBehaviour.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Behaviours\\ValidationBehaviour.cs",
@@ -731,7 +783,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 39,
               "Title": "AnimStudio.IdentityModule.csproj",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj",
               "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\AnimStudio.IdentityModule.csproj",
@@ -743,7 +795,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 40,
               "Title": "AnimStudio.SharedKernel.csproj",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\AnimStudio.SharedKernel.csproj",
@@ -755,7 +807,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 41,
               "Title": "PipelineStage.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.ContentModule\\Domain\\PipelineStage.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.ContentModule\\Domain\\PipelineStage.cs",
@@ -767,7 +819,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 42,
               "Title": "TransactionBehaviour.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\TransactionBehaviour.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Behaviours\\TransactionBehaviour.cs",
@@ -779,7 +831,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 43,
               "Title": "IdentityModuleRegistration.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\IdentityModuleRegistration.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\IdentityModuleRegistration.cs",
@@ -791,7 +843,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 44,
               "Title": "UsageResetJob.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Jobs\\UsageResetJob.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Jobs\\UsageResetJob.cs",
@@ -803,7 +855,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 43,
+              "DocumentIndex": 45,
               "Title": "AcceptTeamInviteCommandValidator.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandValidator.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandValidator.cs",
@@ -815,7 +867,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 44,
+              "DocumentIndex": 46,
               "Title": "AcceptTeamInviteCommandHandler.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandHandler.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommandHandler.cs",
@@ -827,7 +879,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 45,
+              "DocumentIndex": 47,
               "Title": "AcceptTeamInviteCommand.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommand.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.IdentityModule\\Application\\Commands\\AcceptTeamInvite\\AcceptTeamInviteCommand.cs",
@@ -839,7 +891,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 46,
+              "DocumentIndex": 48,
               "Title": "AggregateRoot.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\AggregateRoot.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\AggregateRoot.cs",
@@ -851,7 +903,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 47,
+              "DocumentIndex": 49,
               "Title": "PurgeDeletedEntitiesJob.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Jobs\\PurgeDeletedEntitiesJob.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Jobs\\PurgeDeletedEntitiesJob.cs",
@@ -863,7 +915,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 48,
+              "DocumentIndex": 50,
               "Title": "OutboxPublisherJob.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Jobs\\OutboxPublisherJob.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Jobs\\OutboxPublisherJob.cs",
@@ -875,7 +927,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 49,
+              "DocumentIndex": 51,
               "Title": "DeadLetterRetryJob.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Jobs\\DeadLetterRetryJob.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Jobs\\DeadLetterRetryJob.cs",
@@ -887,7 +939,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 50,
+              "DocumentIndex": 52,
               "Title": "LoggingBehaviour.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\LoggingBehaviour.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Behaviours\\LoggingBehaviour.cs",
@@ -899,7 +951,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 51,
+              "DocumentIndex": 53,
               "Title": "CorrelationIdBehaviour.cs",
               "DocumentMoniker": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.SharedKernel\\Behaviours\\CorrelationIdBehaviour.cs",
               "RelativeDocumentMoniker": "src\\AnimStudio.SharedKernel\\Behaviours\\CorrelationIdBehaviour.cs",

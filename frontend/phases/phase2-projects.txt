@@ -1,0 +1,163 @@
+﻿Build the project and episode management system with real-time job tracking.
+All entities belong to AnimStudio.ContentModule (Domain/Application/Infrastructure).
+ContentDbContext uses schema prefix content.*
+EpisodeSagaState (from SharedKernel) is stored in shared.SagaStates.
+
+=== DATABASE ADDITIONS (ContentModule) ===
+
+content.Projects:
+  Id[Guid], TeamId[Guid FK -> identity.Teams], Name, Description,
+  ThumbnailUrl, CreatedAt, UpdatedAt, IsDeleted, DeletedAt, DeletedByUserId
+
+content.Episodes:
+  Id[Guid], ProjectId[Guid FK], Name, Idea, Style,
+  Status[EpisodeStatus enum], TemplateId[nullable],
+  CharacterIds[JSON array of Guid], DirectorNotes,
+  CreatedAt, UpdatedAt, RenderedAt, IsDeleted, DeletedAt, DeletedByUserId
+
+content.Jobs:
+  Id[Guid], EpisodeId[Guid FK], Type[JobType enum],
+  Status[Pending|Running|Completed|Failed],
+  Payload[JSON], Result[JSON], ErrorMessage,
+  QueuedAt, StartedAt, CompletedAt, AttemptNumber
+
+shared.SagaStates:
+  Id[Guid], EpisodeId[Guid], CurrentStage[PipelineStage enum],
+  RetryCount, LastError, StartedAt, UpdatedAt, IsCompensating[bool]
+
+Enums:
+  EpisodeStatus: Idle, CharacterDesign, LoraTraining, Script,
+    Storyboard, Voice, Animation, PostProduction, Done, Failed
+  JobType: CharacterDesign, LoraTraining, Script, StoryboardPlan,
+    StoryboardGen, Voice, Animation, PostProd
+  PipelineStage (SharedKernel): same values as EpisodeStatus, used in SagaState
+
+=== BACKEND (AnimStudio.ContentModule) ===
+
+Domain/:
+  Project aggregate (extends AggregateRoot<Guid>):
+    factory: Project.Create(teamId, name, description) -> raises ProjectCreatedEvent
+  Episode aggregate (extends AggregateRoot<Guid>):
+    factory: Episode.Create(projectId, name, idea, style) -> raises EpisodeCreatedEvent
+    methods: Advance(stage), Fail(error), Retry(), Complete()
+      each raises: EpisodeStageAdvancedEvent, EpisodeFailedEvent, EpisodeCompletedEvent
+  Job entity (extends Entity<Guid>): Start(), Complete(result), Fail(error)
+  Domain Events (all IDomainEvent):
+    ProjectCreatedEvent, EpisodeCreatedEvent, EpisodeStageAdvancedEvent,
+    EpisodeFailedEvent, EpisodeCompletedEvent, JobQueuedEvent, JobCompletedEvent
+
+Application/:
+  Commands:
+    CreateProject -> returns ProjectDto
+    UpdateProject -> returns ProjectDto
+    DeleteProject (soft delete)
+    CreateEpisode -> returns EpisodeDto
+    DispatchEpisodeJob(episodeId, stage) -> returns JobDto
+      -- JobDispatcherService (atomic dispatch):
+         BEGIN TRANSACTION (via TransactionBehaviour)
+         1. Validate episode status allows this stage
+         2. Create Job row (Status=Pending)
+         3. Update EpisodeSagaState.CurrentStage
+         4. Create OutboxMessage for JobQueuedEvent (serialized Service Bus payload)
+         5. COMMIT -- Service Bus message published by OutboxPublisherJob within 1 minute
+         NOTE: Service Bus MessageId = "{episodeId}-{jobType}-{attempt}"
+               for idempotent delivery; Python engine deduplicates on its side
+    HandleJobCompletion(messageId, result, jobType) -> void
+      -- Called by CompletionMessageProcessor when SB completion arrives:
+         1. Find Job by MessageId pattern
+         2. Mark Job as Completed, store result JSON
+         3. Advance Episode.Status to next stage (domain event)
+         4. Update EpisodeSagaState.CurrentStage
+         5. If stage == Done: mark Episode as Done
+         6. If failed: EpisodeFailedEvent -> SagaState.IsCompensating = true, log
+  Queries:
+    GetProject(id) -> ProjectDto
+    GetProjects(teamId, page, pageSize) -> PaginatedList<ProjectDto>
+    GetEpisode(id) -> EpisodeDto
+    GetEpisodes(projectId) -> List<EpisodeDto>
+    GetJob(id) -> JobDto
+    GetSagaState(episodeId) -> SagaStateDto
+  DTOs: ProjectDto, EpisodeDto, JobDto, SagaStateDto
+  ContentModuleRegistration: IModuleRegistration
+
+Infrastructure/:
+  ContentDbContext (schema: content.*):
+    DbSets: Projects, Episodes, Jobs
+    Separate DbSet on shared schema: SagaStates
+    Global query filters: !IsDeleted on Project and Episode
+    Concurrency: RowVersion on Episode (optimistic lock during stage transitions)
+  Repos: ProjectRepository, EpisodeRepository, JobRepository, SagaStateRepository
+  CompletionMessageProcessor (IHostedService):
+    Azure Service Bus processor on "completions" queue
+    On message: deserialize -> send HandleJobCompletion command via MediatR
+    On error: abandon message (SB retries up to maxDeliveryCount=3)
+    On DLQ: move to deadletter-retry queue for DeadLetterRetryJob
+
+=== BACKEND: API Layer ===
+All controllers: [ApiVersion("1.0")], [Authorize], [RequireTeamMember]
+
+ProjectsController:
+  POST   /api/v1/projects                    -> 201 Created + ProjectDto
+  GET    /api/v1/projects                    -> 200 PaginatedList<ProjectDto>
+  GET    /api/v1/projects/{id}               -> 200 ProjectDto
+  PUT    /api/v1/projects/{id}               -> 200 ProjectDto
+  DELETE /api/v1/projects/{id}               -> 204 No Content [RequireTeamEditor]
+
+EpisodesController:
+  POST   /api/v1/projects/{pid}/episodes     -> 201 EpisodeDto
+  GET    /api/v1/projects/{pid}/episodes     -> 200 List<EpisodeDto>
+  GET    /api/v1/episodes/{id}               -> 200 EpisodeDto
+  GET    /api/v1/episodes/{id}/saga          -> 200 SagaStateDto (current pipeline status)
+  POST   /api/v1/episodes/{id}/dispatch      -> 202 Accepted + JobDto [SubscriptionGate]
+  DELETE /api/v1/episodes/{id}               -> 204 [RequireTeamEditor]
+
+JobsController:
+  GET    /api/v1/jobs/{id}                   -> 200 JobDto
+
+=== SignalR (ProgressHub -- full implementation in Phase 2) ===
+Client connects and joins group: episode-{episodeId}
+Server methods sent to group:
+  ProgressUpdate(episodeId, stage, percentComplete, message)
+    -- triggered by EpisodeStageAdvancedEvent handler
+  RenderProgress(episodeId, percentComplete, currentStage)
+    -- triggered by PostProd stage progress messages
+  RenderComplete(episodeId, cdnUrl)
+    -- triggered by EpisodeCompletedEvent handler
+  EpisodeFailed(episodeId, stage, errorMessage)
+    -- triggered by EpisodeFailedEvent handler
+Server sends to group team-{teamId}:
+  CharacterTrainingUpdate(characterId, status, percentComplete, stage) [Phase 4]
+
+=== FRONTEND ===
+dashboard/page.tsx:
+  Responsive project card grid, create project modal, empty state illustration,
+  usage meter (episodes this month / limit), subscription tier badge
+
+projects/[id]/page.tsx:
+  Episode list with stage progress badges, create episode button,
+  episode status colour coding (Idle=grey, In-Progress=blue, Done=green, Failed=red)
+
+projects/[id]/episodes/[episodeId]/page.tsx:
+  Episode wizard shell with 7-step left-nav stepper:
+  (Characters, Script, Storyboard, Voice, Animation, Render, Done)
+  Step locking: cannot advance past current stage manually
+  Current step highlighted, completed steps show green tick
+
+components/episode/progress-stepper.tsx:
+  Vertical step list, stage icons, status colours, animated spinner for active stage
+
+components/episode/job-progress-toast.tsx:
+  SignalR-driven sticky toast bar with stage name + progress bar
+  Auto-dismisses on completion or error state
+
+hooks/use-signalr.ts:
+  @microsoft/signalr HubConnection lifecycle -- connect on mount, disconnect on unmount,
+  reconnect with exponential backoff, expose connection state (Connected/Connecting/Failed)
+
+hooks/use-episode-progress.ts:
+  Subscribes to ProgressUpdate + EpisodeFailed via use-signalr
+  Updates TanStack Query cache for episode status on each event
+
+hooks/use-projects.ts:  TanStack Query CRUD for projects
+hooks/use-episodes.ts:  TanStack Query CRUD for episodes
+hooks/use-saga-state.ts: TanStack Query polling for saga state (fallback if SignalR down)

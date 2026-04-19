@@ -1,0 +1,41 @@
+Build creator analytics, admin dashboard, usage metering, and notifications.
+
+DATABASE:
+  - VideoView (Id, EpisodeId, RenderId, ViewerIp[hashed], ViewedAt, Source[Direct|Embed|Review])
+  - Notification (Id, UserId, Type[JobComplete|TeamInvite|BillingAlert|SystemMessage],
+    Title, Body, IsRead, CreatedAt, RelatedEntityId, RelatedEntityType)
+  - Update Subscription: add UsageEpisodesThisMonth, UsageResetAt
+
+BACKEND:
+  - AnalyticsController:
+    GET /episodes/{id}/analytics → view count, shares, render count, export count
+    GET /teams/{id}/analytics → aggregate: total episodes, total views, avg render time
+  - AdminController (requires AdminRole claim):
+    GET /admin/stats → DAU/MAU, job queue depth, avg processing time per stage,
+      cost per episode, error rate per stage, active subscriptions by tier
+    GET /admin/users → user list with subscription tier (paginated, searchable)
+    GET /admin/jobs → recent job list with status + processing time
+  - NotificationController:
+    GET /notifications → current user notifications (paginated)
+    PATCH /notifications/{id}/read → mark read
+    PATCH /notifications/read-all → mark all read
+  - UsageMeteringService: increments UsageEpisodesThisMonth on Job completion,
+    enforces limits, sends BillingAlert notification at 80% + 100%
+  - VideoViewTrackingService: records view events from CDN logs (webhook)
+  - Hosted background service: reset usage counters on subscription period renewal
+
+FRONTEND:
+  - studio/[id]/analytics/page.tsx: video analytics per episode
+    - View count, unique viewers, view-over-time sparkline
+    - Share count, embed count
+    - Top referring sources
+  - admin/page.tsx: Admin dashboard (Studio tier billing users only)
+    - Metric cards: MAU, active subscriptions by tier, jobs today, avg render time
+    - Job queue table: recent jobs with status, stage, duration
+    - Cost metrics: avg cost per episode by tier
+  - components/analytics/metric-card.tsx: stat + trend arrow
+  - components/analytics/sparkline.tsx: lightweight SVG sparkline
+  - components/notifications/notification-bell.tsx: top-bar bell icon with unread badge
+  - components/notifications/notification-panel.tsx: slide-out panel, mark read
+  - hooks/use-notifications.ts: TanStack Query polling + mark-read mutations
+  - hooks/use-analytics.ts: TanStack Query for episode + team analytics

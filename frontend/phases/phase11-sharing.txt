@@ -1,0 +1,39 @@
+Build review links, comment threads, YouTube publishing, and brand kit.
+
+DATABASE:
+  - ReviewLink (Id, EpisodeId, RenderId, Token[unique], ExpiresAt,
+    IsRevoked, Password[nullable, hashed], CreatedByUserId, CreatedAt)
+  - ReviewComment (Id, ReviewLinkId, AuthorName, Text, TimestampSeconds,
+    CreatedAt, IsResolved)
+  - BrandKit (Id, TeamId, LogoUrl, PrimaryColor, SecondaryColor,
+    WatermarkPosition[BottomRight|BottomLeft|TopRight], WatermarkOpacity)
+  - SocialPublish (Id, EpisodeId, RenderId, Platform[YouTube],
+    ExternalVideoId, Status, PublishedAt)
+
+BACKEND:
+  - ReviewController:
+    POST /renders/{id}/review-links → create review link (Pro/Studio tier)
+    GET /review/{token} → validate token + return render info (no auth needed)
+    GET /review/{token}/comments → list comments (no auth)
+    POST /review/{token}/comments → add timestamped comment (no auth)
+    PATCH /review/{token}/comments/{id}/resolve → mark resolved (creator only)
+  - BrandKitController: GET/PUT /teams/{id}/brand-kit, POST /brand-kit/logo (upload)
+  - PublishController:
+    POST /renders/{id}/publish/youtube → OAuth flow start (Studio tier)
+    GET /publish/youtube/callback → OAuth callback, upload via YouTube Data API v3
+  - WatermarkService: applies brand logo overlay in post-production render pipeline
+
+FRONTEND:
+  - studio/[id]/share/page.tsx: Sharing page
+    - Review link generator: expiry date picker, optional password, copy button
+    - Active links list: URL, created date, comment count, revoke button
+    - YouTube publish section (Studio tier): connect account CTA, publish button
+    - Watermark settings: enable toggle, position picker, opacity slider (-> brand kit)
+  - review/[token]/page.tsx: Public review page (no auth)
+    - Full video player with timestamp comment markers on progress bar
+    - Comment panel: add comment at current time, list sorted by timestamp
+  - components/share/review-link-card.tsx: link URL, copy, QR code, revoke
+  - components/share/comment-panel.tsx: comment list + input with current time
+  - components/share/publish-youtube.tsx: OAuth connect status, publish form
+  - hooks/use-review.ts: public review data + comment mutations (no auth)
+  - hooks/use-brand-kit.ts: TanStack Query for brand kit + logo upload mutation

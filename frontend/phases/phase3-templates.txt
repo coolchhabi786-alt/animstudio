@@ -1,0 +1,28 @@
+Build the template and visual style library to help users start quickly.
+
+DATABASE:
+  - Genre enum: Kids, Comedy, Drama, Horror, Romance, SciFi, Marketing, Fantasy
+  - Style enum: Pixar3D, Anime, WatercolorIllustration, ComicBook, Realistic,
+    PhotoStorybook, RetroCartoon, Cyberpunk
+  - EpisodeTemplate (Id, Title, Genre, Description, PlotStructure[JSON],
+    DefaultStyle, PreviewVideoUrl, ThumbnailUrl, IsActive, SortOrder)
+  - StylePreset (Id, Style, DisplayName, Description, SampleImageUrl,
+    FluxStylePromptSuffix, IsActive)
+  - Update Episode entity: add TemplateId[FK optional], Style[StyleEnum]
+
+BACKEND:
+  - TemplatesController: GET /templates (filterable by genre),
+    GET /templates/{id}, GET /styles
+  - TemplateService: returns templates with style presets
+  - Seed data: 8 templates (KidsSuperhero, FamilyComedy, MysteryThrillerShort,
+    RomanceVignette, HorrorShort, SciFiAction, ProductAdvert, BrandStory)
+    and 8 style presets with Flux prompt suffixes
+
+FRONTEND:
+  - episodes/new/page.tsx: 2-column layout — left: idea input + template picker,
+    right: style swatches grid with sample renders
+  - components/template/template-gallery.tsx: genre filter tabs, template cards
+    with preview video thumbnail, hover-plays video
+  - components/template/style-picker.tsx: responsive swatch grid, selected border
+  - components/template/template-card.tsx: thumbnail, title, genre badge, select CTA
+  - hooks/use-templates.ts: TanStack Query for templates + styles

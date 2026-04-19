@@ -1,0 +1,29 @@
+Build the Storyboard Studio with per-shot regeneration.
+
+DATABASE:
+  - Storyboard (Id, EpisodeId, RawJson[JSON], CreatedAt, UpdatedAt)
+  - StoryboardShot (Id, StoryboardId, SceneNumber, ShotIndex,
+    ImageUrl, Description, StyleOverride, RegenerationCount, UpdatedAt)
+
+BACKEND:
+  - StoryboardController:
+    POST /episodes/{id}/storyboard → enqueue storyboard planning + generation
+    GET /episodes/{id}/storyboard → return storyboard with all shots
+    POST /storyboard/shots/{shotId}/regenerate → re-queue single shot
+    PUT /storyboard/shots/{shotId}/style → update StyleOverride then re-queue
+  - StoryboardDto: maps to frontend-friendly structure
+  - Shot regeneration increments RegenerationCount (warn if > 3: credits)
+  - SignalR: ShotUpdated(shotId, newImageUrl) pushed on completion
+
+FRONTEND:
+  - studio/[id]/storyboard/page.tsx: Storyboard Studio
+    - Scene tab navigation (Scene 1, Scene 2, ...)
+    - Shot grid: up to 5 shots per scene, image cards in a responsive grid
+    - Each card: image thumbnail, shot description caption, regenerate button,
+      style override button
+    - Full-screen modal: shot image, description, zoom, prev/next navigation
+  - components/storyboard/shot-grid.tsx: responsive CSS grid, loading skeleton per slot
+  - components/storyboard/shot-card.tsx: image, caption, action buttons (regen, style)
+  - components/storyboard/shot-viewer-modal.tsx: full-screen lightbox with arrows
+  - components/storyboard/style-override-popover.tsx: style picker for individual shot
+  - hooks/use-storyboard.ts: TanStack Query + SignalR ShotUpdated subscription

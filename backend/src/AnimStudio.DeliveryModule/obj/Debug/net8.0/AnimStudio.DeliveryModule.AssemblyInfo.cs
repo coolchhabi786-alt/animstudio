@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AnimStudio.DeliveryModule")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2ac4c85a9b5c411be4d2309b38d4830311918078")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e7aa44d32f4a217f0b1e7adfaefe18cbe5dbd3c3")]
 [assembly: System.Reflection.AssemblyProductAttribute("AnimStudio.DeliveryModule")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AnimStudio.DeliveryModule")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -288,3 +288,157 @@ export interface ShotUpdatedPayload {
   imageUrl?: string;
   regenerationCount: number;
 }
+
+// ── Phase 7: Voice Studio ─────────────────────────────────────────────────────
+
+/** Built-in OpenAI TTS voice names. */
+export type BuiltInVoice = "Alloy" | "Echo" | "Fable" | "Onyx" | "Nova" | "Shimmer";
+
+export const BUILT_IN_VOICES: { value: BuiltInVoice; label: string; gender: string }[] = [
+  { value: "Alloy", label: "Alloy", gender: "Neutral" },
+  { value: "Echo", label: "Echo", gender: "Male" },
+  { value: "Fable", label: "Fable", gender: "Male" },
+  { value: "Onyx", label: "Onyx", gender: "Male" },
+  { value: "Nova", label: "Nova", gender: "Female" },
+  { value: "Shimmer", label: "Shimmer", gender: "Female" },
+];
+
+export interface VoiceAssignmentDto {
+  id: string;
+  episodeId: string;
+  characterId: string;
+  characterName: string;
+  voiceName: string;
+  language: string;
+  voiceCloneUrl?: string;
+  updatedAt: string;
+}
+
+export interface VoiceAssignmentRequest {
+  characterId: string;
+  voiceName: string;
+  language: string;
+  voiceCloneUrl?: string;
+}
+
+export interface BatchUpdateVoicesRequest {
+  assignments: VoiceAssignmentRequest[];
+}
+
+export interface VoicePreviewRequest {
+  text: string;
+  voiceName: string;
+  language?: string;
+}
+
+export interface VoicePreviewResponse {
+  audioUrl: string;
+  expiresAt: string;
+}
+
+export interface VoiceCloneRequest {
+  characterId: string;
+  audioSampleUrl?: string;
+}
+
+export interface VoiceCloneResponse {
+  voiceCloneUrl?: string;
+  status: string;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Phase 8 — Animation Studio
+// ────────────────────────────────────────────────────────────────────────────
+
+export type AnimationBackend = "Kling" | "Local";
+
+export type AnimationStatus =
+  | "PendingApproval"
+  | "Approved"
+  | "Running"
+  | "Completed"
+  | "Failed"
+  | "Cancelled";
+
+export type ClipStatus = "Pending" | "Rendering" | "Ready" | "Failed";
+
+export interface AnimationBackendOption {
+  value: AnimationBackend;
+  label: string;
+  description: string;
+  perClipUsd: number;
+}
+
+export const ANIMATION_BACKENDS: AnimationBackendOption[] = [
+  {
+    value: "Kling",
+    label: "Kling (Cloud)",
+    description: "High-fidelity cloud rendering — ~$0.056 per shot",
+    perClipUsd: 0.056,
+  },
+  {
+    value: "Local",
+    label: "Local (On-prem)",
+    description: "Local GPU rendering — no per-shot spend",
+    perClipUsd: 0,
+  },
+];
+
+export interface AnimationEstimateLineItem {
+  sceneNumber: number;
+  shotIndex: number;
+  storyboardShotId?: string;
+  unitCostUsd: number;
+}
+
+export interface AnimationEstimateDto {
+  episodeId: string;
+  backend: AnimationBackend;
+  shotCount: number;
+  unitCostUsd: number;
+  totalCostUsd: number;
+  breakdown: AnimationEstimateLineItem[];
+}
+
+export interface ApproveAnimationRequest {
+  backend: AnimationBackend;
+}
+
+export interface AnimationJobDto {
+  id: string;
+  episodeId: string;
+  backend: AnimationBackend;
+  estimatedCostUsd: number;
+  actualCostUsd?: number | null;
+  approvedByUserId?: string | null;
+  approvedAt?: string | null;
+  status: AnimationStatus;
+  createdAt: string;
+}
+
+export interface AnimationClipDto {
+  id: string;
+  episodeId: string;
+  sceneNumber: number;
+  shotIndex: number;
+  storyboardShotId?: string | null;
+  clipUrl?: string | null;
+  durationSeconds?: number | null;
+  status: ClipStatus;
+  createdAt: string;
+}
+
+export interface SignedClipUrlDto {
+  clipId: string;
+  url: string;
+  expiresAt: string;
+}
+
+/** SignalR payload broadcast by the backend when a single clip is ready. */
+export interface ClipReadyEvent {
+  episodeId: string;
+  clipId: string;
+  sceneNumber: number;
+  shotIndex: number;
+  clipUrl: string;
+}
