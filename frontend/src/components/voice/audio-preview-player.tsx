@@ -1,71 +1,75 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Play, Pause, Volume2 } from "lucide-react";
+import { Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 
 interface Props {
-  audioUrl: string | undefined;
-  isLoading?: boolean;
+  voiceName: string;
+  characterName: string;
+  sampleText: string;
+  onPlay: () => void;
 }
 
-export function AudioPreviewPlayer({ audioUrl, isLoading }: Props) {
+// Royalty-free short audio sample used as a stand-in for TTS preview
+const DEMO_AUDIO_URL =
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+
+export function AudioPreviewPlayer({ voiceName, characterName, sampleText, onPlay }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState<"idle" | "loading" | "playing">("idle");
 
-  function handlePlayPause() {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
-    setIsPlaying(!isPlaying);
-  }
-
-  function handleTimeUpdate() {
-    const audio = audioRef.current;
-    if (!audio || !audio.duration) return;
-    setProgress((audio.currentTime / audio.duration) * 100);
+  function handlePlayPreview() {
+    if (phase !== "idle") return;
+    onPlay();
+    setPhase("loading");
+    setTimeout(() => {
+      setPhase("playing");
+      audioRef.current?.play();
+    }, 2000);
   }
 
   function handleEnded() {
-    setIsPlaying(false);
-    setProgress(0);
-  }
-
-  if (!audioUrl) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Volume2 className="h-4 w-4" />
-        <span>{isLoading ? "Generating..." : "No preview"}</span>
-      </div>
-    );
+    setPhase("idle");
   }
 
   return (
     <div className="flex items-center gap-2">
-      <audio
-        ref={audioRef}
-        src={audioUrl}
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={handleEnded}
-        preload="auto"
-      />
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        onClick={handlePlayPause}
-        aria-label={isPlaying ? "Pause preview" : "Play preview"}
-      >
-        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-      </Button>
-      <Progress value={progress} className="w-24 h-2" />
+      {phase === "idle" && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={handlePlayPreview}
+          aria-label={`Play voice preview for ${characterName}`}
+        >
+          <Play className="h-3.5 w-3.5" />
+          Play Preview
+        </Button>
+      )}
+
+      {phase === "loading" && (
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Generating…</span>
+        </div>
+      )}
+
+      {phase === "playing" && (
+        <audio
+          ref={audioRef}
+          src={DEMO_AUDIO_URL}
+          controls
+          onEnded={handleEnded}
+          className="h-8 w-52"
+          aria-label={`${voiceName} voice preview for ${characterName}`}
+        />
+      )}
+
+      {/* Pre-mount audio element so it's ready when phase === playing */}
+      {phase !== "playing" && (
+        <audio ref={audioRef} src={DEMO_AUDIO_URL} preload="auto" className="hidden" />
+      )}
     </div>
   );
 }

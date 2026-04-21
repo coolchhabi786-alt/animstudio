@@ -6,7 +6,6 @@ import { Save, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { VoicePicker } from "@/components/voice/voice-picker";
@@ -16,7 +15,6 @@ import { VoiceCloneUpload } from "@/components/voice/voice-clone-upload";
 import {
   useVoiceAssignments,
   useUpdateVoiceAssignments,
-  useVoicePreview,
 } from "@/hooks/use-voice-assignments";
 import { useSubscription } from "@/hooks/useSubscription";
 import type { VoiceAssignmentDto, VoiceAssignmentRequest } from "@/types";
@@ -40,7 +38,6 @@ export default function VoiceStudioPage({ params }: Props) {
 
   const { data: assignments, isLoading } = useVoiceAssignments(episodeId);
   const updateMutation = useUpdateVoiceAssignments(episodeId);
-  const previewMutation = useVoicePreview();
   const { subscription } = useSubscription();
   const isStudioTier = subscription?.planName === "Studio";
 
@@ -72,19 +69,6 @@ export default function VoiceStudioPage({ params }: Props) {
     },
     [],
   );
-
-  async function handlePreview(row: VoiceRow) {
-    try {
-      const result = await previewMutation.mutateAsync({
-        text: `Hello, I am ${row.characterName}. This is a voice preview.`,
-        voiceName: row.voiceName,
-        language: row.language,
-      });
-      updateRow(row.characterId, { previewUrl: result.audioUrl });
-    } catch {
-      toast.error("Failed to generate voice preview");
-    }
-  }
 
   async function handleSaveAll() {
     const payloads: VoiceAssignmentRequest[] = rows.map((r) => ({
@@ -183,22 +167,13 @@ export default function VoiceStudioPage({ params }: Props) {
                 }
               />
 
-              {/* Preview Button + Player */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePreview(row)}
-                  disabled={!row.voiceName || previewMutation.isPending}
-                >
-                  <Volume2 className="h-4 w-4 mr-1" />
-                  Preview
-                </Button>
-                <AudioPreviewPlayer
-                  audioUrl={row.previewUrl}
-                  isLoading={previewMutation.isPending}
-                />
-              </div>
+              {/* Preview Player */}
+              <AudioPreviewPlayer
+                voiceName={row.voiceName}
+                characterName={row.characterName}
+                sampleText={`Hello, I am ${row.characterName}. This is a voice preview.`}
+                onPlay={() => {}}
+              />
             </div>
           </Card>
         ))}
@@ -208,7 +183,8 @@ export default function VoiceStudioPage({ params }: Props) {
       <div className="mt-8">
         <h2 className="text-lg font-semibold mb-3">Voice Cloning</h2>
         <VoiceCloneUpload
-          isStudioTier={isStudioTier}
+          characterId="episode-clone"
+          isTierLocked={!isStudioTier}
           onUpload={(file) => {
             toast.info(`Voice cloning for "${file.name}" — feature coming soon`);
           }}

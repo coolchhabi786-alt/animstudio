@@ -81,7 +81,7 @@ public sealed class Storyboard : AggregateRoot<Guid>
         var shot = FindShotOrThrow(shotId);
         shot.IncrementRegeneration();
         UpdatedAt = DateTimeOffset.UtcNow;
-        AddDomainEvent(new StoryboardShotRegeneratedEvent(Id, shot.Id, shot.RegenerationCount));
+        AddDomainEvent(new StoryboardShotRegeneratedEvent(Id, shot.Id, EpisodeId, shot.RegenerationCount));
     }
 
     /// <summary>Updates the style override for a shot and records the change.</summary>
@@ -90,7 +90,7 @@ public sealed class Storyboard : AggregateRoot<Guid>
         var shot = FindShotOrThrow(shotId);
         shot.SetStyleOverride(styleOverride);
         UpdatedAt = DateTimeOffset.UtcNow;
-        AddDomainEvent(new StoryboardShotStyleOverriddenEvent(Id, shot.Id, shot.StyleOverride));
+        AddDomainEvent(new StoryboardShotStyleOverriddenEvent(Id, shot.Id, EpisodeId, shot.StyleOverride));
     }
 
     /// <summary>Records the CDN URL produced by a completed StoryboardGen job.</summary>
@@ -99,7 +99,7 @@ public sealed class Storyboard : AggregateRoot<Guid>
         var shot = FindShotOrThrow(shotId);
         shot.UpdateImage(imageUrl);
         UpdatedAt = DateTimeOffset.UtcNow;
-        AddDomainEvent(new StoryboardShotImageUpdatedEvent(Id, shot.Id, imageUrl));
+        AddDomainEvent(new StoryboardShotImageUpdatedEvent(Id, shot.Id, EpisodeId, imageUrl, shot.RegenerationCount));
     }
 
     private StoryboardShot FindShotOrThrow(Guid shotId)

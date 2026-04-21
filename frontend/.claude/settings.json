@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet restore *)",
+      "Bash(xargs head *)",
+      "Read(//c/Users/Vaibhav/cartoon_automation/output/**)",
+      "Bash(cp \"C:/Users/Vaibhav/cartoon_automation/output/final/The_Superpowered_Shenanigans_of_Mr._Whiskers_episode.mp4\" \"c:/Projects/animstudio/frontend/public/videos/render/episode.mp4\")",
+      "Bash(cp \"C:/Users/Vaibhav/cartoon_automation/output/final/scene_01_final.mp4\" \"c:/Projects/animstudio/frontend/public/videos/render/scene-01-final.mp4\")",
+      "Bash(cp \"C:/Users/Vaibhav/cartoon_automation/output/final/scene_02_final.mp4\" \"c:/Projects/animstudio/frontend/public/videos/render/scene-02-final.mp4\")",
+      "Bash(cp \"C:/Users/Vaibhav/cartoon_automation/output/final/scene_03_final.mp4\" \"c:/Projects/animstudio/frontend/public/videos/render/scene-03-final.mp4\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Projects\\animstudio\\frontend\\src\\app\\(dashboard)\\studio\\[id]",
+      "C:\\Projects\\animstudio\\backend\\tests\\AnimStudio.UnitTests\\Queries",
+      "C:\\Projects\\animstudio\\backend\\tests\\AnimStudio.UnitTests"
+    ]
+  }
+}

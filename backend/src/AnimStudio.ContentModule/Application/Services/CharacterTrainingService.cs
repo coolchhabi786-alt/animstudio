@@ -3,7 +3,6 @@ using AnimStudio.ContentModule.Domain.Events;
 using AnimStudio.ContentModule.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging;
 
 namespace AnimStudio.ContentModule.Application.Services;
 

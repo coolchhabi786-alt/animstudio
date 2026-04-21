@@ -231,8 +231,10 @@ public sealed class ContentDbContext : DbContext
             b.Property(v => v.Language).IsRequired().HasMaxLength(10).HasDefaultValue("en-US");
             b.Property(v => v.VoiceCloneUrl).HasMaxLength(2048);
             b.Property(v => v.RowVersion).IsRowVersion();
+            b.HasQueryFilter(v => !v.IsDeleted);
             b.HasIndex(v => v.EpisodeId);
-            b.HasIndex(v => new { v.EpisodeId, v.CharacterId }).IsUnique();
+            // Unique index is filtered so soft-deleted rows don't block re-assignment
+            b.HasIndex(v => new { v.EpisodeId, v.CharacterId }).IsUnique().HasFilter("[IsDeleted] = 0");
         });
 
         // ── AnimationJob (Phase 8) ─────────────────────────────────────────────

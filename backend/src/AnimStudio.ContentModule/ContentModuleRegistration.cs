@@ -1,8 +1,12 @@
 using AnimStudio.ContentModule.Application.Interfaces;
+using AnimStudio.ContentModule.Application.Services;
+using AnimStudio.ContentModule.Domain.Events;
+using AnimStudio.ContentModule.Infrastructure;
 using AnimStudio.ContentModule.Infrastructure.Persistence;
 using AnimStudio.ContentModule.Infrastructure.Repositories;
 using AnimStudio.SharedKernel;
 using FluentValidation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,6 +51,15 @@ public sealed class ContentModuleRegistration : IModuleRegistration
         // Phase 8 — Animation Studio
         services.AddScoped<IAnimationJobRepository, AnimationJobRepository>();
         services.AddScoped<IAnimationClipRepository, AnimationClipRepository>();
+
+        // ── Domain event infrastructure ────────────────────────────────────────
+        // Collects domain events from ContentDbContext tracked aggregates and
+        // flushes them to the shared outbox so the OutboxPublisherJob can dispatch them.
+        services.AddScoped<IDomainEventCollector, ContentDomainEventCollector>();
+
+        // ── Phase 6 — Storyboard domain event handlers ─────────────────────────
+        services.AddScoped<INotificationHandler<StoryboardShotRegeneratedEvent>, StoryboardNotificationService>();
+        services.AddScoped<INotificationHandler<StoryboardShotImageUpdatedEvent>, StoryboardNotificationService>();
 
         // ── FluentValidation — scan this module's validators ───────────────────
         services.AddValidatorsFromAssembly(typeof(ContentModuleRegistration).Assembly, includeInternalTypes: true);

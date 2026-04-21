@@ -19,6 +19,8 @@ interface Props {
   estimate: AnimationEstimateDto | undefined;
   onConfirm: () => void;
   onClose: () => void;
+  /** Mock account balance shown in confirmation summary. */
+  mockBalance?: number;
 }
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -35,6 +37,7 @@ export function ApprovalDialog({
   estimate,
   onConfirm,
   onClose,
+  mockBalance,
 }: Props) {
   const shotCount = estimate?.shotCount ?? 0;
   const totalCost = estimate?.totalCostUsd ?? 0;
@@ -64,6 +67,16 @@ export function ApprovalDialog({
               </span>
             }
           />
+          {mockBalance !== undefined && (
+            <Row
+              label="Account balance"
+              value={
+                <span className="font-medium tabular-nums text-emerald-600">
+                  {currency.format(mockBalance)}
+                </span>
+              }
+            />
+          )}
         </div>
 
         <DialogFooter>

@@ -7,6 +7,7 @@ import { useEpisodeProgress } from "@/hooks/use-episode-progress";
 import { ProgressStepper } from "@/components/episode/progress-stepper";
 import { JobProgressToast } from "@/components/episode/job-progress-toast";
 import Link from "next/link";
+import { Users, FileText, Layers, Mic, Film } from "lucide-react";
 
 const JOB_TYPES = [
   { key: "CharacterDesign", label: "Character Design" },
@@ -88,6 +89,50 @@ export default function EpisodeDetailPage({ params }: Props) {
           )}
         </section>
       )}
+
+      {/* Studio pages quick-nav */}
+      <section className="mb-8">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
+          Studio Pages
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <Link
+            href={`/projects/${projectId}/characters`}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-lg border hover:bg-accent transition-colors text-center"
+          >
+            <Users className="h-5 w-5 text-indigo-500" />
+            <span className="text-xs font-medium">Characters</span>
+          </Link>
+          <Link
+            href={`/projects/${projectId}/episodes/${episodeId}/script`}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-lg border hover:bg-accent transition-colors text-center"
+          >
+            <FileText className="h-5 w-5 text-emerald-500" />
+            <span className="text-xs font-medium">Script</span>
+          </Link>
+          <Link
+            href={`/studio/${episodeId}/storyboard`}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-lg border hover:bg-accent transition-colors text-center"
+          >
+            <Layers className="h-5 w-5 text-violet-500" />
+            <span className="text-xs font-medium">Storyboard</span>
+          </Link>
+          <Link
+            href={`/projects/${projectId}/episodes/${episodeId}/voice`}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-lg border hover:bg-accent transition-colors text-center"
+          >
+            <Mic className="h-5 w-5 text-rose-500" />
+            <span className="text-xs font-medium">Voice</span>
+          </Link>
+          <Link
+            href={`/projects/${projectId}/episodes/${episodeId}/animation`}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-lg border hover:bg-accent transition-colors text-center"
+          >
+            <Film className="h-5 w-5 text-amber-500" />
+            <span className="text-xs font-medium">Animation</span>
+          </Link>
+        </div>
+      </section>
 
       {/* Dispatch controls */}
       <section>

@@ -34,6 +34,14 @@ public sealed class VoiceAssignmentRepository(ContentDbContext db) : IVoiceAssig
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task SoftDeleteAsync(VoiceAssignment assignment, CancellationToken ct = default)
+    {
+        assignment.IsDeleted = true;
+        assignment.DeletedAt = DateTimeOffset.UtcNow;
+        db.VoiceAssignments.Update(assignment);
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task SaveChangesAsync(CancellationToken ct = default)
     {
         await db.SaveChangesAsync(ct);

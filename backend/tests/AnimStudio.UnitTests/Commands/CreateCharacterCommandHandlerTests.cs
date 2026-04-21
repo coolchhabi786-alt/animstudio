@@ -2,6 +2,7 @@ using AnimStudio.ContentModule.Application.Commands.CreateCharacter;
 using AnimStudio.ContentModule.Application.Interfaces;
 using AnimStudio.ContentModule.Domain.Entities;
 using AnimStudio.ContentModule.Domain.Enums;
+using AnimStudio.IdentityModule.Application.Interfaces;
 using Moq;
 using Xunit;
 

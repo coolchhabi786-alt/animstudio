@@ -1,5 +1,7 @@
 import { toast } from "sonner";
 import { getSession } from "next-auth/react";
+import { MOCK_DATA_ENABLED } from "./config";
+import { getMockResponse } from "./mock-data/mock-interceptor";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001";
 const IS_DEV = process.env.NODE_ENV === "development";
@@ -8,6 +10,11 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  if (MOCK_DATA_ENABLED) {
+    const mock = getMockResponse<T>(path, options);
+    if (mock !== undefined) return mock;
+  }
+
   const url = `${API_BASE_URL}${path}`;
 
   // In development, send NO Authorization header so the backend DevAuthHandler

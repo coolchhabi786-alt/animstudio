@@ -45,6 +45,12 @@ public sealed class UpdateVoiceAssignmentsHandler(
         if (episode is null)
             return Result<List<VoiceAssignmentDto>>.Failure("Episode not found.", "NOT_FOUND");
 
+        // Soft-delete any existing assignments whose character is not in the incoming list
+        var existingAll = await voiceAssignments.GetByEpisodeIdAsync(cmd.EpisodeId, ct) ?? [];
+        var incomingIds = cmd.Assignments.Select(a => a.CharacterId).ToHashSet();
+        foreach (var orphan in existingAll.Where(a => !incomingIds.Contains(a.CharacterId)))
+            await voiceAssignments.SoftDeleteAsync(orphan, ct);
+
         var results = new List<VoiceAssignmentDto>();
 
         foreach (var req in cmd.Assignments)

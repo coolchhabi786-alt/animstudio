@@ -92,6 +92,37 @@ public class UpdateVoiceAssignmentsCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_OrphanedAssignment_SoftDeletes()
+    {
+        var episodeId = Guid.NewGuid();
+        var keptCharacterId = Guid.NewGuid();
+        var orphanCharacterId = Guid.NewGuid();
+        var episode = Episode.Create(Guid.NewGuid(), "Ep", "idea", "Pixar3D");
+        var keptCharacter = Character.Create(Guid.NewGuid(), "Alice", "A character", null, 50);
+        var orphan = VoiceAssignment.Create(episodeId, orphanCharacterId, "Echo", "en-US");
+        var kept = VoiceAssignment.Create(episodeId, keptCharacterId, "Alloy", "en-US");
+
+        _episodes.Setup(r => r.GetByIdAsync(episodeId, default)).ReturnsAsync(episode);
+        _voiceAssignments.Setup(r => r.GetByEpisodeIdAsync(episodeId, default))
+            .ReturnsAsync(new List<VoiceAssignment> { kept, orphan });
+        _characters.Setup(r => r.GetByIdAsync(keptCharacterId, default)).ReturnsAsync(keptCharacter);
+        _voiceAssignments.Setup(r => r.GetByEpisodeAndCharacterAsync(episodeId, keptCharacterId, default))
+            .ReturnsAsync(kept);
+
+        // Only the kept character is in the incoming list
+        var cmd = new UpdateVoiceAssignmentsCommand(episodeId, new List<VoiceAssignmentRequest>
+        {
+            new(keptCharacterId, "Nova", "en-US", null)
+        });
+
+        var result = await _handler.Handle(cmd, default);
+
+        result.IsSuccess.Should().BeTrue();
+        // Orphaned assignment must be soft-deleted
+        _voiceAssignments.Verify(r => r.SoftDeleteAsync(orphan, default), Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_ExistingAssignment_UpdatesVoiceAssignment()
     {
         var episodeId = Guid.NewGuid();

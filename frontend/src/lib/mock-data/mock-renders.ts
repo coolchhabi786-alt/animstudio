@@ -1,4 +1,4 @@
-/** Mock render data for Phase 9 UI testing. 2 renders: one complete, one processing. */
+/** Mock render data for Phase 9 UI testing. */
 
 export type RenderStatus = 'queued' | 'assembling' | 'mixing' | 'complete' | 'failed'
 export type AspectRatio = '16:9' | '9:16' | '1:1' | '4:3' | '21:9'
@@ -12,7 +12,7 @@ export interface MockRender {
   aspectRatio: AspectRatio
   outputFormat: OutputFormat
   resolution: Resolution
-  /** Signed CDN URL valid for 30 days. Null if not yet complete. */
+  /** Served from Next.js public directory. Null if not yet complete. */
   finalVideoUrl: string | null
   cdnUrl: string | null
   /** Subtitle/caption file URL */
@@ -26,6 +26,8 @@ export interface MockRender {
   completedAt: string | null
 }
 
+export const MOCK_RENDER_VIDEO_URL = '/videos/render/episode.mp4'
+
 export const mockRenders: MockRender[] = [
   {
     id: 'render-0001-aaaa-bbbb-cccc-ddddeeeeffff',
@@ -34,11 +36,11 @@ export const mockRenders: MockRender[] = [
     aspectRatio: '16:9',
     outputFormat: 'mp4',
     resolution: '1080p',
-    finalVideoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    cdnUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    finalVideoUrl: '/videos/render/episode.mp4',
+    cdnUrl: '/videos/render/episode.mp4',
     captionsUrl: null,
     durationSeconds: 74,
-    fileSizeMb: 45.2,
+    fileSizeMb: 2.8,
     progressPercent: 100,
     currentStage: 'Done',
     createdAt: '2026-04-18T14:00:00.000Z',
@@ -47,18 +49,18 @@ export const mockRenders: MockRender[] = [
   {
     id: 'render-0002-aaaa-bbbb-cccc-ddddeeeeffff',
     episodeId: 'ep-0011-2222-3333-4444-555566667777',
-    status: 'mixing',
+    status: 'complete',
     aspectRatio: '16:9',
     outputFormat: 'mp4',
     resolution: '4k',
-    finalVideoUrl: null,
-    cdnUrl: null,
+    finalVideoUrl: '/videos/render/scene-02-final.mp4',
+    cdnUrl: '/videos/render/scene-02-final.mp4',
     captionsUrl: null,
-    durationSeconds: 74,
-    fileSizeMb: 0,
-    progressPercent: 67,
-    currentStage: 'Mixing audio tracks...',
-    createdAt: '2026-04-19T09:30:00.000Z',
-    completedAt: null,
+    durationSeconds: 30,
+    fileSizeMb: 1.3,
+    progressPercent: 100,
+    currentStage: 'Done',
+    createdAt: '2026-04-17T09:30:00.000Z',
+    completedAt: '2026-04-17T09:38:45.000Z',
   },
 ]

@@ -258,7 +258,8 @@
               "RelativeToolTip": "src\\AnimStudio.API\\Controllers\\ProjectsController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-18T04:07:10.902Z"
+              "WhenOpened": "2026-04-18T04:07:10.902Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -270,7 +271,8 @@
               "RelativeToolTip": "src\\AnimStudio.API\\Controllers\\StoryboardController.cs",
               "ViewState": "AgIAAEUAAAAAAAAAAAAYwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-18T04:04:52.115Z"
+              "WhenOpened": "2026-04-18T04:04:52.115Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -292,7 +294,7 @@
               "RelativeDocumentMoniker": "src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
               "ToolTip": "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
               "RelativeToolTip": "src\\AnimStudio.API\\Hosted\\RecurringJobsHostedService.cs",
-              "ViewState": "AgIAAAgAAAAAAAAAAAAawBIAAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-05T11:36:23.904Z",
               "EditorCaption": ""
@@ -390,7 +392,8 @@
               "RelativeToolTip": "src\\AnimStudio.API\\Controllers\\CharactersController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAADwAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-12T07:20:12.762Z"
+              "WhenOpened": "2026-04-12T07:20:12.762Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -474,7 +477,8 @@
               "RelativeToolTip": "src\\AnimStudio.API\\Controllers\\BillingController.cs",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAABUAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-04T06:38:30.135Z"
+              "WhenOpened": "2026-04-04T06:38:30.135Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -486,7 +490,8 @@
               "RelativeToolTip": "src\\AnimStudio.IdentityModule\\Infrastructure\\Repositories\\SubscriptionRepository.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-11T13:20:40.621Z"
+              "WhenOpened": "2026-04-11T13:20:40.621Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -521,7 +526,8 @@
               "RelativeToolTip": "src\\AnimStudio.API\\Authentication\\DevAuthHandler.cs",
               "ViewState": "AgIAAAgAAAAAAAAAAAApwBgAAABcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-05T07:24:25.494Z"
+              "WhenOpened": "2026-04-05T07:24:25.494Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",

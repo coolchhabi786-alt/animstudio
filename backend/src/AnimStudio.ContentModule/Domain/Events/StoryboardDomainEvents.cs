@@ -12,16 +12,20 @@ public sealed record StoryboardUpdatedEvent(Guid StoryboardId, Guid EpisodeId) :
 public sealed record StoryboardShotRegeneratedEvent(
     Guid StoryboardId,
     Guid ShotId,
+    Guid EpisodeId,
     int RegenerationCount) : IDomainEvent;
 
 /// <summary>Raised when a shot has its style override changed.</summary>
 public sealed record StoryboardShotStyleOverriddenEvent(
     Guid StoryboardId,
     Guid ShotId,
+    Guid EpisodeId,
     string? StyleOverride) : IDomainEvent;
 
 /// <summary>Raised when a shot's generated image URL is updated after a generation job completes.</summary>
 public sealed record StoryboardShotImageUpdatedEvent(
     Guid StoryboardId,
     Guid ShotId,
-    string ImageUrl) : IDomainEvent;
+    Guid EpisodeId,
+    string ImageUrl,
+    int RegenerationCount) : IDomainEvent;

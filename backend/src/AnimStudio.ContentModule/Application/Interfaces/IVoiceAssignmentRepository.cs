@@ -8,5 +8,6 @@ public interface IVoiceAssignmentRepository
     Task<VoiceAssignment?> GetByEpisodeAndCharacterAsync(Guid episodeId, Guid characterId, CancellationToken ct = default);
     Task AddAsync(VoiceAssignment assignment, CancellationToken ct = default);
     Task UpdateAsync(VoiceAssignment assignment, CancellationToken ct = default);
+    Task SoftDeleteAsync(VoiceAssignment assignment, CancellationToken ct = default);
     Task SaveChangesAsync(CancellationToken ct = default);
 }
