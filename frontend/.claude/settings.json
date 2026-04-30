@@ -9,12 +9,29 @@
       "Bash(cp \"C:/Users/Vaibhav/cartoon_automation/output/final/The_Superpowered_Shenanigans_of_Mr._Whiskers_episode.mp4\" \"c:/Projects/animstudio/frontend/public/videos/render/episode.mp4\")",
       "Bash(cp \"C:/Users/Vaibhav/cartoon_automation/output/final/scene_01_final.mp4\" \"c:/Projects/animstudio/frontend/public/videos/render/scene-01-final.mp4\")",
       "Bash(cp \"C:/Users/Vaibhav/cartoon_automation/output/final/scene_02_final.mp4\" \"c:/Projects/animstudio/frontend/public/videos/render/scene-02-final.mp4\")",
-      "Bash(cp \"C:/Users/Vaibhav/cartoon_automation/output/final/scene_03_final.mp4\" \"c:/Projects/animstudio/frontend/public/videos/render/scene-03-final.mp4\")"
+      "Bash(cp \"C:/Users/Vaibhav/cartoon_automation/output/final/scene_03_final.mp4\" \"c:/Projects/animstudio/frontend/public/videos/render/scene-03-final.mp4\")",
+      "Read(//tmp/**)",
+      "Bash(pnpm add *)",
+      "Bash(sqlcmd -S localhost,1433 -U sa -P \"AnimStudio!Dev123\" -d AnimStudio -Q \"SELECT Id, Status, IsDeleted FROM [content].[Episodes] WHERE Id = '33333333-3333-3333-3333-333333333333'\")",
+      "Bash(sqlcmd -S localhost,1433 -U sa -P AnimStudio!Dev123 -d AnimStudio -Q ' *)",
+      "Bash(sqlcmd -S localhost,1433 -U sa -P \"AnimStudio!Dev123\" -d AnimStudio -Q \"SELECT TOP 5 Id, ProjectId, Name, Status, IsDeleted FROM [content].[Episodes]\")",
+      "Bash(sqlcmd -S localhost,1433 -U sa -P \"AnimStudio!Dev123\" -d AnimStudio -Q \"SELECT Id, TeamId, Name FROM [content].[Projects]\")",
+      "Bash(curl -s \"http://localhost:5001/api/v1/episodes/33333333-3333-3333-3333-333333333333/animation/estimate?backend=Local\")",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s \"http://localhost:5001/api/v1/episodes/33333333-3333-3333-3333-333333333333/animation\")",
+      "Bash(dir \"C:\\\\Users\\\\Vaibhav\\\\cartoon_automation\\\\output\\\\animation\\\\23MarAnimation\" /b)",
+      "Bash(dir \"C:\\\\Users\\\\Vaibhav\\\\cartoon_automation\\\\output\\\\audio\" /b)",
+      "Bash(dir \"C:\\\\Users\\\\Vaibhav\\\\cartoon_automation\\\\output\\\\storyboard\\\\29MarAnimationImages\" /b)",
+      "Bash(dir \"C:\\\\Projects\\\\animstudio\\\\backend\\\\src\\\\AnimStudio.ContentModule\\\\Infrastructure\" /b)",
+      "Bash(dir \"C:\\\\Projects\\\\animstudio\\\\backend\\\\src\\\\AnimStudio.API\\\\Controllers\" /b)",
+      "Bash(dir \"C:\\\\Projects\\\\animstudio\\\\backend\\\\src\\\\AnimStudio.ContentModule\\\\Infrastructure\\\\Repositories\" /b)",
+      "Bash(dir \"C:\\\\Projects\\\\animstudio\\\\backend\\\\src\\\\AnimStudio.ContentModule\\\\Infrastructure\\\\Persistence\" /b)"
     ],
     "additionalDirectories": [
       "c:\\Projects\\animstudio\\frontend\\src\\app\\(dashboard)\\studio\\[id]",
       "C:\\Projects\\animstudio\\backend\\tests\\AnimStudio.UnitTests\\Queries",
-      "C:\\Projects\\animstudio\\backend\\tests\\AnimStudio.UnitTests"
+      "C:\\Projects\\animstudio\\backend\\tests\\AnimStudio.UnitTests",
+      "C:\\Projects\\animstudio\\backend\\src\\AnimStudio.DeliveryModule"
     ]
   }
 }

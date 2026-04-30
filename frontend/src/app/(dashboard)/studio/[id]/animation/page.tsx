@@ -1,37 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Film } from "lucide-react";
+import { useState } from "react";
+import { Film, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BackendSelector } from "@/components/animation/backend-selector";
 import { CostBreakdownTable } from "@/components/animation/cost-breakdown-table";
 import { ClipPreviewGrid } from "@/components/animation/clip-preview-grid";
 import { ApprovalDialog } from "@/components/animation/approval-dialog";
 import {
-  mockAnimationClips,
-  ANIMATION_COST_PER_CLIP,
-} from "@/lib/mock-data";
-import type { AnimationBackend } from "@/types";
-import type { AnimationStatus } from "@/lib/mock-data";
+  useAnimationEstimate,
+  useAnimationClips,
+  useApproveAnimation,
+  useAnimationRealtime,
+} from "@/hooks/use-animation";
+import type { AnimationBackend, AnimationClipDto, ClipStatus } from "@/types";
 
-const MOCK_BALANCE = 45.33;
-const MOCK_EPISODE_ID = "ep-0011-2222-3333-4444-555566667777";
+const HUB_URL = process.env.NEXT_PUBLIC_SIGNALR_HUB_URL ?? "http://localhost:5001/hubs/progress";
 
-const SCENES = [
-  { sceneNumber: 1, shotCount: 4 },
-  { sceneNumber: 2, shotCount: 4 },
-  { sceneNumber: 3, shotCount: 4 },
-];
-
-type ProcessingState = "idle" | "processing" | "done";
-
-const STATUS_FILTER_MAP: Record<string, AnimationStatus[]> = {
-  all: ["ready", "processing", "queued", "failed"],
-  ready: ["ready"],
-  processing: ["processing"],
-  failed: ["failed"],
+const STATUS_FILTER: Record<string, ClipStatus[]> = {
+  all:       ["Ready", "Rendering", "Pending", "Failed"],
+  ready:     ["Ready"],
+  processing:["Rendering", "Pending"],
+  failed:    ["Failed"],
 };
 
 export default function AnimationApprovalPage({
@@ -39,67 +32,57 @@ export default function AnimationApprovalPage({
 }: {
   params: { id: string };
 }) {
-  const episodeId = params.id ?? MOCK_EPISODE_ID;
+  const episodeId = params.id;
 
-  const [backend, setBackend] = useState<AnimationBackend>("Kling");
+  const [backend, setBackend] = useState<AnimationBackend>("Local");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [processingState, setProcessingState] = useState<ProcessingState>("idle");
-  const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { data: estimate, isLoading: estimateLoading } = useAnimationEstimate(episodeId, backend);
+  const { data: clips = [], isLoading: clipsLoading, refetch: refetchClips } = useAnimationClips(episodeId);
+  const approveMutation = useApproveAnimation(episodeId);
 
-  const ratePerShot = ANIMATION_COST_PER_CLIP[backend === "Kling" ? "kling" : "local"];
-  const totalShots = mockAnimationClips.length;
-  const totalCost = totalShots * ratePerShot;
+  // Wire SignalR — real-time clip updates
+  // teamId is not in the episode response yet; read from a stored user context if available.
+  // For now pass undefined — the hook silently skips group join when teamId is absent.
+  useAnimationRealtime({
+    episodeId,
+    teamId: undefined,
+    hubUrl: HUB_URL,
+  });
 
-  const filteredClips = mockAnimationClips.filter((c) =>
-    STATUS_FILTER_MAP[activeTab]?.includes(c.status),
+  const scenes = estimate
+    ? [...new Set(estimate.breakdown.map((b) => b.sceneNumber))].sort().map((n) => ({
+        sceneNumber: n,
+        shotCount: estimate.breakdown.filter((b) => b.sceneNumber === n).length,
+      }))
+    : [];
+
+  const filteredClips = clips.filter((c: AnimationClipDto) =>
+    STATUS_FILTER[activeTab]?.includes(c.status),
   );
 
-  const MOCK_ESTIMATE = {
-    episodeId,
-    backend,
-    shotCount: totalShots,
-    unitCostUsd: ratePerShot,
-    totalCostUsd: totalCost,
-    breakdown: mockAnimationClips.map((c) => ({
-      sceneNumber: c.sceneNumber,
-      shotIndex: c.shotIndex,
-      storyboardShotId: undefined,
-      unitCostUsd: ratePerShot,
-    })),
-  };
+  const readyCount = clips.filter((c) => c.status === "Ready").length;
+  const failedCount = clips.filter((c) => c.status === "Failed").length;
+  const processingCount = clips.filter((c) => c.status === "Rendering" || c.status === "Pending").length;
 
   function handleApprove() {
     setDialogOpen(false);
-    setProcessingState("processing");
-    setProgress(0);
-    setStatusText("Queuing render jobs…");
-
-    let pct = 0;
-    intervalRef.current = setInterval(() => {
-      pct += 5;
-      setProgress(pct);
-      if (pct < 20) setStatusText("Initialising Kling AI pipeline…");
-      else if (pct < 50) setStatusText(`Rendering clip ${Math.ceil((pct / 100) * totalShots)} of ${totalShots}…`);
-      else if (pct < 80) setStatusText("Encoding output…");
-      else setStatusText("Finalising…");
-
-      if (pct >= 100) {
-        clearInterval(intervalRef.current!);
-        setProcessingState("done");
-        setStatusText("All clips rendered successfully");
-      }
-    }, 1000);
+    approveMutation.mutate(
+      { backend },
+      {
+        onSuccess: () => {
+          toast.success("Animation job approved — clips are being processed.");
+        },
+        onError: (err) => {
+          toast.error(err.message ?? "Failed to approve animation.");
+        },
+      },
+    );
   }
 
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
+  const isApproving = approveMutation.isPending;
+  const hasApproved = approveMutation.isSuccess || clips.length > 0;
 
   return (
     <main className="p-6 max-w-5xl mx-auto space-y-10">
@@ -122,88 +105,97 @@ export default function AnimationApprovalPage({
 
         <BackendSelector selectedBackend={backend} onSelect={setBackend} />
 
-        <CostBreakdownTable
-          scenes={SCENES}
-          ratePerShot={ratePerShot}
-          backend={backend}
-        />
+        {estimateLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-3/4" />
+          </div>
+        ) : (
+          <CostBreakdownTable
+            scenes={scenes}
+            ratePerShot={estimate?.unitCostUsd ?? 0}
+            backend={backend}
+          />
+        )}
 
-        <div className="flex justify-end">
-          <Button
-            onClick={() => setDialogOpen(true)}
-            disabled={processingState === "processing"}
-          >
-            {processingState === "done"
-              ? "Re-approve"
-              : "Approve & Process"}
-          </Button>
+        <div className="flex items-center justify-between">
+          {estimate && (
+            <p className="text-sm text-muted-foreground">
+              {estimate.shotCount} shot{estimate.shotCount !== 1 ? "s" : ""} ·{" "}
+              <span className="font-medium text-foreground">
+                ${estimate.totalCostUsd.toFixed(3)} total
+              </span>
+            </p>
+          )}
+          <div className="ml-auto flex gap-2">
+            {hasApproved && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refetchClips()}
+                className="gap-1.5"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Refresh
+              </Button>
+            )}
+            <Button
+              onClick={() => setDialogOpen(true)}
+              disabled={isApproving || estimateLoading || !estimate}
+            >
+              {isApproving ? "Approving…" : hasApproved ? "Re-approve" : "Approve & Process"}
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* Section 2 — Processing Progress */}
-      {processingState !== "idle" && (
-        <section className="space-y-3">
+      {/* Section 2 — Clip Previews */}
+      {(hasApproved || clipsLoading) && (
+        <section className="space-y-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Processing Progress
+            Clip Previews
           </h2>
-          <div className="rounded-lg border p-5 space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{statusText}</span>
-              <span className="font-bold tabular-nums">{progress}%</span>
+
+          {clipsLoading ? (
+            <div className="grid grid-cols-4 gap-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="aspect-video rounded-xl" />
+              ))}
             </div>
-            <Progress value={progress} />
-            {processingState === "done" && (
-              <p className="text-xs text-emerald-600 font-medium">
-                All {totalShots} clips rendered successfully.
-              </p>
-            )}
-          </div>
+          ) : (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="all">All ({clips.length})</TabsTrigger>
+                <TabsTrigger value="ready">Ready ({readyCount})</TabsTrigger>
+                <TabsTrigger value="processing">Processing ({processingCount})</TabsTrigger>
+                <TabsTrigger value="failed">Failed ({failedCount})</TabsTrigger>
+              </TabsList>
+
+              {["all", "ready", "processing", "failed"].map((tab) => (
+                <TabsContent key={tab} value={tab} className="pt-4">
+                  {filteredClips.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-6 text-center">
+                      No clips in this category.
+                    </p>
+                  ) : (
+                    <ClipPreviewGrid clips={filteredClips} groupByScene={tab === "all"} />
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+          )}
         </section>
       )}
-
-      {/* Section 3 — Clip Previews */}
-      <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Clip Previews
-        </h2>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All ({mockAnimationClips.length})</TabsTrigger>
-            <TabsTrigger value="ready">
-              Ready ({mockAnimationClips.filter((c) => c.status === "ready").length})
-            </TabsTrigger>
-            <TabsTrigger value="processing">
-              Processing ({mockAnimationClips.filter((c) => c.status === "processing").length})
-            </TabsTrigger>
-            <TabsTrigger value="failed">
-              Failed ({mockAnimationClips.filter((c) => c.status === "failed").length})
-            </TabsTrigger>
-          </TabsList>
-
-          {["all", "ready", "processing", "failed"].map((tab) => (
-            <TabsContent key={tab} value={tab} className="pt-4">
-              {filteredClips.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-6 text-center">
-                  No clips in this category.
-                </p>
-              ) : (
-                <ClipPreviewGrid clips={filteredClips} groupByScene={tab === "all"} />
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
-      </section>
 
       {/* Approval Dialog */}
       <ApprovalDialog
         isOpen={dialogOpen}
-        isLoading={false}
+        isLoading={isApproving}
         backend={backend}
-        estimate={MOCK_ESTIMATE}
+        estimate={estimate}
         onConfirm={handleApprove}
         onClose={() => setDialogOpen(false)}
-        mockBalance={MOCK_BALANCE}
       />
     </main>
   );

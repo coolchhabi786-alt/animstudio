@@ -1,3 +1,4 @@
+using AnimStudio.ContentModule.Application.EventHandlers;
 using AnimStudio.ContentModule.Application.Interfaces;
 using AnimStudio.ContentModule.Application.Services;
 using AnimStudio.ContentModule.Domain.Events;
@@ -60,6 +61,11 @@ public sealed class ContentModuleRegistration : IModuleRegistration
         // ── Phase 6 — Storyboard domain event handlers ─────────────────────────
         services.AddScoped<INotificationHandler<StoryboardShotRegeneratedEvent>, StoryboardNotificationService>();
         services.AddScoped<INotificationHandler<StoryboardShotImageUpdatedEvent>, StoryboardNotificationService>();
+
+        // ── Phase 8 — Animation domain event handlers ──────────────────────────
+        // AnimationClipReadyEventHandler bridges the domain event → IAnimationClipNotifier
+        // (SignalR impl registered in Program.cs via API layer).
+        services.AddScoped<INotificationHandler<AnimationClipReadyEvent>, AnimationClipReadyEventHandler>();
 
         // ── FluentValidation — scan this module's validators ───────────────────
         services.AddValidatorsFromAssembly(typeof(ContentModuleRegistration).Assembly, includeInternalTypes: true);

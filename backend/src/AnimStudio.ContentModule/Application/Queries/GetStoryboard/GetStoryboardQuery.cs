@@ -10,7 +10,8 @@ public sealed record GetStoryboardQuery(Guid EpisodeId) : IRequest<Result<Storyb
 
 public sealed class GetStoryboardHandler(
     IStoryboardRepository storyboards,
-    IEpisodeRepository episodes)
+    IEpisodeRepository episodes,
+    IFileStorageService fileStorage)
     : IRequestHandler<GetStoryboardQuery, Result<StoryboardDto?>>
 {
     public async Task<Result<StoryboardDto?>> Handle(GetStoryboardQuery query, CancellationToken ct)
@@ -31,7 +32,7 @@ public sealed class GetStoryboardHandler(
                 s.StoryboardId,
                 s.SceneNumber,
                 s.ShotIndex,
-                s.ImageUrl,
+                s.ImageUrl is not null ? fileStorage.GetFileUrl(s.ImageUrl) : null,
                 s.Description,
                 s.StyleOverride,
                 s.RegenerationCount,

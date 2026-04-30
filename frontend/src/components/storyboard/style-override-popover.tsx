@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { StoryboardShot } from "@/lib/mock-data"
+import type { StoryboardShotDto } from "@/types"
 
 const STYLE_PRESETS: { label: string; value: string; color: string }[] = [
   { label: "Realistic",     value: "realistic",    color: "text-gray-700" },
@@ -23,7 +23,7 @@ const STYLE_PRESETS: { label: string; value: string; color: string }[] = [
 ]
 
 interface Props {
-  shot: StoryboardShot
+  shot: StoryboardShotDto
   onApply: (style: string) => void
   disabled?: boolean
 }

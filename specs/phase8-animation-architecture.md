@@ -3,131 +3,198 @@
 ## Scope
 Animate approved storyboards into video clips via a configurable backend
 (cloud **Kling** or on-prem **Local**), gate the spend with an explicit
-per-episode cost-approval, and stream clips back to the studio UI as they
-render.
+user approval step, and stream per-clip completion events to the browser
+via SignalR.
 
-## Bounded context
-Animation lives inside `ContentModule`. It references `StoryboardShot` by FK
-but owns its own lifecycle aggregates (`AnimationJob`, `AnimationClip`). No
-cross-module changes; no new DbContext.
+---
 
-## Aggregates
+## Storage Strategy: Local vs Azure Blob
 
-### `AnimationJob` (aggregate root)
-Tracks the **cost + approval lifecycle** of an animation run for an episode.
+All file URL generation flows through **`IFileStorageService`** (defined in
+`AnimStudio.ContentModule/Application/Interfaces/IFileStorageService.cs`).
 
-| Field               | Type                    | Notes                                                  |
-|---------------------|-------------------------|--------------------------------------------------------|
-| Id                  | Guid                    | PK                                                     |
-| EpisodeId           | Guid                    | FK, indexed                                            |
-| Backend             | AnimationBackend        | Kling \| Local                                         |
-| EstimatedCostUsd    | decimal(10,4)           | Frozen at approval time                                |
-| ActualCostUsd       | decimal(10,4)?          | Populated on completion                                |
-| ApprovedByUserId    | Guid?                   | Audit                                                  |
-| ApprovedAt          | DateTime?               |                                                        |
-| Status              | AnimationStatus         | PendingApproval → Approved → Running → Completed/Failed |
-| CreatedAt/UpdatedAt | DateTime                |                                                        |
-| RowVersion          | byte[]                  | Concurrency                                            |
-| IsDeleted           | bool                    | Soft delete                                            |
+| Config `FileStorage:Provider` | Implementation | Clip URL pattern |
+|---|---|---|
+| `Local` (dev default) | `LocalFileStorageService` | `http://localhost:5001/api/v1/files/{relativePath}` |
+| `AzureBlob` (prod) | `AzureBlobFileStorageService` | SAS URL with 1-hour TTL |
 
-Raises: `AnimationJobApprovedEvent`, `AnimationJobCompletedEvent`.
+Switch is done at startup in `Program.cs` — no code changes required.
 
-### `AnimationClip` (aggregate root)
-One row per rendered (or in-flight) clip. Owned by the episode; linked to the
-source `StoryboardShot` when available.
+**Local file-serving** (`FileStorageController`):
+- Route: `GET /api/v1/files/{**filePath}`
+- `[AllowAnonymous]` — `<video>` tags can't send auth headers
+- Path traversal guard: resolved path must be inside `LocalRootPath`
+- `PhysicalFile(..., enableRangeProcessing: true)` for video seeking
 
-Unique index: `(EpisodeId, SceneNumber, ShotIndex)` — idempotent creation
-keyed off the storyboard grid. FK to `StoryboardShots` uses `OnDelete(SetNull)`
-so deleting a storyboard shot does not delete already-rendered footage.
+---
 
-Raises: `AnimationClipReadyEvent` when `Status` transitions to `Ready`.
-
-## Cost model
+## Data Flow
 
 ```
-unitCostUsd(Kling)  = 0.056
-unitCostUsd(Local)  = 0.000
-totalCostUsd        = shotCount × unitCostUsd
+User clicks "Approve & Process"
+    │
+    ▼
+POST /api/v1/episodes/{id}/animation
+    │
+    ├─ ApproveAnimationCommand
+    │    ├─ Create AnimationJob (Approved)
+    │    ├─ Seed AnimationClips (Pending, one per storyboard shot)
+    │    └─ Create generic Job row (JobType.Animation)
+    │
+    └─ AnimationController enqueues Hangfire job
+         │
+         ▼
+    AnimationJobHangfireProcessor.ProcessAsync(animationJobId)
+         │
+         ├─ [Local backend]
+         │    ├─ MarkRunning on AnimationJob
+         │    ├─ For each AnimationClip:
+         │    │    ├─ Resolve file: {LocalRootPath}/animation/{subfolder}/scene_{sc}_shot_{sh}.mp4
+         │    │    ├─ Found → MarkReady(relativePath, estimatedDuration)
+         │    │    └─ Not found → MarkFailed()
+         │    ├─ Publish AnimationClipReadyEvent (domain event)
+         │    └─ MarkCompleted / MarkFailed on AnimationJob
+         │
+         └─ [Kling backend]
+              └─ Stub log — clips stay Pending until Python webhook fires
+                   │
+                   ▼ (future)
+              POST /api/v1/jobs/{id}/complete
+                   │
+                   ▼
+              HandleJobCompletionCommand (JobType.Animation)
+                   └─ Parse Python result JSON → MarkReady per clip → domain events
+
+    AnimationClipReadyEvent (domain event)
+         │
+         ▼
+    AnimationClipReadyEventHandler (MediatR INotificationHandler)
+         │
+         └─ IAnimationClipNotifier.PublishClipReadyAsync(teamId, ...)
+              │
+              ▼
+         SignalRAnimationClipNotifier
+              └─ hubContext.Clients.Group("team:{teamId}").SendAsync("ClipReady", payload)
+                   │
+                   ▼
+              Frontend: useAnimationRealtime() hook
+                   └─ Updates TanStack Query clips cache → UI re-renders
 ```
 
-`shotCount` is the number of `StoryboardShot` rows that belong to the
-storyboard for the episode (no branching, no variants in Phase 8).
+---
 
-Rates live in configuration (`Animation:Rates:Kling`, `Animation:Rates:Local`)
-so finance can rotate without a deploy, but default to the values above.
+## Key Design Decisions
 
-## Endpoints (AnimationController, `/api/v1`)
+### 1. Hangfire over Service Bus for Local backend
+The Python pipeline dispatches via Azure Service Bus (unavailable in local dev).
+Hangfire provides a SQL-backed queue that works without Azure credentials,
+enabling end-to-end animation testing locally.
 
-| Verb | Route                                             | Purpose                           |
-|------|---------------------------------------------------|-----------------------------------|
-| GET  | `/episodes/{id}/animation/estimate?backend=…`     | Itemised cost breakdown           |
-| POST | `/episodes/{id}/animation`                        | Approve + enqueue job (body: backend) |
-| GET  | `/episodes/{id}/animation`                        | List clips with status            |
-| GET  | `/episodes/{id}/animation/clips/{clipId}`         | Signed Blob URL for one clip      |
+### 2. IFileStorageService for all URL generation
+`GetAnimationClipSignedUrlQuery` and `GetAnimationClipsQuery` both use
+`IFileStorageService.GetFileUrl()` rather than `IClipUrlSigner`. This means:
+- Local: permanent `/api/v1/files/...` URLs, no TTL
+- Azure Blob: SAS URL with 1-hour TTL embedded by `AzureBlobFileStorageService`
+- `IClipUrlSigner` is kept only for `BlobClipUrlSigner` (legacy, used by voice preview SAS)
 
-All are gated by `[Authorize(Policy = "RequireTeamMember")]` and the
-`authenticated` rate-limit policy.
+### 3. Domain event → SignalR bridge
+`AnimationClipReadyEvent` is a domain event raised by `AnimationClip.MarkReady()`.
+`AnimationClipReadyEventHandler` (Application layer, injected with `IAnimationClipNotifier`)
+bridges to SignalR. This keeps the domain model infrastructure-agnostic.
 
-## Orchestration
+### 4. teamId resolution
+`AnimationClipReadyEventHandler` walks `Episode.ProjectId → Project.TeamId` to
+determine the SignalR group. Episode does not carry TeamId directly (to avoid
+denormalization). Both repositories are in scope (same DbContext scope, no extra I/O).
 
-1. `POST /episodes/{id}/animation` persists a new `AnimationJob` in
-   `Approved` state (we collapse PendingApproval+Approved into one atomic step
-   because the estimate endpoint is the approval ceremony on the client), sets
-   `Episode.Status = Animation`, and enqueues a `JobType.Animation` via the
-   existing `Job` aggregate. The transition `Animation → PostProduction` is
-   already wired in `HandleJobCompletionCommand`.
-2. The worker (existing Hangfire pipeline) renders each shot, persists an
-   `AnimationClip` row, and publishes `AnimationClipReadyEvent`.
-3. `SignalRAnimationClipNotifier` (MediatR handler) broadcasts `ClipReady` on
-   the existing `ProgressHub` to group `team:{teamId}` — consistent with Phase
-   6.
-4. When all clips are `Ready` (or the job times out), the worker updates
-   `AnimationJob.Status` and `ActualCostUsd`.
+### 5. Duration estimation without FFprobe
+The Hangfire local processor estimates clip duration from file size (~500KB/s)
+as a temporary measure. Accurate duration is set when:
+- Python pipeline delivers results via the webhook (Kling/remote)
+- Future: `ffprobe` integration or metadata sidecar file
 
-## SignalR contract
+### 6. Idempotent dev seeder
+`SeedDevContentAsync` in `Program.cs` seeds an `AnimationJob` (Completed, Local)
+and 8 `AnimationClips` (Ready) pointing to existing `.mp4` files in
+`animation/23MarAnimation/`. These are idempotent (`IF NOT EXISTS`) so they
+survive server restarts without duplicating data.
 
-Reuses `ProgressHub` (no new hub). Event name: `ClipReady`. Payload:
+---
 
-```ts
+## Configuration
+
+### appsettings.Development.json
+```json
 {
-  episodeId: string;
-  sceneNumber: number;
-  shotIndex: number;
-  clipId: string;
-  clipUrl: string;      // signed SAS URL, 60s TTL
+  "FileStorage": {
+    "Provider": "Local",
+    "LocalRootPath": "C:\\Users\\Vaibhav\\cartoon_automation\\output",
+    "BackendBaseUrl": "http://localhost:5001"
+  },
+  "Animation": {
+    "LocalSubfolder": "23MarAnimation",
+    "Rates": {
+      "Kling": "0.056",
+      "Local": "0"
+    }
+  }
 }
 ```
 
-## Clip delivery
+### appsettings.json (production defaults)
+```json
+{
+  "FileStorage": {
+    "Provider": "AzureBlob",
+    "LocalRootPath": "",
+    "BackendBaseUrl": "https://api.animstudio.ai"
+  }
+}
+```
 
-`ClipUrl` on the row is the blob path (`clips/{episodeId}/{clipId}.mp4`). The
-signed URL endpoint issues a 60-second SAS token at request time — same TTL
-and pattern used for storyboard frames in Phase 6.
+---
 
-## Frontend shape
+## SignalR Contract
 
-- Studio route: `projects/[id]/episodes/[episodeId]/animation/page.tsx`.
-- `CostEstimateCard` — backend radio (Kling/Local), shot breakdown table, total.
-- `ApprovalDialog` — shows total cost, shot count, backend; confirm triggers
-  the approval mutation.
-- `ClipPlayer` — HTML5 `<video>` with loop toggle, fed by signed URL.
-- `use-animation` — React Query estimate+clips + mutation, subscribes to
-  `ClipReady` via the shared SignalR connection and invalidates the clips
-  query.
+**Event name**: `ClipReady`  
+**Group**: `team:{teamId}`  
+**Payload**:
+```json
+{
+  "episodeId": "guid",
+  "clipId": "guid",
+  "sceneNumber": 1,
+  "shotIndex": 1,
+  "clipUrl": "http://localhost:5001/api/v1/files/animation/23MarAnimation/scene_01_shot_01.mp4"
+}
+```
 
-## Decisions & alternatives considered
+Frontend `useAnimationRealtime()` hook patches the TanStack Query clips cache
+directly so the UI updates without a full refetch.
 
-- **Separate `AnimationJob` vs reuse `Job`.** Keep both: `Job` still tracks
-  engine progress, `AnimationJob` tracks the cost/approval lifecycle that the
-  generic job row cannot express.
-- **Dedicated hub vs reuse `ProgressHub`.** Reuse, matching Phase 6. One fewer
-  connection per client.
-- **Bake rates into code vs config.** Config — finance changes quarterly.
-- **Atomic approve-and-enqueue vs two-step.** One step: approval implies
-  intent; the estimate GET is the "review" stage. A separate pending state
-  would add UX without value.
+---
 
-## Non-goals (Phase 8)
-- Retrying individual failed clips from the UI (reuse episode regenerate).
-- Variant/branching shots.
-- Frame-accurate edits — handled in Phase 9 Post-Production.
+## Python Webhook Contract (Kling backend)
+
+When Python finishes rendering, it calls:
+```
+POST /api/v1/jobs/{jobId}/complete
+{
+  "isSuccess": true,
+  "result": "{\"clips\":[{\"sceneNumber\":1,\"shotIndex\":1,\"clipUrl\":\"animation/.../scene_01_shot_01.mp4\",\"durationSeconds\":4.5}],\"actualCostUsd\":0.448}"
+}
+```
+
+`HandleJobCompletionCommand` (extended in Phase 8) deserializes the result JSON
+and calls `AnimationClip.MarkReady()` per clip, publishing domain events that
+flow to SignalR via `AnimationClipReadyEventHandler`.
+
+---
+
+## Security
+
+- `[Authorize(Policy = "RequireTeamMember")]` on all animation endpoints
+- `[AllowAnonymous]` on `FileStorageController` (browser media elements)
+- Path traversal prevention: resolved path must start with `LocalRootPath`
+- No secrets in clip URLs for Local provider (filesystem, not blob SAS)
+- Azure Blob SAS URLs: 1-hour TTL, read-only scope

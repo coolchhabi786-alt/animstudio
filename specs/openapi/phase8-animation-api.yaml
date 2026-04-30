@@ -1,116 +1,22 @@
 openapi: 3.1.0
 info:
-  title: AnimStudio — Phase 8 Animation Studio API
-  version: 1.0.0
-  description: |
-    Animation Studio endpoints: estimate cost, approve & enqueue animation jobs,
-    list generated clips, and issue signed Blob URLs for single clips.
+  title: AnimStudio Phase 8 — Animation Studio API
+  version: "1.0"
+  description: >
+    Endpoints for animation cost estimation, job approval, clip listing,
+    and per-clip playback URL retrieval. Local or Azure Blob storage is
+    toggled via FileStorage:Provider config.
 
 servers:
-  - url: /api/v1
+  - url: http://localhost:5001
+    description: Local dev
 
 security:
-  - bearerAuth: []
-
-tags:
-  - name: Animation
-    description: Animation cost estimate, approval, and clip retrieval
-
-paths:
-  /episodes/{episodeId}/animation/estimate:
-    get:
-      tags: [Animation]
-      summary: Compute cost estimate for animating the episode
-      operationId: getAnimationEstimate
-      parameters:
-        - $ref: '#/components/parameters/EpisodeId'
-        - in: query
-          name: backend
-          required: false
-          schema:
-            $ref: '#/components/schemas/AnimationBackend'
-          description: Backend to price against (defaults to Kling)
-      responses:
-        '200':
-          description: Itemised cost breakdown
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AnimationEstimateDto'
-        '404':
-          description: Episode or storyboard not found
-
-  /episodes/{episodeId}/animation:
-    get:
-      tags: [Animation]
-      summary: List all animation clips for the episode
-      operationId: getAnimationClips
-      parameters:
-        - $ref: '#/components/parameters/EpisodeId'
-      responses:
-        '200':
-          description: Clips with status
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AnimationClipDto'
-    post:
-      tags: [Animation]
-      summary: Approve estimate and enqueue animation job
-      operationId: approveAnimation
-      parameters:
-        - $ref: '#/components/parameters/EpisodeId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ApproveAnimationRequest'
-      responses:
-        '202':
-          description: Job accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AnimationJobDto'
-        '400':
-          description: Validation error
-        '409':
-          description: Animation already in progress or completed
-
-  /episodes/{episodeId}/animation/clips/{clipId}:
-    get:
-      tags: [Animation]
-      summary: Issue a signed Blob URL for a single clip
-      operationId: getAnimationClipSignedUrl
-      parameters:
-        - $ref: '#/components/parameters/EpisodeId'
-        - in: path
-          name: clipId
-          required: true
-          schema: { type: string, format: uuid }
-      responses:
-        '200':
-          description: Signed URL with TTL
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SignedClipUrlDto'
-        '404':
-          description: Clip not found
+  - BearerAuth: []
 
 components:
-  parameters:
-    EpisodeId:
-      in: path
-      name: episodeId
-      required: true
-      schema: { type: string, format: uuid }
-
   securitySchemes:
-    bearerAuth:
+    BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
@@ -119,7 +25,7 @@ components:
     AnimationBackend:
       type: string
       enum: [Kling, Local]
-      description: Which animation backend will execute the job
+      description: Rendering backend — Kling AI (cloud) or local GPU.
 
     AnimationStatus:
       type: string
@@ -129,67 +35,260 @@ components:
       type: string
       enum: [Pending, Rendering, Ready, Failed]
 
-    AnimationEstimateDto:
-      type: object
-      required: [episodeId, backend, shotCount, unitCostUsd, totalCostUsd, breakdown]
-      properties:
-        episodeId: { type: string, format: uuid }
-        backend: { $ref: '#/components/schemas/AnimationBackend' }
-        shotCount: { type: integer, minimum: 0 }
-        unitCostUsd: { type: number, format: double, minimum: 0 }
-        totalCostUsd: { type: number, format: double, minimum: 0 }
-        breakdown:
-          type: array
-          items:
-            $ref: '#/components/schemas/AnimationEstimateLineItem'
-
     AnimationEstimateLineItem:
       type: object
-      required: [sceneNumber, shotIndex, unitCostUsd]
       properties:
-        sceneNumber: { type: integer, minimum: 1 }
-        shotIndex: { type: integer, minimum: 0 }
-        storyboardShotId: { type: string, format: uuid }
-        unitCostUsd: { type: number, format: double, minimum: 0 }
+        sceneNumber:     { type: integer }
+        shotIndex:       { type: integer }
+        storyboardShotId:
+          type: string
+          format: uuid
+          nullable: true
+        unitCostUsd:     { type: number, format: decimal }
+      required: [sceneNumber, shotIndex, unitCostUsd]
+
+    AnimationEstimateDto:
+      type: object
+      properties:
+        episodeId:   { type: string, format: uuid }
+        backend:     { $ref: '#/components/schemas/AnimationBackend' }
+        shotCount:   { type: integer }
+        unitCostUsd: { type: number, format: decimal }
+        totalCostUsd:{ type: number, format: decimal }
+        breakdown:
+          type: array
+          items: { $ref: '#/components/schemas/AnimationEstimateLineItem' }
+      required: [episodeId, backend, shotCount, unitCostUsd, totalCostUsd, breakdown]
 
     ApproveAnimationRequest:
       type: object
-      required: [backend]
       properties:
         backend: { $ref: '#/components/schemas/AnimationBackend' }
+      required: [backend]
 
     AnimationJobDto:
       type: object
-      required: [id, episodeId, backend, estimatedCostUsd, status, createdAt]
       properties:
-        id: { type: string, format: uuid }
-        episodeId: { type: string, format: uuid }
-        backend: { $ref: '#/components/schemas/AnimationBackend' }
-        estimatedCostUsd: { type: number, format: double }
-        actualCostUsd: { type: number, format: double, nullable: true }
-        approvedByUserId: { type: string, format: uuid, nullable: true }
-        approvedAt: { type: string, format: date-time, nullable: true }
-        status: { $ref: '#/components/schemas/AnimationStatus' }
+        id:              { type: string, format: uuid }
+        episodeId:       { type: string, format: uuid }
+        backend:         { $ref: '#/components/schemas/AnimationBackend' }
+        estimatedCostUsd:{ type: number, format: decimal }
+        actualCostUsd:
+          type: number
+          format: decimal
+          nullable: true
+        approvedByUserId:
+          type: string
+          format: uuid
+          nullable: true
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:    { $ref: '#/components/schemas/AnimationStatus' }
         createdAt: { type: string, format: date-time }
+      required: [id, episodeId, backend, estimatedCostUsd, status, createdAt]
 
     AnimationClipDto:
       type: object
-      required: [id, episodeId, sceneNumber, shotIndex, status, createdAt]
       properties:
-        id: { type: string, format: uuid }
-        episodeId: { type: string, format: uuid }
-        sceneNumber: { type: integer, minimum: 1 }
-        shotIndex: { type: integer, minimum: 0 }
-        storyboardShotId: { type: string, format: uuid, nullable: true }
-        clipUrl: { type: string, nullable: true }
-        durationSeconds: { type: number, format: double, nullable: true }
-        status: { $ref: '#/components/schemas/ClipStatus' }
+        id:             { type: string, format: uuid }
+        episodeId:      { type: string, format: uuid }
+        sceneNumber:    { type: integer }
+        shotIndex:      { type: integer }
+        storyboardShotId:
+          type: string
+          format: uuid
+          nullable: true
+        clipUrl:
+          type: string
+          nullable: true
+          description: >
+            Absolute URL resolved by IFileStorageService.
+            Local: http://localhost:5001/api/v1/files/animation/23MarAnimation/scene_01_shot_01.mp4
+            AzureBlob: SAS URL with 1-hour TTL.
+            Null while clip is Pending or Rendering.
+        durationSeconds:
+          type: number
+          format: double
+          nullable: true
+        status:    { $ref: '#/components/schemas/ClipStatus' }
         createdAt: { type: string, format: date-time }
+      required: [id, episodeId, sceneNumber, shotIndex, status, createdAt]
 
     SignedClipUrlDto:
       type: object
-      required: [clipId, url, expiresAt]
       properties:
-        clipId: { type: string, format: uuid }
-        url: { type: string }
+        clipId:    { type: string, format: uuid }
+        url:       { type: string, format: uri }
         expiresAt: { type: string, format: date-time }
+      required: [clipId, url, expiresAt]
+
+    ProblemDetails:
+      type: object
+      properties:
+        error: { type: string }
+        code:  { type: string }
+
+paths:
+  /api/v1/episodes/{id}/animation/estimate:
+    get:
+      summary: Get animation cost estimate
+      description: >
+        Returns an itemised cost estimate for animating the episode storyboard
+        against the chosen backend. Shot count comes from the episode storyboard.
+      operationId: getAnimationEstimate
+      tags: [Animation]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: backend
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/AnimationBackend' }
+          description: Defaults to Kling if omitted
+      responses:
+        "200":
+          description: Cost estimate
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnimationEstimateDto' }
+        "404":
+          description: Episode or storyboard not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+
+  /api/v1/episodes/{id}/animation:
+    post:
+      summary: Approve animation and enqueue Hangfire job
+      description: >
+        Creates an AnimationJob (Approved), seeds Pending clips, and
+        dispatches a Hangfire background job via AnimationJobHangfireProcessor.
+        Local: processor scans LocalRootPath for matching mp4 files.
+        Kling: processor stubs; Python worker delivers via webhook.
+        Returns 409 if a non-terminal job already exists.
+      operationId: approveAnimation
+      tags: [Animation]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ApproveAnimationRequest' }
+            example: { backend: "Local" }
+      responses:
+        "202":
+          description: Animation job queued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnimationJobDto' }
+        "400":
+          description: No storyboard or empty storyboard
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        "404":
+          description: Episode not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        "409":
+          description: Animation already active
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+
+    get:
+      summary: List animation clips for episode
+      description: >
+        Returns AnimationClips ordered by sceneNumber then shotIndex.
+        ClipUrl resolved by IFileStorageService — local HTTP or SAS URL.
+      operationId: getAnimationClips
+      tags: [Animation]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Clip list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AnimationClipDto' }
+        "404":
+          description: Episode not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+
+  /api/v1/episodes/{id}/animation/clips/{clipId}:
+    get:
+      summary: Get playback URL for a single clip
+      description: >
+        Returns the resolved playback URL for a Ready clip via IFileStorageService.
+        Returns 425 Too Early if clip status is not Ready.
+      operationId: getClipUrl
+      tags: [Animation]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: clipId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Playback URL
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignedClipUrlDto' }
+        "404":
+          description: Clip not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+        "425":
+          description: Clip not yet ready
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProblemDetails' }
+
+  /api/v1/files/{filePath}:
+    get:
+      summary: Serve local file (Local provider only)
+      description: >
+        Streams file from FileStorage:LocalRootPath. Range requests supported
+        for video seeking. AllowAnonymous (img/video tags need no auth header).
+        Returns 404 when Provider != Local.
+      operationId: serveLocalFile
+      tags: [FileStorage]
+      security: []
+      parameters:
+        - name: filePath
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: File stream
+          content:
+            video/mp4: {}
+            image/png: {}
+            image/jpeg: {}
+            audio/mpeg: {}
+        "206":
+          description: Partial content (Range request)
+        "404":
+          description: File not found or provider is AzureBlob

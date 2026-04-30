@@ -1,6 +1,7 @@
 using AnimStudio.ContentModule.Application.Interfaces;
 using AnimStudio.ContentModule.Domain;
 using AnimStudio.ContentModule.Domain.Entities;
+using AnimStudio.ContentModule.Domain.Enums;
 using AnimStudio.SharedKernel;
 using AnimStudio.SharedKernel.Enums;
 using MediatR;
@@ -17,6 +18,9 @@ public sealed class HandleJobCompletionHandler(
     IEpisodeRepository episodes,
     ISagaStateRepository sagas,
     IStoryboardRepository storyboards,
+    IAnimationJobRepository animationJobs,
+    IAnimationClipRepository animationClips,
+    IPublisher publisher,
     ILogger<HandleJobCompletionHandler> logger)
     : IRequestHandler<HandleJobCompletionCommand, Result<bool>>
 {
@@ -38,6 +42,11 @@ public sealed class HandleJobCompletionHandler(
 
             if (job.Type == JobType.StoryboardGen && cmd.Result is not null)
                 await HandleStoryboardGenResultAsync(job.EpisodeId, cmd.Result, ct);
+
+            // ── Animation-specific result processing ─────────────────────────
+            // Python result: { "clips": [{ "sceneNumber": 1, "shotIndex": 1, "clipUrl": "...", "durationSeconds": 4.5 }] }
+            if (job.Type == JobType.Animation && cmd.Result is not null)
+                await HandleAnimationResultAsync(job.EpisodeId, cmd.Result, ct);
 
             job.Complete(cmd.Result);
             await jobs.UpdateAsync(job, ct);
@@ -179,4 +188,77 @@ public sealed class HandleJobCompletionHandler(
     private sealed record StoryboardGenResult(
         [property: JsonPropertyName("shotId")] Guid ShotId,
         [property: JsonPropertyName("imageUrl")] string ImageUrl);
+
+    // ── Animation ─────────────────────────────────────────────────────────────
+    // Python returns: { "clips": [{ "sceneNumber":1, "shotIndex":1, "clipUrl":"…", "durationSeconds":4.5 }],
+    //                   "actualCostUsd": 0.672 }
+
+    private async Task HandleAnimationResultAsync(Guid episodeId, string resultJson, CancellationToken ct)
+    {
+        try
+        {
+            var result = JsonSerializer.Deserialize<AnimationBatchResult>(resultJson, JsonOpts);
+            if (result?.Clips is null || result.Clips.Count == 0)
+            {
+                logger.LogWarning("Animation result for episode {EpisodeId} had no clips", episodeId);
+                return;
+            }
+
+            foreach (var item in result.Clips)
+            {
+                var clip = await animationClips.GetByEpisodeAndPositionAsync(
+                    episodeId, item.SceneNumber, item.ShotIndex, ct);
+
+                if (clip is null)
+                {
+                    logger.LogWarning(
+                        "Animation result: no clip found for episode {EpisodeId} scene {Scene} shot {Shot}",
+                        episodeId, item.SceneNumber, item.ShotIndex);
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(item.ClipUrl))
+                {
+                    clip.MarkFailed();
+                }
+                else
+                {
+                    clip.MarkReady(item.ClipUrl, item.DurationSeconds);
+                }
+
+                await animationClips.UpdateAsync(clip, ct);
+
+                // Dispatch domain events (ClipReady → SignalR)
+                foreach (var evt in clip.DomainEvents)
+                    await publisher.Publish(evt, ct);
+                clip.ClearDomainEvents();
+            }
+
+            // Update AnimationJob cost if Python provided it
+            var animJob = await animationJobs.GetLatestByEpisodeIdAsync(episodeId, ct);
+            if (animJob is not null && !animJob.Status.Equals(AnimationStatus.Completed))
+            {
+                animJob.MarkCompleted(result.ActualCostUsd ?? animJob.EstimatedCostUsd);
+                await animationJobs.UpdateAsync(animJob, ct);
+            }
+
+            logger.LogInformation(
+                "Animation result processed for episode {EpisodeId}: {Count} clips updated",
+                episodeId, result.Clips.Count);
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "Failed to parse Animation result for episode {EpisodeId}", episodeId);
+        }
+    }
+
+    private sealed record AnimationBatchResult(
+        [property: JsonPropertyName("clips")] List<AnimationClipResult> Clips,
+        [property: JsonPropertyName("actualCostUsd")] decimal? ActualCostUsd);
+
+    private sealed record AnimationClipResult(
+        [property: JsonPropertyName("sceneNumber")] int SceneNumber,
+        [property: JsonPropertyName("shotIndex")] int ShotIndex,
+        [property: JsonPropertyName("clipUrl")] string ClipUrl,
+        [property: JsonPropertyName("durationSeconds")] double DurationSeconds);
 }

@@ -4,10 +4,10 @@ import { useEffect } from "react"
 import Image from "next/image"
 import { X, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { StoryboardShot } from "@/lib/mock-data"
+import type { StoryboardShotDto } from "@/types"
 
 interface Props {
-  shot: StoryboardShot | null
+  shot: StoryboardShotDto | null
   isOpen: boolean
   onClose: () => void
   onNavigate: (direction: "prev" | "next") => void
@@ -56,16 +56,22 @@ export function ShotViewerModal({ shot, isOpen, onClose, onNavigate }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Image */}
-        <div className="relative w-[80vw] max-w-3xl aspect-video rounded-lg overflow-hidden shadow-2xl">
-          <Image
-            src={shot.imageUrl}
-            alt={`Scene ${shot.sceneNumber} Shot ${shot.shotIndex}`}
-            fill
-            sizes="80vw"
-            className="object-cover"
-            unoptimized
-            priority
-          />
+        <div className="relative w-[80vw] max-w-3xl aspect-video rounded-lg overflow-hidden shadow-2xl bg-gray-900">
+          {shot.imageUrl ? (
+            <Image
+              src={shot.imageUrl}
+              alt={`Scene ${shot.sceneNumber} Shot ${shot.shotIndex}`}
+              fill
+              sizes="80vw"
+              className="object-cover"
+              unoptimized
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-white/40 text-sm">
+              Image not yet generated
+            </div>
+          )}
         </div>
 
         {/* Info panel */}

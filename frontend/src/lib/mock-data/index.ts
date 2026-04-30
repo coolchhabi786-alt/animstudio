@@ -2,7 +2,6 @@ export {
   mockProjects,
   mockEpisodesByProject,
   mockCharactersPage,
-  mockStoryboardDto,
   mockSagaState,
   MOCK_TEAM_ID,
   MOCK_PROJECT_ID_1,

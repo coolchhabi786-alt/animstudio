@@ -9,22 +9,20 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { AspectRatio } from "@/lib/mock-data";
+import { ASPECT_RATIO_DISPLAY, type RenderAspectRatio } from "@/types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   videoUrl: string;
-  aspectRatio: AspectRatio;
+  aspectRatio: RenderAspectRatio;
   renderId: string;
 }
 
-const RATIO_META: Record<AspectRatio, { maxW: string; paddingTop: string; label: string }> = {
-  "16:9": { maxW: "max-w-4xl", paddingTop: "56.25%", label: "Landscape 16:9" },
-  "9:16": { maxW: "max-w-xs",  paddingTop: "177.78%", label: "Portrait 9:16" },
-  "1:1":  { maxW: "max-w-xl",  paddingTop: "100%",    label: "Square 1:1" },
-  "4:3":  { maxW: "max-w-2xl", paddingTop: "75%",     label: "Standard 4:3" },
-  "21:9": { maxW: "max-w-5xl", paddingTop: "42.86%",  label: "Ultrawide 21:9" },
+const RATIO_META: Record<RenderAspectRatio, { maxW: string; paddingTop: string; label: string }> = {
+  SixteenNine: { maxW: "max-w-4xl", paddingTop: "56.25%",  label: "Landscape 16:9" },
+  NineSixteen: { maxW: "max-w-xs",  paddingTop: "177.78%", label: "Portrait 9:16"  },
+  OneOne:      { maxW: "max-w-xl",  paddingTop: "100%",     label: "Square 1:1"     },
 };
 
 function triggerDownload(url: string, filename: string) {
@@ -37,7 +35,7 @@ function triggerDownload(url: string, filename: string) {
 }
 
 export function RenderPreviewDialog({ open, onClose, videoUrl, aspectRatio, renderId }: Props) {
-  const meta = RATIO_META[aspectRatio] ?? RATIO_META["16:9"];
+  const meta = RATIO_META[aspectRatio] ?? RATIO_META.SixteenNine;
   const shortId = renderId.slice(0, 8);
 
   return (
@@ -64,7 +62,6 @@ export function RenderPreviewDialog({ open, onClose, videoUrl, aspectRatio, rend
           </Button>
         </DialogHeader>
 
-        {/* Aspect-ratio-preserving video container */}
         <div className="relative w-full bg-black" style={{ paddingTop: meta.paddingTop }}>
           <video
             key={videoUrl}

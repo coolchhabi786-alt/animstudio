@@ -1,173 +1,175 @@
-/** Mock storyboard data for Phase 6 UI testing. 3 scenes × 4 shots = 12 total. */
+/**
+ * Mock storyboard using real AI-generated images from the cartoon automation pipeline.
+ * Images served from: /api/assets/storyboard/29MarAnimationImages/
+ * Episode: "The Superpowered Shenanigans of Mr. Whiskers"
+ *   Scene 1 — Mr. Whiskers meets Dave (2 shots + 2 extras)
+ *   Scene 2 — The Prank Plan (3 shots + 1 extra)
+ *   Scene 3 — Superpowered Shenanigans (3 shots + 2 extras)
+ */
 
 export interface StoryboardShot {
-  id: string
-  sceneNumber: number
-  shotIndex: number
-  imageUrl: string
-  description: string
-  styleOverride?: string
-  regenerationCount: number
-  updatedAt: string
+  id:                string;
+  sceneNumber:       number;
+  shotIndex:         number;
+  imageUrl:          string;
+  description:       string;
+  styleOverride?:    string;
+  regenerationCount: number;
+  updatedAt:         string;
 }
 
 export interface StoryboardScene {
-  id: string
-  number: number
-  shots: StoryboardShot[]
+  id:     string;
+  number: number;
+  shots:  StoryboardShot[];
 }
 
 export interface MockStoryboard {
-  id: string
-  episodeId: string
-  scenes: StoryboardScene[]
-  createdAt: string
-  updatedAt: string
+  id:        string;
+  episodeId: string;
+  scenes:    StoryboardScene[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+function img(file: string) {
+  return `/api/assets/storyboard/29MarAnimationImages/${file}`;
 }
 
 export const mockStoryboard: MockStoryboard = {
-  id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-  episodeId: 'ep-0011-2222-3333-4444-555566667777',
-  createdAt: '2026-04-01T08:00:00.000Z',
-  updatedAt: '2026-04-19T10:30:00.000Z',
+  id:        "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  episodeId: "ep-0011-2222-3333-4444-555566667777",
+  createdAt: "2026-03-29T08:00:00.000Z",
+  updatedAt: "2026-04-27T10:00:00.000Z",
   scenes: [
     {
-      id: 'scene-0001-1111-2222-3333-444455556666',
+      id: "scene-0001-1111-2222-3333-444455556666",
       number: 1,
       shots: [
         {
-          id: 'shot-s1-01-aaaa-bbbb-cccc-ddddeeee0001',
-          sceneNumber: 1,
-          shotIndex: 1,
-          imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&h=600&fit=crop',
-          description: 'Wide establishing shot of a futuristic city skyline at dawn. Skyscrapers glow with blue neon accents.',
-          styleOverride: undefined,
-          regenerationCount: 0,
-          updatedAt: '2026-04-01T08:05:00.000Z',
-        },
-        {
-          id: 'shot-s1-02-aaaa-bbbb-cccc-ddddeeee0002',
-          sceneNumber: 1,
-          shotIndex: 2,
-          imageUrl: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800&h=600&fit=crop',
-          description: 'Medium shot of protagonist Maya walking through a crowded market district, looking determined.',
-          styleOverride: undefined,
+          id: "shot-s1-01-aaaa-bbbb-cccc-ddddeeee0001",
+          sceneNumber: 1, shotIndex: 1,
+          imageUrl: img("scene_01_shot_01_6233dc.png"),
+          description:
+            "Wide establishing shot of Mr. Whiskers lounging on a sun-soaked windowsill as Dave the Owner walks in carrying groceries.",
           regenerationCount: 1,
-          updatedAt: '2026-04-02T09:10:00.000Z',
+          updatedAt: "2026-03-29T08:05:00.000Z",
         },
         {
-          id: 'shot-s1-03-aaaa-bbbb-cccc-ddddeeee0003',
-          sceneNumber: 1,
-          shotIndex: 3,
-          imageUrl: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=800&h=600&fit=crop',
-          description: 'Close-up on Maya\'s face as she spots something alarming in the distance. Her eyes widen.',
-          styleOverride: 'anime',
-          regenerationCount: 2,
-          updatedAt: '2026-04-03T11:00:00.000Z',
-        },
-        {
-          id: 'shot-s1-04-aaaa-bbbb-cccc-ddddeeee0004',
-          sceneNumber: 1,
-          shotIndex: 4,
-          imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&h=600&fit=crop',
-          description: 'Pan shot revealing a massive holographic advertisement malfunctioning above the plaza.',
-          styleOverride: undefined,
+          id: "shot-s1-01b-aaaa-bbbb-cccc-ddddeeee0001",
+          sceneNumber: 1, shotIndex: 2,
+          imageUrl: img("scene_01_shot_01_fa1fd5.png"),
+          description:
+            "Alternate take: tighter framing on Mr. Whiskers giving Dave a suspicious side-eye.",
           regenerationCount: 0,
-          updatedAt: '2026-04-01T08:20:00.000Z',
+          updatedAt: "2026-03-29T08:06:00.000Z",
+        },
+        {
+          id: "shot-s1-02-aaaa-bbbb-cccc-ddddeeee0002",
+          sceneNumber: 1, shotIndex: 3,
+          imageUrl: img("scene_01_shot_02_3b5d67.png"),
+          description:
+            "Medium shot of Dave setting down bags, noticing Mr. Whiskers has knocked over a plant — again.",
+          regenerationCount: 0,
+          updatedAt: "2026-03-29T08:10:00.000Z",
+        },
+        {
+          id: "shot-s1-02b-aaaa-bbbb-cccc-ddddeeee0002",
+          sceneNumber: 1, shotIndex: 4,
+          imageUrl: img("scene_01_shot_02_5422b4.png"),
+          description:
+            "Close-up on shattered pot and guilty paw — Mr. Whiskers pretends to be asleep.",
+          styleOverride: "comic-panel",
+          regenerationCount: 1,
+          updatedAt: "2026-03-29T08:12:00.000Z",
         },
       ],
     },
     {
-      id: 'scene-0002-1111-2222-3333-444455556666',
+      id: "scene-0002-1111-2222-3333-444455556666",
       number: 2,
       shots: [
         {
-          id: 'shot-s2-01-aaaa-bbbb-cccc-ddddeeee0005',
-          sceneNumber: 2,
-          shotIndex: 1,
-          imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop',
-          description: 'Interior of a high-tech research lab. Banks of monitors display complex data streams.',
-          styleOverride: undefined,
+          id: "shot-s2-01-aaaa-bbbb-cccc-ddddeeee0005",
+          sceneNumber: 2, shotIndex: 1,
+          imageUrl: img("scene_02_shot_01_13117c.png"),
+          description:
+            "Professor Paws (neighbour cat) sneaks through the cat flap with a gadget strapped to his back.",
           regenerationCount: 0,
-          updatedAt: '2026-04-01T09:00:00.000Z',
+          updatedAt: "2026-03-29T09:00:00.000Z",
         },
         {
-          id: 'shot-s2-02-aaaa-bbbb-cccc-ddddeeee0006',
-          sceneNumber: 2,
-          shotIndex: 2,
-          imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=600&fit=crop',
-          description: 'Dr. Chen (antagonist) studies the anomalous readings, a thin smile crossing his face.',
-          styleOverride: 'pixar3d',
+          id: "shot-s2-01b-aaaa-bbbb-cccc-ddddeeee0005",
+          sceneNumber: 2, shotIndex: 2,
+          imageUrl: img("scene_02_shot_01_313eb6.png"),
+          description:
+            "Alternate angle: Professor Paws presenting a holographic blueprint to Mr. Whiskers.",
+          regenerationCount: 0,
+          updatedAt: "2026-03-29T09:02:00.000Z",
+        },
+        {
+          id: "shot-s2-02-aaaa-bbbb-cccc-ddddeeee0006",
+          sceneNumber: 2, shotIndex: 3,
+          imageUrl: img("scene_02_shot_02_7b60f5.png"),
+          description:
+            "Two-shot of both cats studying the contraption — Mr. Whiskers looks intrigued, Professor Paws narrates.",
+          styleOverride: "pixar3d",
           regenerationCount: 1,
-          updatedAt: '2026-04-05T14:30:00.000Z',
+          updatedAt: "2026-03-29T09:15:00.000Z",
         },
         {
-          id: 'shot-s2-03-aaaa-bbbb-cccc-ddddeeee0007',
-          sceneNumber: 2,
-          shotIndex: 3,
-          imageUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=600&fit=crop',
-          description: 'Two-shot of Dr. Chen and his assistant reviewing a glowing blue schematic on a holotable.',
-          styleOverride: undefined,
+          id: "shot-s2-03-aaaa-bbbb-cccc-ddddeeee0007",
+          sceneNumber: 2, shotIndex: 4,
+          imageUrl: img("scene_02_shot_03_1f3279.png"),
+          description:
+            "The gadget sparks to life, bathing the room in purple light as Mr. Whiskers gets zapped.",
           regenerationCount: 0,
-          updatedAt: '2026-04-01T09:20:00.000Z',
-        },
-        {
-          id: 'shot-s2-04-aaaa-bbbb-cccc-ddddeeee0008',
-          sceneNumber: 2,
-          shotIndex: 4,
-          imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop',
-          description: 'ECU on a spinning device activating — a pulse of energy radiates outward from the core.',
-          styleOverride: undefined,
-          regenerationCount: 3,
-          updatedAt: '2026-04-10T16:45:00.000Z',
+          updatedAt: "2026-03-29T09:20:00.000Z",
         },
       ],
     },
     {
-      id: 'scene-0003-1111-2222-3333-444455556666',
+      id: "scene-0003-1111-2222-3333-444455556666",
       number: 3,
       shots: [
         {
-          id: 'shot-s3-01-aaaa-bbbb-cccc-ddddeeee0009',
-          sceneNumber: 3,
-          shotIndex: 1,
-          imageUrl: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&h=600&fit=crop',
-          description: 'Aerial drone shot of the city as lights begin to flicker and fail block by block.',
-          styleOverride: undefined,
+          id: "shot-s3-01-aaaa-bbbb-cccc-ddddeeee0009",
+          sceneNumber: 3, shotIndex: 1,
+          imageUrl: img("scene_03_shot_01_b50a0d.png"),
+          description:
+            "Mr. Whiskers levitates off the couch — eyes glowing purple, fur on end — discovering his new superpower.",
           regenerationCount: 0,
-          updatedAt: '2026-04-01T10:00:00.000Z',
+          updatedAt: "2026-03-29T10:00:00.000Z",
         },
         {
-          id: 'shot-s3-02-aaaa-bbbb-cccc-ddddeeee0010',
-          sceneNumber: 3,
-          shotIndex: 2,
-          imageUrl: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&h=600&fit=crop',
-          description: 'Maya running through a darkened alley, sparks flying from overhead power conduits.',
-          styleOverride: undefined,
+          id: "shot-s3-01b-aaaa-bbbb-cccc-ddddeeee0009",
+          sceneNumber: 3, shotIndex: 2,
+          imageUrl: img("scene_03_shot_01_bb3785.png"),
+          description:
+            "Dave drops his coffee mug in shock as Mr. Whiskers floats past at eye level.",
+          regenerationCount: 0,
+          updatedAt: "2026-03-29T10:01:00.000Z",
+        },
+        {
+          id: "shot-s3-02-aaaa-bbbb-cccc-ddddeeee0010",
+          sceneNumber: 3, shotIndex: 3,
+          imageUrl: img("scene_03_shot_02_480e61.png"),
+          description:
+            "Chaos: Mr. Whiskers zooms around the apartment at super-speed, knocking over everything.",
           regenerationCount: 1,
-          updatedAt: '2026-04-07T12:00:00.000Z',
+          updatedAt: "2026-03-29T10:10:00.000Z",
         },
         {
-          id: 'shot-s3-03-aaaa-bbbb-cccc-ddddeeee0011',
-          sceneNumber: 3,
-          shotIndex: 3,
-          imageUrl: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=800&h=600&fit=crop',
-          description: 'Maya slides to a stop before a sealed blast door. She raises her keycard with trembling hands.',
-          styleOverride: 'comicbook',
+          id: "shot-s3-03-aaaa-bbbb-cccc-ddddeeee0011",
+          sceneNumber: 3, shotIndex: 4,
+          imageUrl: img("scene_03_shot_03_96a061.png"),
+          description:
+            "Professor Paws furiously scribbles notes while Dave tries to catch Mr. Whiskers with a laundry basket.",
+          styleOverride: "comicbook",
           regenerationCount: 0,
-          updatedAt: '2026-04-01T10:20:00.000Z',
-        },
-        {
-          id: 'shot-s3-04-aaaa-bbbb-cccc-ddddeeee0012',
-          sceneNumber: 3,
-          shotIndex: 4,
-          imageUrl: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&h=600&fit=crop',
-          description: 'The door slides open revealing an empty chamber — the device is gone. Cut to black.',
-          styleOverride: undefined,
-          regenerationCount: 0,
-          updatedAt: '2026-04-01T10:30:00.000Z',
+          updatedAt: "2026-03-29T10:20:00.000Z",
         },
       ],
     },
   ],
-}
+};

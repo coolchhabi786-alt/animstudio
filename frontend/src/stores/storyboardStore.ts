@@ -1,13 +1,13 @@
 import { create } from "zustand"
-import type { StoryboardShot } from "@/lib/mock-data"
+import type { StoryboardShotDto } from "@/types"
 
 interface StoryboardState {
   currentSceneIndex: number
-  selectedShot: StoryboardShot | null
+  selectedShot: StoryboardShotDto | null
   regeneratingShots: Set<string>
   nextScene: (totalScenes: number) => void
   prevScene: () => void
-  selectShot: (shot: StoryboardShot | null) => void
+  selectShot: (shot: StoryboardShotDto | null) => void
   markRegeneration: (shotId: string, done?: boolean) => void
 }
 

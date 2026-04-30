@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StyleOverridePopover } from "@/components/storyboard/style-override-popover"
-import type { StoryboardShot } from "@/lib/mock-data"
+import type { StoryboardShotDto } from "@/types"
 
 // ─── Shot Card ────────────────────────────────────────────────────────────────
 
 interface ShotCardProps {
-  shot: StoryboardShot
+  shot: StoryboardShotDto
   isRegenerating: boolean
   onRegenerate: () => void
   onStyleEdit: (style: string) => void
@@ -31,7 +31,7 @@ function ShotCard({ shot, isRegenerating, onRegenerate, onStyleEdit, onClick }: 
             <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
             <span className="text-xs text-gray-500">Regenerating…</span>
           </div>
-        ) : (
+        ) : shot.imageUrl ? (
           <Image
             src={shot.imageUrl}
             alt={`Scene ${shot.sceneNumber} shot ${shot.shotIndex}`}
@@ -40,6 +40,11 @@ function ShotCard({ shot, isRegenerating, onRegenerate, onStyleEdit, onClick }: 
             className="object-cover transition-transform group-hover:scale-105"
             unoptimized
           />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-gray-100">
+            <Loader2 className="h-5 w-5 text-gray-400" />
+            <span className="text-xs text-gray-400">Generating…</span>
+          </div>
         )}
 
         {/* Top-left badge */}
@@ -116,13 +121,13 @@ function ShotCardSkeleton() {
 export type ShotAction = "regenerate" | "styleEdit"
 
 interface Props {
-  shots: StoryboardShot[]
+  shots: StoryboardShotDto[]
   regeneratingShots: Set<string>
   isLoading?: boolean
   currentSceneIndex: number
   totalScenes: number
   onCardAction: (shotId: string, action: ShotAction, payload?: string) => void
-  onShotClick: (shot: StoryboardShot) => void
+  onShotClick: (shot: StoryboardShotDto) => void
   onNextScene: () => void
   onPrevScene: () => void
 }

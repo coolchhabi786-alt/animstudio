@@ -10,25 +10,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { MockAnimationClip, AnimationStatus } from "@/lib/mock-data";
+import type { AnimationClipDto, ClipStatus } from "@/types";
 
 interface Props {
-  clips: MockAnimationClip[];
+  clips: AnimationClipDto[];
   groupByScene?: boolean;
 }
 
-const STATUS_STYLES: Record<AnimationStatus, string> = {
-  ready: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  processing: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  queued: "bg-gray-100 text-gray-600 border-gray-200",
-  failed: "bg-red-100 text-red-700 border-red-200",
+const STATUS_STYLES: Record<ClipStatus, string> = {
+  Ready:     "bg-emerald-100 text-emerald-700 border-emerald-200",
+  Rendering: "bg-indigo-100 text-indigo-700 border-indigo-200",
+  Pending:   "bg-gray-100 text-gray-600 border-gray-200",
+  Failed:    "bg-red-100 text-red-700 border-red-200",
 };
 
-const STATUS_LABEL: Record<AnimationStatus, string> = {
-  ready: "Ready",
-  processing: "Processing",
-  queued: "Queued",
-  failed: "Failed",
+const STATUS_LABEL: Record<ClipStatus, string> = {
+  Ready:     "Ready",
+  Rendering: "Processing",
+  Pending:   "Queued",
+  Failed:    "Failed",
 };
 
 // ── Thumbnail ─────────────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ function VideoThumbnail({
       ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
       onCapture(canvas.toDataURL("image/jpeg", 0.8));
     } catch {
-      // cross-origin or codec issue — ignore, fallback shown
+      // cross-origin or codec issue — fallback shown
     }
   }
 
@@ -84,17 +84,15 @@ function ClipCard({
   clip,
   onOpen,
 }: {
-  clip: MockAnimationClip;
+  clip: AnimationClipDto;
   onOpen: () => void;
 }) {
   const [thumbnail, setThumbnail] = useState<string | null>(null);
-
-  const isReady = clip.status === "ready";
+  const isReady = clip.status === "Ready";
 
   return (
     <>
-      {/* Hidden video used only for thumbnail extraction */}
-      {isReady && (
+      {isReady && clip.clipUrl && (
         <VideoThumbnail src={clip.clipUrl} onCapture={setThumbnail} />
       )}
 
@@ -104,7 +102,6 @@ function ClipCard({
         onClick={isReady ? onOpen : undefined}
         title={isReady ? `Scene ${clip.sceneNumber} · Shot ${clip.shotIndex}` : undefined}
       >
-        {/* Thumbnail / state display */}
         {isReady && thumbnail ? (
           <img
             src={thumbnail}
@@ -113,7 +110,7 @@ function ClipCard({
           />
         ) : isReady && !thumbnail ? (
           <div className="w-full h-full bg-gray-800 animate-pulse" />
-        ) : clip.status === "failed" ? (
+        ) : clip.status === "Failed" ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-red-400">
             <AlertTriangle className="h-6 w-6" />
             <span className="text-[10px]">Failed</span>
@@ -121,11 +118,10 @@ function ClipCard({
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-gray-500">
             <Loader2 className="h-6 w-6 animate-spin" />
-            <span className="text-[10px] capitalize">{clip.status}</span>
+            <span className="text-[10px]">{STATUS_LABEL[clip.status]}</span>
           </div>
         )}
 
-        {/* Play overlay on hover (ready only) */}
         {isReady && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="rounded-full bg-white/90 p-2.5">
@@ -134,7 +130,6 @@ function ClipCard({
           </div>
         )}
 
-        {/* Status badge */}
         <Badge
           variant="outline"
           className={`absolute top-1.5 left-1.5 text-[9px] px-1.5 py-0.5 leading-none border ${STATUS_STYLES[clip.status]}`}
@@ -142,7 +137,6 @@ function ClipCard({
           {STATUS_LABEL[clip.status]}
         </Badge>
 
-        {/* Shot label */}
         <span className="absolute bottom-1.5 right-1.5 text-[9px] text-white bg-black/60 rounded px-1 leading-tight">
           S{clip.sceneNumber}·{clip.shotIndex}
         </span>
@@ -158,7 +152,7 @@ function ClipDialog({
   open,
   onClose,
 }: {
-  clip: MockAnimationClip | null;
+  clip: AnimationClipDto | null;
   open: boolean;
   onClose: () => void;
 }) {
@@ -181,7 +175,7 @@ function ClipDialog({
           </Button>
         </DialogHeader>
 
-        {clip && (
+        {clip?.clipUrl && (
           <div className="aspect-video w-full bg-black">
             <video
               key={clip.id}
@@ -197,9 +191,7 @@ function ClipDialog({
 
         {clip && (
           <div className="px-5 py-3 bg-gray-900 border-t border-gray-800 flex items-center gap-4 text-xs text-gray-400">
-            <span>Duration: {clip.durationSeconds}s</span>
-            <span>Backend: {clip.backend}</span>
-            <span>Cost: ${clip.costUsd.toFixed(3)}</span>
+            {clip.durationSeconds && <span>Duration: {clip.durationSeconds.toFixed(1)}s</span>}
             <Badge
               variant="outline"
               className={`ml-auto text-[10px] border ${STATUS_STYLES[clip.status]}`}
@@ -221,11 +213,11 @@ function SceneGroup({
   onOpenClip,
 }: {
   sceneNumber: number;
-  clips: MockAnimationClip[];
-  onOpenClip: (clip: MockAnimationClip) => void;
+  clips: AnimationClipDto[];
+  onOpenClip: (clip: AnimationClipDto) => void;
 }) {
   const [open, setOpen] = useState(true);
-  const readyCount = clips.filter((c) => c.status === "ready").length;
+  const readyCount = clips.filter((c) => c.status === "Ready").length;
 
   return (
     <div className="border rounded-xl overflow-hidden">
@@ -261,14 +253,10 @@ function SceneGroup({
 // ── Public component ──────────────────────────────────────────────────────────
 
 export function ClipPreviewGrid({ clips, groupByScene = false }: Props) {
-  const [activeClip, setActiveClip] = useState<MockAnimationClip | null>(null);
+  const [activeClip, setActiveClip] = useState<AnimationClipDto | null>(null);
 
-  function openClip(clip: MockAnimationClip) {
-    if (clip.status === "ready") setActiveClip(clip);
-  }
-
-  function closeClip() {
-    setActiveClip(null);
+  function openClip(clip: AnimationClipDto) {
+    if (clip.status === "Ready") setActiveClip(clip);
   }
 
   const scenes = [...new Set(clips.map((c) => c.sceneNumber))].sort((a, b) => a - b);
@@ -294,7 +282,7 @@ export function ClipPreviewGrid({ clips, groupByScene = false }: Props) {
         </div>
       )}
 
-      <ClipDialog clip={activeClip} open={!!activeClip} onClose={closeClip} />
+      <ClipDialog clip={activeClip} open={!!activeClip} onClose={() => setActiveClip(null)} />
     </>
   );
 }

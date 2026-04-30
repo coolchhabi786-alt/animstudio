@@ -442,3 +442,60 @@ export interface ClipReadyEvent {
   shotIndex: number;
   clipUrl: string;
 }
+
+// ── Phase 9 — Render & Delivery ──────────────────────────────────────────────
+
+/** Maps to backend RenderAspectRatio enum (string serialized). */
+export type RenderAspectRatio = "SixteenNine" | "NineSixteen" | "OneOne";
+
+/** Maps to backend RenderStatus enum (string serialized). */
+export type RenderStatus = "Pending" | "Rendering" | "Complete" | "Failed";
+
+/** Display strings for aspect ratio values used by the picker. */
+export const ASPECT_RATIO_DISPLAY: Record<RenderAspectRatio, string> = {
+  SixteenNine: "16:9",
+  NineSixteen: "9:16",
+  OneOne: "1:1",
+};
+
+export interface RenderDto {
+  id: string;
+  episodeId: string;
+  aspectRatio: RenderAspectRatio;
+  status: RenderStatus;
+  finalVideoUrl: string | null;
+  cdnUrl: string | null;
+  srtUrl: string | null;
+  durationSeconds: number;
+  errorMessage: string | null;
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export interface StartRenderRequest {
+  aspectRatio: RenderAspectRatio;
+}
+
+/** SignalR payload broadcast when render progress updates. */
+export interface RenderProgressEvent {
+  renderId: string;
+  episodeId: string;
+  percent: number;
+  stage: string;
+}
+
+/** SignalR payload broadcast when a render completes. */
+export interface RenderCompleteEvent {
+  renderId: string;
+  episodeId: string;
+  cdnUrl: string | null;
+  srtUrl: string | null;
+  durationSeconds: number;
+}
+
+/** SignalR payload broadcast when a render fails. */
+export interface RenderFailedEvent {
+  renderId: string;
+  episodeId: string;
+  errorMessage: string;
+}

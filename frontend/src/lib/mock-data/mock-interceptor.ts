@@ -1,22 +1,24 @@
-import type { JobDto, VoiceAssignmentDto } from "@/types"
+import type { JobDto } from "@/types"
 import {
   mockProjects,
   mockEpisodesByProject,
   mockCharactersPage,
-  mockStoryboardDto,
   mockSagaState,
 } from "./mock-projects"
-import { mockVoices } from "./mock-voices"
 
 /**
  * Maps an API path + method to a mock response.
- * Returns `undefined` when no mock rule matches (real fetch proceeds).
+ * Returns `undefined` when no mock rule matches — real fetch proceeds.
+ *
+ * Routes removed from mocking (use real backend):
+ *   - Storyboard GET/POST           (Phase 6 — IFileStorageService returns real URLs)
+ *   - Voice assignments GET/PUT     (Phase 7 backend)
+ *   - Animation estimate/clips/approve (Phase 8 — AnimationController + Hangfire processor)
  */
 export function getMockResponse<T>(path: string, options: RequestInit = {}): T | undefined {
   const method = ((options.method as string) ?? "GET").toUpperCase()
 
-  // ── Projects ─────────────────────────────────────────────────────────────
-
+  // Projects
   if (method === "GET" && path === "/api/v1/projects") {
     return {
       items: mockProjects,
@@ -36,7 +38,7 @@ export function getMockResponse<T>(path: string, options: RequestInit = {}): T |
     const body = safeParseBody(options.body)
     return {
       id: `mock-proj-${Date.now()}`,
-      teamId: "mock-team-001",
+      teamId: "00000000-0000-0000-0000-000000000002",
       name: body?.name ?? "New Project",
       description: body?.description ?? "",
       createdAt: new Date().toISOString(),
@@ -48,8 +50,7 @@ export function getMockResponse<T>(path: string, options: RequestInit = {}): T |
     return null as unknown as T
   }
 
-  // ── Episodes ──────────────────────────────────────────────────────────────
-
+  // Episodes
   const projectEpisodesMatch = path.match(/^\/api\/v1\/projects\/([^/]+)\/episodes$/)
   if (method === "GET" && projectEpisodesMatch) {
     const eps =
@@ -83,8 +84,7 @@ export function getMockResponse<T>(path: string, options: RequestInit = {}): T |
     return null as unknown as T
   }
 
-  // ── Characters ────────────────────────────────────────────────────────────
-
+  // Characters
   if (method === "GET" && path.startsWith("/api/v1/characters")) {
     return mockCharactersPage as unknown as T
   }
@@ -102,45 +102,7 @@ export function getMockResponse<T>(path: string, options: RequestInit = {}): T |
     return null as unknown as T
   }
 
-  // ── Storyboard ────────────────────────────────────────────────────────────
-
-  const storyboardMatch = path.match(/^\/api\/v1\/episodes\/([^/]+)\/storyboard$/)
-  if (method === "GET" && storyboardMatch) {
-    return { ...mockStoryboardDto, episodeId: storyboardMatch[1] } as unknown as T
-  }
-
-  if (method === "POST" && storyboardMatch) {
-    const mockJob: JobDto = {
-      id: `mock-job-${Date.now()}`,
-      episodeId: storyboardMatch[1],
-      type: "StoryboardPlan",
-      status: "Queued",
-      queuedAt: new Date().toISOString(),
-      attemptNumber: 1,
-    }
-    return mockJob as unknown as T
-  }
-
-  // ── Voice assignments ─────────────────────────────────────────────────────
-
-  const voicesMatch = path.match(/^\/api\/v1\/episodes\/([^/]+)\/voices$/)
-  if (method === "GET" && voicesMatch) {
-    const assignments: VoiceAssignmentDto[] = mockVoices.map((v) => ({
-      id: v.id,
-      episodeId: voicesMatch[1],
-      characterId: v.characterId,
-      characterName: v.character.name,
-      voiceName: v.voiceName,
-      language: v.language,
-      updatedAt: v.updatedAt,
-    }))
-    return assignments as unknown as T
-  }
-
-  if (method === "PUT" && voicesMatch) {
-    return [] as unknown as T
-  }
-
+  // Voice preview — keep mocked because the backend dev stub returns a non-playable placeholder URL
   if (method === "POST" && path === "/api/v1/voices/preview") {
     return {
       audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
@@ -148,8 +110,7 @@ export function getMockResponse<T>(path: string, options: RequestInit = {}): T |
     } as unknown as T
   }
 
-  // ── Saga / production state ───────────────────────────────────────────────
-
+  // Saga / production state
   const sagaMatch = path.match(/^\/api\/v1\/episodes\/([^/]+)\/saga$/)
   if (method === "GET" && sagaMatch) {
     return { ...mockSagaState, episodeId: sagaMatch[1] } as unknown as T

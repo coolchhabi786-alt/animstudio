@@ -11,7 +11,8 @@ public sealed record GetAnimationClipsQuery(Guid EpisodeId)
 
 public sealed class GetAnimationClipsHandler(
     IEpisodeRepository episodes,
-    IAnimationClipRepository clips)
+    IAnimationClipRepository clips,
+    IFileStorageService fileStorage)
     : IRequestHandler<GetAnimationClipsQuery, Result<List<AnimationClipDto>>>
 {
     public async Task<Result<List<AnimationClipDto>>> Handle(
@@ -27,7 +28,9 @@ public sealed class GetAnimationClipsHandler(
             .ThenBy(c => c.ShotIndex)
             .Select(c => new AnimationClipDto(
                 c.Id, c.EpisodeId, c.SceneNumber, c.ShotIndex,
-                c.StoryboardShotId, c.ClipUrl, c.DurationSeconds,
+                c.StoryboardShotId,
+                c.ClipUrl is not null ? fileStorage.GetFileUrl(c.ClipUrl) : null,
+                c.DurationSeconds,
                 c.Status, c.CreatedAt))
             .ToList();
 

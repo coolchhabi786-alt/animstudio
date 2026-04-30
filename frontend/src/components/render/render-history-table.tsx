@@ -9,28 +9,26 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { MockRender, RenderStatus } from "@/lib/mock-data";
+import { ASPECT_RATIO_DISPLAY, type RenderDto, type RenderAspectRatio, type RenderStatus } from "@/types";
 
 interface Props {
-  renders: MockRender[];
-  onRerender?: (render: MockRender) => void;
-  onPreview?: (render: MockRender) => void;
+  renders: RenderDto[];
+  onRerender?: (render: RenderDto) => void;
+  onPreview?: (render: RenderDto) => void;
 }
 
 const STATUS_STYLES: Record<RenderStatus, string> = {
-  complete:   "bg-emerald-100 text-emerald-700 border-emerald-200",
-  queued:     "bg-gray-100 text-gray-600 border-gray-200",
-  assembling: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  mixing:     "bg-violet-100 text-violet-700 border-violet-200",
-  failed:     "bg-red-100 text-red-700 border-red-200",
+  Complete:  "bg-emerald-100 text-emerald-700 border-emerald-200",
+  Pending:   "bg-gray-100 text-gray-600 border-gray-200",
+  Rendering: "bg-indigo-100 text-indigo-700 border-indigo-200",
+  Failed:    "bg-red-100 text-red-700 border-red-200",
 };
 
 const STATUS_LABEL: Record<RenderStatus, string> = {
-  complete:   "Complete",
-  queued:     "Queued",
-  assembling: "Assembling",
-  mixing:     "Mixing",
-  failed:     "Failed",
+  Complete:  "Complete",
+  Pending:   "Queued",
+  Rendering: "Rendering",
+  Failed:    "Failed",
 };
 
 function formatDate(iso: string) {
@@ -79,7 +77,6 @@ export function RenderHistoryTable({ renders, onRerender, onPreview }: Props) {
             <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Date Created</th>
             <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Duration</th>
             <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Aspect</th>
-            <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Resolution</th>
             <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Status</th>
             <th className="px-4 py-3" />
           </tr>
@@ -89,8 +86,9 @@ export function RenderHistoryTable({ renders, onRerender, onPreview }: Props) {
             <tr key={r.id} className="border-b last:border-b-0 hover:bg-muted/30 transition-colors">
               <td className="px-4 py-3 text-muted-foreground">{formatDate(r.createdAt)}</td>
               <td className="px-4 py-3 tabular-nums">{formatDuration(r.durationSeconds)}</td>
-              <td className="px-4 py-3 font-mono text-xs">{r.aspectRatio}</td>
-              <td className="px-4 py-3 text-xs text-muted-foreground uppercase">{r.resolution}</td>
+              <td className="px-4 py-3 font-mono text-xs">
+                {ASPECT_RATIO_DISPLAY[r.aspectRatio as RenderAspectRatio] ?? r.aspectRatio}
+              </td>
               <td className="px-4 py-3">
                 <Badge
                   variant="outline"
@@ -101,7 +99,7 @@ export function RenderHistoryTable({ renders, onRerender, onPreview }: Props) {
               </td>
               <td className="px-4 py-3 text-right">
                 <div className="flex items-center justify-end gap-1">
-                  {r.finalVideoUrl && onPreview && (
+                  {r.cdnUrl && onPreview && (
                     <Button
                       size="sm"
                       variant="ghost"
@@ -119,10 +117,10 @@ export function RenderHistoryTable({ renders, onRerender, onPreview }: Props) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {r.finalVideoUrl && (
+                      {r.cdnUrl && (
                         <DropdownMenuItem
                           onClick={() =>
-                            triggerDownload(r.finalVideoUrl!, `render-${r.id.slice(0, 8)}.mp4`)
+                            triggerDownload(r.cdnUrl!, `render-${r.id.slice(0, 8)}.mp4`)
                           }
                         >
                           <Download className="h-4 w-4 mr-2" />

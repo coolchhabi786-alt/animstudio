@@ -1,0 +1,228 @@
+openapi: 3.1.0
+info:
+  title: AnimStudio API — Phase 9 Render & Delivery
+  version: "1.0"
+  description: |
+    Post-production rendering endpoints. Accepts an episode and aspect ratio,
+    enqueues a Hangfire render job, and returns progress via SignalR.
+
+servers:
+  - url: http://localhost:5001
+    description: Local development
+  - url: https://api.animstudio.ai
+    description: Production
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Renders
+    description: Post-production render lifecycle
+
+paths:
+  /api/v1/episodes/{id}/renders:
+    post:
+      operationId: startRender
+      tags: [Renders]
+      summary: Start a new render job
+      description: |
+        Creates a Render record (status=Pending) and enqueues a Hangfire processor.
+        The processor runs asynchronously; monitor progress via SignalR event `RenderProgress`
+        and completion via `RenderComplete`.
+      parameters:
+        - $ref: "#/components/parameters/EpisodeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartRenderRequest"
+            example:
+              aspectRatio: SixteenNine
+      responses:
+        "202":
+          description: Render accepted and queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RenderDto"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+    get:
+      operationId: getRenderHistory
+      tags: [Renders]
+      summary: Get all renders for an episode
+      description: Returns renders ordered newest-first.
+      parameters:
+        - $ref: "#/components/parameters/EpisodeId"
+      responses:
+        "200":
+          description: List of renders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RenderDto"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/renders/{id}:
+    get:
+      operationId: getRender
+      tags: [Renders]
+      summary: Get a single render by ID
+      parameters:
+        - $ref: "#/components/parameters/RenderId"
+      responses:
+        "200":
+          description: Render found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RenderDto"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    EpisodeId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The episode GUID
+    RenderId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The render GUID
+
+  schemas:
+    RenderAspectRatio:
+      type: string
+      enum:
+        - SixteenNine
+        - NineSixteen
+        - OneOne
+      description: |
+        Output aspect ratio.
+        - `SixteenNine` → 1920×1080 (landscape)
+        - `NineSixteen` → 1080×1920 (portrait)
+        - `OneOne` → 1080×1080 (square)
+
+    RenderStatus:
+      type: string
+      enum:
+        - Pending
+        - Rendering
+        - Complete
+        - Failed
+      description: Current lifecycle state of the render job.
+
+    StartRenderRequest:
+      type: object
+      required: [aspectRatio]
+      properties:
+        aspectRatio:
+          $ref: "#/components/schemas/RenderAspectRatio"
+
+    RenderDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        episodeId:
+          type: string
+          format: uuid
+        aspectRatio:
+          $ref: "#/components/schemas/RenderAspectRatio"
+        status:
+          $ref: "#/components/schemas/RenderStatus"
+        cdnUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Playback URL (signed SAS or local file URL). Populated only when status=Complete.
+        srtUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: SRT captions file URL. Null if not generated.
+        durationSeconds:
+          type: number
+          format: double
+        errorMessage:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - episodeId
+        - aspectRatio
+        - status
+        - durationSeconds
+        - createdAt
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: string
+    Unauthorized:
+      description: Missing or invalid Bearer token
+    Forbidden:
+      description: Insufficient permissions
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: string
+
+# ── SignalR events (WebSocket — not REST) ────────────────────────────────────
+# Hub URL: /hubs/progress
+# Client joins group: invoke("JoinEpisodeGroup", episodeId)  [to be added to ProgressHub]
+#
+# Server-to-client events:
+#
+# RenderProgress  { renderId, episodeId, percent: 0-100, stage: string }
+# RenderComplete  { renderId, episodeId, cdnUrl, srtUrl, durationSeconds }
+# RenderFailed    { renderId, episodeId, errorMessage }

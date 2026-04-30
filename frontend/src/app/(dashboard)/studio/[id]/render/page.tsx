@@ -1,113 +1,58 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Clapperboard, Play } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AspectRatioPicker } from "@/components/render/aspect-ratio-picker";
 import { RenderProgressBar } from "@/components/render/render-progress-bar";
 import { DownloadBar } from "@/components/render/download-bar";
 import { RenderHistoryTable } from "@/components/render/render-history-table";
 import { RenderPreviewDialog } from "@/components/render/render-preview-dialog";
-import { mockRenders, MOCK_RENDER_VIDEO_URL } from "@/lib/mock-data";
-import type { MockRender, AspectRatio } from "@/lib/mock-data";
-
-const MOCK_EPISODE_ID = "ep-0011-2222-3333-4444-555566667777";
-
-type RenderState = "idle" | "rendering" | "done";
-
-const STAGE_LABELS: [number, string][] = [
-  [0,   "Queued…"],
-  [20,  "Assembling video frames…"],
-  [50,  "Mixing audio…"],
-  [80,  "Finalizing…"],
-  [100, "Done"],
-];
-
-function stageForPercent(pct: number): string {
-  let label = STAGE_LABELS[0][1] as string;
-  for (const [threshold, text] of STAGE_LABELS) {
-    if (pct >= threshold) label = text;
-  }
-  return label;
-}
+import { useRenderHistory, useStartRender } from "@/hooks/use-render";
+import { ASPECT_RATIO_DISPLAY, type RenderDto, type RenderAspectRatio } from "@/types";
 
 export default function RenderPage({ params }: { params: { id: string } }) {
-  const episodeId = params.id ?? MOCK_EPISODE_ID;
+  const episodeId = params.id;
 
-  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
-  const [renderState, setRenderState] = useState<RenderState>("idle");
-  const [progress, setProgress] = useState(0);
-  const [stage, setStage] = useState("");
-  const [history, setHistory] = useState<MockRender[]>(mockRenders);
+  const [aspectRatio, setAspectRatio] = useState<RenderAspectRatio>("SixteenNine");
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewRender, setPreviewRender] = useState<MockRender | null>(null);
+  const [previewRender, setPreviewRender] = useState<RenderDto | null>(null);
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const currentRenderId = useRef<string>("");
+  const { data: history = [], isLoading: historyLoading } = useRenderHistory(episodeId);
+  const startMutation = useStartRender(episodeId);
 
-  function startRender() {
-    if (renderState === "rendering") return;
+  // The latest render drives the progress display
+  const latest = history[0] ?? null;
+  const isRendering = latest?.status === "Pending" || latest?.status === "Rendering";
+  const isComplete = latest?.status === "Complete";
 
-    const newId = `render-${Date.now()}-new`;
-    currentRenderId.current = newId;
-
-    setRenderState("rendering");
-    setProgress(0);
-    setStage("Queued…");
-
-    let pct = 0;
-    intervalRef.current = setInterval(() => {
-      pct += 5;
-      setProgress(pct);
-      setStage(stageForPercent(pct));
-
-      if (pct >= 100) {
-        clearInterval(intervalRef.current!);
-        setRenderState("done");
-
-        const completed: MockRender = {
-          id: newId,
-          episodeId,
-          status: "complete",
-          aspectRatio,
-          outputFormat: "mp4",
-          resolution: "1080p",
-          finalVideoUrl: MOCK_RENDER_VIDEO_URL,
-          cdnUrl: MOCK_RENDER_VIDEO_URL,
-          captionsUrl: null,
-          durationSeconds: 74,
-          fileSizeMb: 2.8,
-          progressPercent: 100,
-          currentStage: "Done",
-          createdAt: new Date().toISOString(),
-          completedAt: new Date().toISOString(),
-        };
-        setHistory((prev) => [completed, ...prev]);
-        setPreviewRender(completed);
-      }
-    }, 500);
+  function handleStartRender() {
+    startMutation.mutate(
+      { aspectRatio },
+      {
+        onSuccess: () => {
+          toast.success("Render started — this may take a few moments.");
+        },
+        onError: (err) => {
+          toast.error(err.message ?? "Failed to start render.");
+        },
+      },
+    );
   }
 
-  function openPreview(render: MockRender) {
+  function openPreview(render: RenderDto) {
     setPreviewRender(render);
     setPreviewOpen(true);
   }
 
-  function handleRerender(render: MockRender) {
+  function handleRerender(render: RenderDto) {
     setAspectRatio(render.aspectRatio);
-    setRenderState("idle");
-    setProgress(0);
-    setStage("");
   }
 
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
-
-  const isComplete = renderState === "done";
-  const completedRender = isComplete ? previewRender : null;
+  const currentStage = isRendering ? "Rendering…" : isComplete ? "Done" : "";
+  const percent = isComplete ? 100 : isRendering ? 50 : 0;
 
   return (
     <main className="p-6 max-w-5xl mx-auto space-y-10">
@@ -132,12 +77,12 @@ export default function RenderPage({ params }: { params: { id: string } }) {
           <AspectRatioPicker selected={aspectRatio} onSelect={setAspectRatio} />
           <Button
             className="w-full"
-            onClick={startRender}
-            disabled={renderState === "rendering"}
+            onClick={handleStartRender}
+            disabled={startMutation.isPending || isRendering}
           >
-            {renderState === "rendering"
+            {startMutation.isPending || isRendering
               ? "Rendering…"
-              : renderState === "done"
+              : isComplete
               ? "Start New Render"
               : "Start Render"}
           </Button>
@@ -149,49 +94,59 @@ export default function RenderPage({ params }: { params: { id: string } }) {
             {isComplete ? "Preview & Download" : "Render Progress"}
           </h2>
 
-          {renderState === "idle" && (
+          {!latest && !startMutation.isPending && (
             <p className="text-sm text-muted-foreground py-4">
               Select your output settings and click Start Render to begin.
             </p>
           )}
 
-          {renderState !== "idle" && (
+          {(isRendering || startMutation.isPending) && (
             <RenderProgressBar
-              percent={progress}
-              currentStage={stage}
-              isComplete={isComplete}
+              percent={percent}
+              currentStage={currentStage}
+              isComplete={false}
             />
           )}
 
-          {isComplete && completedRender && (
+          {isComplete && latest && (
             <>
+              <RenderProgressBar percent={100} currentStage="Done" isComplete />
+
               <DownloadBar
-                renderId={completedRender.id}
-                videoUrl={MOCK_RENDER_VIDEO_URL}
-                srtUrl={null}
+                renderId={latest.id}
+                videoUrl={latest.cdnUrl ?? ""}
+                srtUrl={latest.srtUrl}
               />
 
-              {/* Preview thumbnail / play button */}
-              <div
-                className="relative rounded-xl overflow-hidden bg-gray-950 border cursor-pointer group"
-                style={{ aspectRatio: aspectRatio === "9:16" ? "9/16" : aspectRatio === "1:1" ? "1/1" : "16/9" }}
-                onClick={() => completedRender && openPreview(completedRender)}
-              >
-                <video
-                  src={MOCK_RENDER_VIDEO_URL}
-                  className="w-full h-full object-cover"
-                  preload="metadata"
-                  muted
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 group-hover:bg-black/40 transition-colors">
-                  <div className="rounded-full bg-white/90 p-4 shadow-lg group-hover:scale-110 transition-transform">
-                    <Play className="h-7 w-7 text-gray-900 fill-gray-900" />
+              {latest.cdnUrl && (
+                <div
+                  className="relative rounded-xl overflow-hidden bg-gray-950 border cursor-pointer group"
+                  style={{
+                    aspectRatio:
+                      latest.aspectRatio === "NineSixteen"
+                        ? "9/16"
+                        : latest.aspectRatio === "OneOne"
+                        ? "1/1"
+                        : "16/9",
+                  }}
+                  onClick={() => openPreview(latest)}
+                >
+                  <video
+                    src={latest.cdnUrl}
+                    className="w-full h-full object-cover"
+                    preload="metadata"
+                    muted
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 group-hover:bg-black/40 transition-colors">
+                    <div className="rounded-full bg-white/90 p-4 shadow-lg group-hover:scale-110 transition-transform">
+                      <Play className="h-7 w-7 text-gray-900 fill-gray-900" />
+                    </div>
                   </div>
+                  <span className="absolute bottom-3 right-3 text-[11px] text-white bg-black/60 rounded px-2 py-0.5">
+                    {ASPECT_RATIO_DISPLAY[latest.aspectRatio]} · Click to preview
+                  </span>
                 </div>
-                <span className="absolute bottom-3 right-3 text-[11px] text-white bg-black/60 rounded px-2 py-0.5">
-                  Click to preview
-                </span>
-              </div>
+              )}
             </>
           )}
         </section>
@@ -202,19 +157,27 @@ export default function RenderPage({ params }: { params: { id: string } }) {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Render History
         </h2>
-        <RenderHistoryTable
-          renders={history}
-          onRerender={handleRerender}
-          onPreview={openPreview}
-        />
+        {historyLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : (
+          <RenderHistoryTable
+            renders={history}
+            onRerender={handleRerender}
+            onPreview={openPreview}
+          />
+        )}
       </section>
 
       {/* Preview popup */}
-      {previewRender && (
+      {previewRender?.cdnUrl && (
         <RenderPreviewDialog
           open={previewOpen}
           onClose={() => setPreviewOpen(false)}
-          videoUrl={previewRender.finalVideoUrl ?? MOCK_RENDER_VIDEO_URL}
+          videoUrl={previewRender.cdnUrl}
           aspectRatio={previewRender.aspectRatio}
           renderId={previewRender.id}
         />

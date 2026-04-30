@@ -4,19 +4,18 @@ import type {
   CharacterDto,
   PagedResult,
   SagaStateDto,
-  StoryboardDto,
 } from "@/types"
-import { mockStoryboard } from "./mock-storyboard"
 
-// ── Stable mock IDs ───────────────────────────────────────────────────────────
+// ── Stable mock IDs — kept in sync with the backend dev seeder in Program.cs ──
+// Project 1 + Episode 1 match the seeded DB rows so storyboard navigation works
+// end-to-end when NEXT_PUBLIC_MOCK_DATA=true.
 
-export const MOCK_TEAM_ID = "mock-team-001"
-export const MOCK_PROJECT_ID_1 = "mock-proj-001"
-export const MOCK_PROJECT_ID_2 = "mock-proj-002"
-export const MOCK_EPISODE_ID_1 = "mock-ep-001"
-export const MOCK_EPISODE_ID_2 = "mock-ep-002"
-export const MOCK_EPISODE_ID_3 = "mock-ep-003"
-const MOCK_STORYBOARD_ID = "mock-sb-001"
+export const MOCK_TEAM_ID = "00000000-0000-0000-0000-000000000002"
+export const MOCK_PROJECT_ID_1 = "22222222-2222-2222-2222-222222222222"
+export const MOCK_PROJECT_ID_2 = "77777777-7777-7777-7777-777777777777"
+export const MOCK_EPISODE_ID_1 = "33333333-3333-3333-3333-333333333333"
+export const MOCK_EPISODE_ID_2 = "44444444-4444-4444-4444-444444444444"
+export const MOCK_EPISODE_ID_3 = "55555555-5555-5555-5555-555555555555"
 
 // ── Projects ──────────────────────────────────────────────────────────────────
 
@@ -173,32 +172,6 @@ export const mockCharactersPage: PagedResult<CharacterDto> = {
   totalPages: 1,
   hasPreviousPage: false,
   hasNextPage: false,
-}
-
-// ── Storyboard DTO ────────────────────────────────────────────────────────────
-// Converts the Phase 6 mock type → StoryboardDto (API type used by real hooks)
-
-export const mockStoryboardDto: StoryboardDto = {
-  id: MOCK_STORYBOARD_ID,
-  episodeId: MOCK_EPISODE_ID_1,
-  screenplayTitle: "Neon City — Episode 1: The Signal",
-  directorNotes:
-    "High contrast cyberpunk aesthetic. Rain-slicked streets, neon reflections.",
-  shots: mockStoryboard.scenes.flatMap((scene) =>
-    scene.shots.map((shot) => ({
-      id: shot.id,
-      storyboardId: MOCK_STORYBOARD_ID,
-      sceneNumber: shot.sceneNumber,
-      shotIndex: shot.shotIndex,
-      imageUrl: shot.imageUrl,
-      description: shot.description,
-      styleOverride: shot.styleOverride,
-      regenerationCount: shot.regenerationCount,
-      updatedAt: "2024-01-22T15:30:00Z",
-    })),
-  ),
-  createdAt: "2024-01-22T14:00:00Z",
-  updatedAt: "2024-01-22T15:30:00Z",
 }
 
 // ── Saga / Production State ───────────────────────────────────────────────────

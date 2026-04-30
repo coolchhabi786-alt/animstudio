@@ -1,23 +1,30 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { AspectRatio } from "@/lib/mock-data";
+import type { RenderAspectRatio } from "@/types";
 
-const RATIOS: { value: AspectRatio; label: string; dims: string; w: number; h: number }[] = [
-  { value: "16:9", label: "Landscape", dims: "1920×1080", w: 64, h: 36 },
-  { value: "9:16", label: "Portrait", dims: "1080×1920", w: 36, h: 64 },
-  { value: "1:1", label: "Square", dims: "1080×1080", w: 50, h: 50 },
+const RATIOS: {
+  value: RenderAspectRatio;
+  label: string;
+  display: string;
+  dims: string;
+  w: number;
+  h: number;
+}[] = [
+  { value: "SixteenNine", label: "Landscape", display: "16:9", dims: "1920×1080", w: 64, h: 36 },
+  { value: "NineSixteen", label: "Portrait",  display: "9:16", dims: "1080×1920", w: 36, h: 64 },
+  { value: "OneOne",      label: "Square",    display: "1:1",  dims: "1080×1080", w: 50, h: 50 },
 ];
 
 interface Props {
-  selected: AspectRatio;
-  onSelect: (ratio: AspectRatio) => void;
+  selected: RenderAspectRatio;
+  onSelect: (ratio: RenderAspectRatio) => void;
 }
 
 export function AspectRatioPicker({ selected, onSelect }: Props) {
   return (
     <div className="flex gap-3 flex-wrap">
-      {RATIOS.map(({ value, label, dims, w, h }) => {
+      {RATIOS.map(({ value, label, display, dims, w, h }) => {
         const active = selected === value;
         return (
           <button
@@ -37,7 +44,7 @@ export function AspectRatioPicker({ selected, onSelect }: Props) {
             />
             <div className="text-center">
               <p className={cn("text-sm font-semibold", active ? "text-primary" : "text-foreground")}>
-                {value}
+                {display}
               </p>
               <p className="text-[11px] text-muted-foreground">{label}</p>
               <p className="text-[10px] text-muted-foreground font-mono">{dims}</p>

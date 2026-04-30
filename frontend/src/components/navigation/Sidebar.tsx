@@ -8,8 +8,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { MOCK_DATA_ENABLED } from "@/lib/config";
-import { MOCK_EPISODE_ID_1 } from "@/lib/mock-data";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -18,6 +16,8 @@ import {
   Layers,
   Mic,
   Film,
+  Clapperboard,
+  MonitorPlay,
 } from "lucide-react";
 
 const NAV_LINKS = [
@@ -27,14 +27,18 @@ const NAV_LINKS = [
   { name: "Billing", href: "/billing", icon: CreditCard },
 ];
 
-const STUDIO_LINKS = MOCK_DATA_ENABLED
-  ? [
-      { name: "Storyboard (Demo)", href: `/studio/${MOCK_EPISODE_ID_1}/storyboard`, icon: Layers },
-      { name: "Voice Studio (Demo)", href: `/studio/${MOCK_EPISODE_ID_1}/voice`, icon: Mic },
-      { name: "Animation (Demo)", href: `/studio/${MOCK_EPISODE_ID_1}/animation`, icon: Film },
-      { name: "Render (Demo)", href: `/studio/${MOCK_EPISODE_ID_1}/render`, icon: Film },
-    ]
-  : [];
+// Fixed dev episode ID — matches the seed data in SeedDevContentAsync (Program.cs).
+// These links are always visible so dev/test navigation works regardless of mock flag.
+const DEV_EPISODE_ID = "33333333-3333-3333-3333-333333333333";
+
+const STUDIO_LINKS = [
+  { name: "Storyboard", href: `/studio/${DEV_EPISODE_ID}/storyboard`, icon: Layers },
+  { name: "Voice Studio", href: `/studio/${DEV_EPISODE_ID}/voice`, icon: Mic },
+  { name: "Animation", href: `/studio/${DEV_EPISODE_ID}/animation`, icon: Film },
+  { name: "Render", href: `/studio/${DEV_EPISODE_ID}/render`, icon: Clapperboard },
+  { name: "Timeline", href: `/studio/${DEV_EPISODE_ID}/timeline`, icon: MonitorPlay },
+  { name: "Compositor", href: `/studio/${DEV_EPISODE_ID}/composer`, icon: Film },
+];
 
 function SidebarNav() {
   const pathname = usePathname();
@@ -60,15 +64,13 @@ function SidebarNav() {
   return (
     <nav className="flex flex-col gap-1 p-4" aria-label="Main navigation">
       {NAV_LINKS.map(renderLink)}
-      {STUDIO_LINKS.length > 0 && (
-        <>
-          <Separator className="my-2" />
-          <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Dev Studio
-          </p>
-          {STUDIO_LINKS.map(renderLink)}
-        </>
-      )}
+      <>
+        <Separator className="my-2" />
+        <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Dev Studio
+        </p>
+        {STUDIO_LINKS.map(renderLink)}
+      </>
     </nav>
   );
 }

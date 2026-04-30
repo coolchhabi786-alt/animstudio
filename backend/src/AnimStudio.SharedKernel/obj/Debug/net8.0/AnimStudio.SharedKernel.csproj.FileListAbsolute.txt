@@ -1,13 +1,13 @@
+C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\bin\Debug\net8.0\AnimStudio.SharedKernel.deps.json
+C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\bin\Debug\net8.0\AnimStudio.SharedKernel.dll
+C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\bin\Debug\net8.0\AnimStudio.SharedKernel.pdb
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.csproj.AssemblyReference.cache
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.GeneratedMSBuildEditorConfig.editorconfig
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.AssemblyInfoInputs.cache
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.AssemblyInfo.cs
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.csproj.CoreCompileInputs.cache
-C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\bin\Debug\net8.0\AnimStudio.SharedKernel.deps.json
-C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\bin\Debug\net8.0\AnimStudio.SharedKernel.dll
-C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\bin\Debug\net8.0\AnimStudio.SharedKernel.pdb
+C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.sourcelink.json
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.dll
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\refint\AnimStudio.SharedKernel.dll
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.pdb
 C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\ref\AnimStudio.SharedKernel.dll
-C:\Projects\animstudio\backend\src\AnimStudio.SharedKernel\obj\Debug\net8.0\AnimStudio.SharedKernel.sourcelink.json

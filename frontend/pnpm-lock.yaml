@@ -62,6 +62,9 @@ importers:
       framer-motion:
         specifier: ^10.0.0
         version: 10.18.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      konva:
+        specifier: ^9.3.22
+        version: 9.3.22
       lucide-react:
         specifier: ^0.460.0
         version: 0.460.0(react@18.3.1)
@@ -80,6 +83,9 @@ importers:
       react-hook-form:
         specifier: ^7.0.0
         version: 7.53.0(react@18.3.1)
+      react-konva:
+        specifier: 18.2.10
+        version: 18.2.10(@types/react@18.3.12)(konva@9.3.22)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       sonner:
         specifier: ^1.5.0
         version: 1.7.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -775,6 +781,11 @@ packages:
     peerDependencies:
       '@types/react': ^18.0.0
 
+  '@types/react-reconciler@0.28.9':
+    resolution: {integrity: sha1-0ktIZMOE53DIMnWz/nP7oAJpyDs=, tarball: https://www.myget.org/F/roptia/auth/1f37f135-7166-4419-afd4-58c3e7a6b80b/npm/@types/react-reconciler/-/@types/react-reconciler-0.28.9.tgz}
+    peerDependencies:
+      '@types/react': '*'
+
   '@types/react@18.3.12':
     resolution: {integrity: sha1-mUGfGCzNaRUYE7fuJLeS/gh3T2A=, tarball: https://www.myget.org/F/roptia/auth/1f37f135-7166-4419-afd4-58c3e7a6b80b/npm/@types/react/-/@types/react-18.3.12.tgz}
 
@@ -1152,6 +1163,11 @@ packages:
   isexe@2.0.0:
     resolution: {integrity: sha1-6PvzdNxVb/iUehDcsFctYz8s+hA=}
 
+  its-fine@1.2.5:
+    resolution: {integrity: sha1-VGbCh/hqCnPncsjY1RVibJcZXck=}
+    peerDependencies:
+      react: '>=18.0'
+
   jiti@1.21.7:
     resolution: {integrity: sha1-ndgQQ0JKPShFixk9ll8NGKIwC6k=}
     hasBin: true
@@ -1177,6 +1193,9 @@ packages:
 
   keyv@4.5.4:
     resolution: {integrity: sha1-qHmpnilFL5QkOfKkBeOvizHU3pM=}
+
+  konva@9.3.22:
+    resolution: {integrity: sha1-qpecQQEn3aIL8HiKtwpBRkjCWpE=}
 
   levn@0.4.1:
     resolution: {integrity: sha1-rkViwAdHO5MqYgDUAyaN0v/8at4=}
@@ -1442,6 +1461,19 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
+
+  react-konva@18.2.10:
+    resolution: {integrity: sha1-W17cXp7UUnVdIbq8NTdHgoho3sw=}
+    peerDependencies:
+      konva: ^8.0.1 || ^7.2.5 || ^9.0.0
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+
+  react-reconciler@0.29.2:
+    resolution: {integrity: sha1-js+vymNUmk9PPkweBJ3VrZrDpU8=}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      react: ^18.3.1
 
   react-remove-scroll-bar@2.3.8:
     resolution: {integrity: sha1-mcIPkI7kZ7OFtoo0abSj51ABIiM=}
@@ -2349,6 +2381,10 @@ snapshots:
     dependencies:
       '@types/react': 18.3.12
 
+  '@types/react-reconciler@0.28.9(@types/react@18.3.12)':
+    dependencies:
+      '@types/react': 18.3.12
+
   '@types/react@18.3.12':
     dependencies:
       '@types/prop-types': 15.7.15
@@ -2714,6 +2750,13 @@ snapshots:
 
   isexe@2.0.0: {}
 
+  its-fine@1.2.5(@types/react@18.3.12)(react@18.3.1):
+    dependencies:
+      '@types/react-reconciler': 0.28.9(@types/react@18.3.12)
+      react: 18.3.1
+    transitivePeerDependencies:
+      - '@types/react'
+
   jiti@1.21.7: {}
 
   jose@5.10.0: {}
@@ -2733,6 +2776,8 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  konva@9.3.22: {}
 
   levn@0.4.1:
     dependencies:
@@ -2954,6 +2999,24 @@ snapshots:
   react-hook-form@7.53.0(react@18.3.1):
     dependencies:
       react: 18.3.1
+
+  react-konva@18.2.10(@types/react@18.3.12)(konva@9.3.22)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      '@types/react-reconciler': 0.28.9(@types/react@18.3.12)
+      its-fine: 1.2.5(@types/react@18.3.12)(react@18.3.1)
+      konva: 9.3.22
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-reconciler: 0.29.2(react@18.3.1)
+      scheduler: 0.23.2
+    transitivePeerDependencies:
+      - '@types/react'
+
+  react-reconciler@0.29.2(react@18.3.1):
+    dependencies:
+      loose-envify: 1.4.0
+      react: 18.3.1
+      scheduler: 0.23.2
 
   react-remove-scroll-bar@2.3.8(@types/react@18.3.12)(react@18.3.1):
     dependencies:
