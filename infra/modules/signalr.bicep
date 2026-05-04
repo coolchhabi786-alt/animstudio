@@ -1,23 +1,24 @@
-param unitCount int
+param environment string = 'dev'
+param unitCount int = 1
 
-resource signalR 'Microsoft.SignalRService/signalR@2022-08-01' = {
-  name: 'AnimStudioSignalR'
+resource signalR 'Microsoft.SignalRService/signalR@2023-02-01' = {
+  name: 'animstudio-${environment}-signalr'
   location: resourceGroup().location
+  kind: 'SignalR'
+  sku: {
+    name: 'Standard_S1'
+    capacity: unitCount
+  }
   properties: {
-    sku: {
-      name: 'Standard'
-      tier: 'Standard'
-      capacity: unitCount
-    }
-    externalSettings: {
-      defaultDomainEnabled: true
-    }
     features: [
       {
         flag: 'ServiceMode'
         value: 'Serverless'
       }
     ]
+    cors: {
+      allowedOrigins: ['*']
+    }
   }
 }
 

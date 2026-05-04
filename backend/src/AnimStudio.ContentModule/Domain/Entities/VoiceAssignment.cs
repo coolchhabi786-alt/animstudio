@@ -25,6 +25,12 @@ public sealed class VoiceAssignment : AggregateRoot<Guid>
     /// </summary>
     public string? VoiceCloneUrl { get; private set; }
 
+    /// <summary>
+    /// ElevenLabs voice_id returned after a successful clone.
+    /// Null until <see cref="SetVoiceCloneId"/> is called.
+    /// </summary>
+    public string? VoiceCloneId { get; private set; }
+
     private VoiceAssignment() { }
 
     public static VoiceAssignment Create(
@@ -54,6 +60,13 @@ public sealed class VoiceAssignment : AggregateRoot<Guid>
         };
         assignment.AddDomainEvent(new VoiceAssignedEvent(assignment.Id, episodeId, characterId, voiceName));
         return assignment;
+    }
+
+    /// <summary>Stores the ElevenLabs voice_id after a successful voice clone operation.</summary>
+    public void SetVoiceCloneId(string voiceCloneId)
+    {
+        VoiceCloneId = voiceCloneId;
+        UpdatedAt    = DateTimeOffset.UtcNow;
     }
 
     /// <summary>Updates the voice assignment with new values.</summary>

@@ -35,6 +35,18 @@ public sealed class ContentDbContext : DbContext
     public DbSet<AnimationJob> AnimationJobs => Set<AnimationJob>();
     public DbSet<AnimationClip> AnimationClips => Set<AnimationClip>();
 
+    // ── Phase 10 — Timeline Editor ─────────────────────────────────────────
+    public DbSet<EpisodeTimeline> EpisodeTimelines => Set<EpisodeTimeline>();
+    public DbSet<TimelineTrack> TimelineTracks => Set<TimelineTrack>();
+    public DbSet<TimelineClip> TimelineClips => Set<TimelineClip>();
+    public DbSet<TimelineTextOverlay> TimelineTextOverlays => Set<TimelineTextOverlay>();
+
+    // ── Phase 11 — Sharing & Review ────────────────────────────────────────
+    public DbSet<ReviewLink> ReviewLinks => Set<ReviewLink>();
+    public DbSet<ReviewComment> ReviewComments => Set<ReviewComment>();
+    public DbSet<BrandKit> BrandKits => Set<BrandKit>();
+    public DbSet<SocialPublish> SocialPublishes => Set<SocialPublish>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -273,6 +285,135 @@ public sealed class ContentDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(c => c.StoryboardShotId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── EpisodeTimeline (Phase 10) ─────────────────────────────────────────
+        modelBuilder.Entity<EpisodeTimeline>(b =>
+        {
+            b.ToTable("EpisodeTimelines", "timeline");
+            b.HasKey(t => t.Id);
+            b.Property(t => t.Id).ValueGeneratedNever();
+            b.Property(t => t.RowVersion).IsRowVersion();
+            b.HasQueryFilter(t => !t.IsDeleted);
+            b.HasIndex(t => t.EpisodeId).IsUnique();
+            b.HasMany(t => t.Tracks)
+                .WithOne()
+                .HasForeignKey(nameof(TimelineTrack.TimelineId))
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(t => t.TextOverlays)
+                .WithOne()
+                .HasForeignKey(nameof(TimelineTextOverlay.TimelineId))
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── TimelineTrack (Phase 10) ───────────────────────────────────────────
+        modelBuilder.Entity<TimelineTrack>(b =>
+        {
+            b.ToTable("TimelineTracks", "timeline");
+            b.HasKey(t => t.Id);
+            b.Property(t => t.Id).ValueGeneratedNever();
+            b.Property(t => t.TrackType).IsRequired().HasMaxLength(20);
+            b.Property(t => t.Label).IsRequired().HasMaxLength(100);
+            b.HasMany(t => t.Clips)
+                .WithOne()
+                .HasForeignKey(nameof(TimelineClip.TrackId))
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── TimelineClip (Phase 10) ────────────────────────────────────────────
+        modelBuilder.Entity<TimelineClip>(b =>
+        {
+            b.ToTable("TimelineClips", "timeline");
+            b.HasKey(c => c.Id);
+            b.Property(c => c.Id).ValueGeneratedNever();
+            b.Property(c => c.ClipType).IsRequired().HasMaxLength(20);
+            b.Property(c => c.TransitionIn).HasMaxLength(50);
+            b.Property(c => c.ClipUrl).HasMaxLength(2048);
+            b.Property(c => c.ThumbnailUrl).HasMaxLength(2048);
+            b.Property(c => c.Label).HasMaxLength(200);
+            b.Property(c => c.AudioUrl).HasMaxLength(2048);
+            b.Property(c => c.Text).HasColumnType("nvarchar(max)");
+            b.Property(c => c.Color).HasMaxLength(50);
+            b.Property(c => c.Position).HasMaxLength(50);
+            b.Property(c => c.Animation).HasMaxLength(50);
+            b.HasIndex(c => c.TrackId);
+        });
+
+        // ── TimelineTextOverlay (Phase 10) ────────────────────────────────────
+        modelBuilder.Entity<TimelineTextOverlay>(b =>
+        {
+            b.ToTable("TimelineTextOverlays", "timeline");
+            b.HasKey(o => o.Id);
+            b.Property(o => o.Id).ValueGeneratedNever();
+            b.Property(o => o.Text).IsRequired().HasColumnType("nvarchar(max)");
+            b.Property(o => o.Color).IsRequired().HasMaxLength(50);
+            b.Property(o => o.Animation).HasMaxLength(50);
+            b.HasIndex(o => o.TimelineId);
+        });
+
+        // ── ReviewLink (Phase 11) ──────────────────────────────────────────────
+        modelBuilder.Entity<ReviewLink>(b =>
+        {
+            b.ToTable("ReviewLinks", "content");
+            b.HasKey(r => r.Id);
+            b.Property(r => r.Id).ValueGeneratedNever();
+            b.Property(r => r.Token).IsRequired().HasMaxLength(16);
+            b.Property(r => r.PasswordHash).HasMaxLength(500);
+            b.Property(r => r.ViewCount).HasDefaultValue(0);
+            b.Property(r => r.RowVersion).IsRowVersion();
+            b.HasQueryFilter(r => !r.IsDeleted);
+            b.HasIndex(r => r.Token).IsUnique();
+            b.HasIndex(r => r.EpisodeId);
+        });
+
+        // ── ReviewComment (Phase 11) ───────────────────────────────────────────
+        modelBuilder.Entity<ReviewComment>(b =>
+        {
+            b.ToTable("ReviewComments", "content");
+            b.HasKey(c => c.Id);
+            b.Property(c => c.Id).ValueGeneratedNever();
+            b.Property(c => c.AuthorName).IsRequired().HasMaxLength(100);
+            b.Property(c => c.Text).IsRequired().HasColumnType("nvarchar(max)");
+            b.Property(c => c.RowVersion).IsRowVersion();
+            b.HasQueryFilter(c => !c.IsDeleted);
+            b.HasIndex(c => c.ReviewLinkId);
+            b.HasOne<ReviewLink>()
+                .WithMany()
+                .HasForeignKey(c => c.ReviewLinkId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── BrandKit (Phase 11) ────────────────────────────────────────────────
+        modelBuilder.Entity<BrandKit>(b =>
+        {
+            b.ToTable("BrandKits", "content");
+            b.HasKey(k => k.Id);
+            b.Property(k => k.Id).ValueGeneratedNever();
+            b.Property(k => k.PrimaryColor).IsRequired().HasMaxLength(20);
+            b.Property(k => k.SecondaryColor).IsRequired().HasMaxLength(20);
+            b.Property(k => k.LogoUrl).HasMaxLength(2048);
+            b.Property(k => k.LogoBlobPath).HasMaxLength(2048);
+            b.Property(k => k.WatermarkPosition).HasConversion<string>().IsRequired().HasMaxLength(30);
+            b.Property(k => k.WatermarkOpacity).HasPrecision(4, 2);
+            b.Property(k => k.RowVersion).IsRowVersion();
+            b.HasQueryFilter(k => !k.IsDeleted);
+            b.HasIndex(k => k.TeamId).IsUnique();
+        });
+
+        // ── SocialPublish (Phase 11) ───────────────────────────────────────────
+        modelBuilder.Entity<SocialPublish>(b =>
+        {
+            b.ToTable("SocialPublishes", "content");
+            b.HasKey(s => s.Id);
+            b.Property(s => s.Id).ValueGeneratedNever();
+            b.Property(s => s.Platform).HasConversion<string>().IsRequired().HasMaxLength(30);
+            b.Property(s => s.Status).HasConversion<string>().IsRequired().HasMaxLength(20);
+            b.Property(s => s.ExternalVideoId).HasMaxLength(500);
+            b.Property(s => s.ErrorMessage).HasMaxLength(2000);
+            b.Property(s => s.RowVersion).IsRowVersion();
+            b.HasQueryFilter(s => !s.IsDeleted);
+            b.HasIndex(s => s.EpisodeId);
+            b.HasIndex(s => s.RenderId);
         });
     }
 }

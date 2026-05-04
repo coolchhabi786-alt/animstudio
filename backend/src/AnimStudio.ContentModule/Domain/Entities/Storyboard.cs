@@ -93,10 +93,21 @@ public sealed class Storyboard : AggregateRoot<Guid>
         AddDomainEvent(new StoryboardShotStyleOverriddenEvent(Id, shot.Id, EpisodeId, shot.StyleOverride));
     }
 
-    /// <summary>Records the CDN URL produced by a completed StoryboardGen job.</summary>
+    /// <summary>Records the CDN URL produced by a completed StoryboardGen job (by shot GUID).</summary>
     public void SetShotImage(Guid shotId, string imageUrl)
     {
         var shot = FindShotOrThrow(shotId);
+        shot.UpdateImage(imageUrl);
+        UpdatedAt = DateTimeOffset.UtcNow;
+        AddDomainEvent(new StoryboardShotImageUpdatedEvent(Id, shot.Id, EpisodeId, imageUrl, shot.RegenerationCount));
+    }
+
+    /// <summary>Records the CDN URL produced by a completed StoryboardGen job (by grid position).</summary>
+    public void SetShotImageByPosition(int sceneNumber, int shotIndex, string imageUrl)
+    {
+        var shot = _shots.FirstOrDefault(s => s.SceneNumber == sceneNumber && s.ShotIndex == shotIndex)
+            ?? throw new InvalidOperationException(
+                $"No shot at scene {sceneNumber} / index {shotIndex} in storyboard {Id}.");
         shot.UpdateImage(imageUrl);
         UpdatedAt = DateTimeOffset.UtcNow;
         AddDomainEvent(new StoryboardShotImageUpdatedEvent(Id, shot.Id, EpisodeId, imageUrl, shot.RegenerationCount));

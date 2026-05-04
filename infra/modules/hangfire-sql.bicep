@@ -1,23 +1,29 @@
+param environment string = 'dev'
+// East US and East US 2 block SQL on some subscriptions; West US has broader availability.
+param location string = 'westus'
+
+var serverName = 'animstudio-${environment}-hangfire-sql'
+
 resource hangfireSqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
-  name: 'AnimStudioHangfireSqlServer'
-  location: resourceGroup().location
+  name: serverName
+  location: location
   properties: {
     administratorLogin: 'hangfireAdmin'
     administratorLoginPassword: 'secureHangfirePa$$word123'
   }
 }
 
-resource hangfireDatabase 'Microsoft.Sql/servers/databases@2022-02-01-preview' = {
+resource hangfireDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
   name: 'HangfireDB'
   parent: hangfireSqlServer
+  location: location
+  sku: {
+    name: 'Basic'
+    tier: 'Basic'
+  }
   properties: {
     collation: 'SQL_Latin1_General_CP1_CI_AS'
     maxSizeBytes: 2147483648
-    sku: {
-      name: 'Basic'
-      tier: 'GeneralPurpose'
-      capacity: 1
-    }
   }
 }
 

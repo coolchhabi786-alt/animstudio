@@ -53,6 +53,9 @@ public sealed class ContentModuleRegistration : IModuleRegistration
         services.AddScoped<IAnimationJobRepository, AnimationJobRepository>();
         services.AddScoped<IAnimationClipRepository, AnimationClipRepository>();
 
+        // Phase 10 — Timeline Editor
+        services.AddScoped<ITimelineRepository, TimelineRepository>();
+
         // ── Domain event infrastructure ────────────────────────────────────────
         // Collects domain events from ContentDbContext tracked aggregates and
         // flushes them to the shared outbox so the OutboxPublisherJob can dispatch them.

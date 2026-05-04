@@ -2,23 +2,14 @@
   "$schema": "https://schema.management.azure.com/schemas/2020-06-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "logAnalyticsWorkspaceName": {
-      "value": "animstudio-law-dev"
+    "environment": {
+      "value": "dev"
     },
-    "vnetName": {
-      "value": "animstudio-vnet-dev"
+    "swaSkuName": {
+      "value": "Free"
     },
-    "tier": {
-      "value": "Basic"
-    },
-    "unitCount": {
-      "value": 1
-    },
-    "wafPolicyMode": {
-      "value": "Detection"
-    },
-    "privateEndpointEnabled": {
-      "value": false
+    "sqlLocation": {
+      "value": "eastasia"
     }
   }
 }

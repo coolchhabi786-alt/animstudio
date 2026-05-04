@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://animstudio.internal/schemas/job-completion-message.json",
+  "title": "JobCompletionMessage",
+  "description": "Message published to the 'completions' Azure Service Bus queue by the Python cartoon_automation pipeline when a job finishes.",
+  "type": "object",
+  "required": ["jobId", "episodeId", "jobType", "status", "completedAt"],
+  "properties": {
+    "jobId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "GUID of the Job row in AnimStudio.Jobs table."
+    },
+    "episodeId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "GUID of the episode this job belongs to."
+    },
+    "jobType": {
+      "type": "string",
+      "enum": ["CharacterDesign", "LoraTraining", "Script", "StoryboardPlan", "StoryboardGen", "Animation", "PostProd"],
+      "description": "Discriminates which result schema applies."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Completed", "Failed"],
+      "description": "Terminal status of the job."
+    },
+    "result": {
+      "description": "Type-specific result payload. Present when status=Completed. Schema selected by jobType.",
+      "oneOf": [
+        { "$ref": "#/definitions/CharacterDesignResult" },
+        { "$ref": "#/definitions/LoraTrainingResult" },
+        { "$ref": "#/definitions/ScriptResult" },
+        { "$ref": "#/definitions/StoryboardPlanResult" },
+        { "$ref": "#/definitions/StoryboardGenResult" },
+        { "$ref": "#/definitions/AnimationResult" },
+        { "$ref": "#/definitions/PostProdResult" }
+      ]
+    },
+    "errorMessage": {
+      "type": ["string", "null"],
+      "description": "Human-readable error. Present when status=Failed."
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when the Python job finished."
+    }
+  },
+  "definitions": {
+    "CharacterDesignResult": {
+      "type": "object",
+      "title": "CharacterDesignResult",
+      "description": "Result payload for jobType=CharacterDesign.",
+      "required": ["imageUrl"],
+      "properties": {
+        "imageUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "CDN or blob URL of the generated character reference image."
+        }
+      },
+      "additionalProperties": false
+    },
+    "LoraTrainingResult": {
+      "type": "object",
+      "title": "LoraTrainingResult",
+      "description": "Result payload for jobType=LoraTraining.",
+      "required": ["loraWeightsUrl", "triggerWord"],
+      "properties": {
+        "loraWeightsUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Azure Blob Storage URL of the trained .safetensors LoRA weights file."
+        },
+        "triggerWord": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Short LoRA trigger token injected into render prompts (e.g. PROF_WHISKERBOLT)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "ScriptResult": {
+      "type": "object",
+      "title": "ScriptResult",
+      "description": "Result payload for jobType=Script.",
+      "required": ["screenplay"],
+      "properties": {
+        "screenplay": {
+          "type": "object",
+          "description": "Serialised Screenplay Pydantic model from the Python ScriptwritingCrew.",
+          "properties": {
+            "title": { "type": "string" },
+            "scenes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "scene_number":         { "type": "integer" },
+                  "visual_description":   { "type": "string" },
+                  "emotional_tone":       { "type": "string" },
+                  "dialogue": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "character":   { "type": "string" },
+                        "text":        { "type": "string" },
+                        "start_time":  { "type": "number" },
+                        "end_time":    { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "StoryboardPlanResult": {
+      "type": "object",
+      "title": "StoryboardPlanResult",
+      "description": "Result payload for jobType=StoryboardPlan.",
+      "required": ["shots"],
+      "properties": {
+        "screenplayTitle": { "type": ["string", "null"] },
+        "shots": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["sceneNumber", "shotIndex"],
+            "properties": {
+              "sceneNumber": { "type": "integer", "minimum": 1 },
+              "shotIndex":   { "type": "integer", "minimum": 0 },
+              "description": { "type": ["string", "null"] }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "StoryboardGenResult": {
+      "type": "object",
+      "title": "StoryboardGenResult",
+      "description": "Result payload for jobType=StoryboardGen.",
+      "required": ["shots"],
+      "properties": {
+        "shots": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["sceneNumber", "shotIndex", "imageUrl"],
+            "properties": {
+              "sceneNumber": { "type": "integer", "minimum": 1 },
+              "shotIndex":   { "type": "integer", "minimum": 0 },
+              "imageUrl":    { "type": "string", "format": "uri" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "AnimationResult": {
+      "type": "object",
+      "title": "AnimationResult",
+      "description": "Result payload for jobType=Animation.",
+      "required": ["clips"],
+      "properties": {
+        "clips": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["sceneNumber", "shotIndex", "clipUrl", "durationSeconds"],
+            "properties": {
+              "sceneNumber":     { "type": "integer", "minimum": 1 },
+              "shotIndex":       { "type": "integer", "minimum": 0 },
+              "clipUrl":         { "type": "string", "format": "uri" },
+              "durationSeconds": { "type": "number", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "actualCostUsd": { "type": ["number", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "PostProdResult": {
+      "type": "object",
+      "title": "PostProdResult",
+      "description": "Result payload for jobType=PostProd.",
+      "required": ["videoUrl", "durationSeconds"],
+      "properties": {
+        "videoUrl":        { "type": "string", "format": "uri" },
+        "srtUrl":          { "type": ["string", "null"], "format": "uri" },
+        "durationSeconds": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

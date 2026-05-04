@@ -2,23 +2,11 @@
   "$schema": "https://schema.management.azure.com/schemas/2020-06-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "logAnalyticsWorkspaceName": {
-      "value": "animstudio-law-prod"
+    "environment": {
+      "value": "prod"
     },
-    "vnetName": {
-      "value": "animstudio-vnet-prod"
-    },
-    "tier": {
+    "swaSkuName": {
       "value": "Standard"
-    },
-    "unitCount": {
-      "value": 1
-    },
-    "wafPolicyMode": {
-      "value": "Prevention"
-    },
-    "privateEndpointEnabled": {
-      "value": true
     }
   }
 }

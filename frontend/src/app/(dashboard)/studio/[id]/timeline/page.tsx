@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useTimelineMock } from "@/hooks/use-timeline-mock";
+import { useEffect, useRef, useState } from "react";
+import { useTimeline, useSaveTimeline } from "@/hooks/use-timeline";
 import { useTimelineStore } from "@/stores/timelineStore";
 import { useTimelineKeybinds } from "@/hooks/use-timeline-keybinds";
 import { TimelineCanvasWrapper } from "@/components/timeline/timeline-canvas-wrapper";
@@ -26,6 +26,9 @@ import {
   Lock,
   Unlock,
   Music,
+  Save,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TRACK_HEIGHTS } from "@/components/timeline/timeline-constants";
@@ -43,6 +46,13 @@ const TRACK_TYPE_COLORS: Record<string, string> = {
 
 export default function TimelinePage({ params }: { params: { id: string } }) {
   const episodeId = params.id;
+
+  // ── API hooks ───────────────────────────────────────────────────────────────
+  const { data: timelineData, isLoading, isError } = useTimeline(episodeId);
+  const { mutate: saveTimeline, isPending: isSaving } = useSaveTimeline(episodeId);
+
+  // ── Zustand store ───────────────────────────────────────────────────────────
+  const store = useTimelineStore();
   const {
     timeline,
     playheadPositionMs,
@@ -56,22 +66,53 @@ export default function TimelinePage({ params }: { params: { id: string } }) {
     toggleTrackLock,
     selectedClipId,
     selectClip,
-  } = useTimelineMock();
+    setTrackVolume,
+    toggleTrackAutoDuck,
+    addMusicClip,
+    addTextOverlay,
+    updateTextOverlay,
+    deleteTextOverlay,
+  } = store;
+
+  // Load timeline into store when API data arrives
+  useEffect(() => {
+    if (timelineData) store.loadTimeline(timelineData);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timelineData]);
+
+  // RAF playback loop
+  const rafRef = useRef<number | null>(null);
+  const lastTickRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!isPlaying) {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      return;
+    }
+
+    function tick(now: number) {
+      const delta = lastTickRef.current === 0 ? 16 : now - lastTickRef.current;
+      lastTickRef.current = now;
+      store.advancePlayhead(Math.min(delta, 100));
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
+    lastTickRef.current = 0;
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying]);
 
   useTimelineKeybinds();
 
-  const setTrackVolume     = useTimelineStore((s) => s.setTrackVolume);
-  const toggleTrackAutoDuck = useTimelineStore((s) => s.toggleTrackAutoDuck);
-  const addMusicClip       = useTimelineStore((s) => s.addMusicClip);
-  const addTextOverlay     = useTimelineStore((s) => s.addTextOverlay);
-  const updateTextOverlay  = useTimelineStore((s) => s.updateTextOverlay);
-  const deleteTextOverlay  = useTimelineStore((s) => s.deleteTextOverlay);
-
   const [showMusicLib, setShowMusicLib] = useState(false);
-
   const TRACK_LABEL_W = 160;
 
-  // Find the first music track ID for "Add to Timeline" action
   const musicTrackId = timeline?.tracks.find((t) => t.trackType === "music")?.id;
 
   function handleAddMusicToTimeline(stock: StockMusicTrack, startMs: number) {
@@ -91,6 +132,31 @@ export default function TimelinePage({ params }: { params: { id: string } }) {
       musicTrackId
     );
   }
+
+  // ── Loading / error states ──────────────────────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-[#0a0f1a] text-slate-400 gap-3">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-sm">Loading timeline…</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center bg-[#0a0f1a] gap-4">
+        <AlertTriangle className="h-8 w-8 text-amber-400" />
+        <p className="text-sm text-slate-400">Failed to load timeline for this episode.</p>
+        <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  // ── Editor ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col h-full bg-[#0a0f1a] text-white overflow-auto">
@@ -135,6 +201,23 @@ export default function TimelinePage({ params }: { params: { id: string } }) {
         )}
 
         <div className="flex-1" />
+
+        {/* Save */}
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 gap-1.5 text-xs text-slate-300 hover:text-white"
+          onClick={() => timeline && saveTimeline(timeline)}
+          disabled={isSaving || !timeline}
+        >
+          {isSaving
+            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            : <Save className="h-3.5 w-3.5" />
+          }
+          Save
+        </Button>
+
+        <div className="w-px h-5 bg-slate-700 mx-1" />
 
         {/* Music library toggle */}
         <Button
@@ -185,7 +268,6 @@ export default function TimelinePage({ params }: { params: { id: string } }) {
                 style={{ height: h }}
               >
                 {isMusic ? (
-                  /* Music track: volume slider + auto-duck */
                   <MusicTrackRow
                     trackId={track.id}
                     label={track.label}
@@ -195,7 +277,6 @@ export default function TimelinePage({ params }: { params: { id: string } }) {
                     onAutoDuckToggle={toggleTrackAutoDuck}
                   />
                 ) : (
-                  /* All other tracks: label + mute/lock */
                   <>
                     <div className="flex items-center gap-2 min-w-0">
                       <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${colorClass}`}>
@@ -228,12 +309,10 @@ export default function TimelinePage({ params }: { params: { id: string } }) {
 
         {/* ── Centre: canvas + text overlay panel ──────── */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Konva canvas */}
           <div className="flex-1 overflow-hidden">
             <TimelineCanvasWrapper />
           </div>
 
-          {/* Text overlay panel */}
           {timeline && (
             <TextOverlayPanel
               timeline={timeline}

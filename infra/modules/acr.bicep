@@ -1,37 +1,17 @@
+param environment string
 param tier string
 
-resource acr 'Microsoft.ContainerRegistry/registries@2022-09-01' = {
-  name: 'AnimStudioACR'
+resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
+  name: 'animstudio${environment}acr'
   location: resourceGroup().location
+  sku: {
+    name: tier
+  }
   properties: {
-    sku: {
-      name: tier
-    }
     adminUserEnabled: false
-    policies: {
-      quarantinePolicy: {
-        status: 'enabled'
-      }
-    }
-  }
-}
-
-module rbacContainerApp './rbac.bicep' = {
-  name: 'AssignACRPullForContainerApp'
-  params: {
-    principalId: containerAppMI.outputs.principalId
-    roleDefinitionId: 'AcrPull'
-    scope: acr.id
-  }
-}
-
-module rbacGitHub './rbac.bicep' = {
-  name: 'AssignACRPushForGitHubActions'
-  params: {
-    principalId: githubOIDC.outputs.principalId
-    roleDefinitionId: 'AcrPush'
-    scope: acr.id
   }
 }
 
 output acrLoginServer string = acr.properties.loginServer
+output acrId string = acr.id
+output registryId string = acr.id

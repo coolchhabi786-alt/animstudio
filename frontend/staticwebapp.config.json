@@ -1,0 +1,27 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/api/*", "/hubs/*", "/_next/*", "/favicon.ico"]
+  },
+  "routes": [
+    {
+      "route": "/hubs/*",
+      "allowedRoles": ["anonymous"],
+      "rewrite": "https://animstudio-ENVIRONMENT-api.REGION.azurecontainerapps.io/hubs/*"
+    },
+    {
+      "route": "/api/*",
+      "allowedRoles": ["anonymous"],
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      "rewrite": "https://animstudio-ENVIRONMENT-api.REGION.azurecontainerapps.io/api/*"
+    }
+  ],
+  "globalHeaders": {
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  },
+  "mimeTypes": {
+    ".json": "application/json"
+  }
+}

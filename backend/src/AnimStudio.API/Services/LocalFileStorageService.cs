@@ -24,8 +24,7 @@ public sealed class LocalFileStorageService(
         CancellationToken ct = default)
     {
         var fullPath = ToFullPath(relativePath);
-        var dir = Path.GetDirectoryName(fullPath)!;
-        Directory.CreateDirectory(dir);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
 
         await using var file = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None);
         await content.CopyToAsync(file, ct);
@@ -34,7 +33,7 @@ public sealed class LocalFileStorageService(
         return relativePath;
     }
 
-    public string GetFileUrl(string relativePath)
+    public string GetFileUrl(string relativePath, TimeSpan? expiry = null)
     {
         if (string.IsNullOrWhiteSpace(relativePath))
             return relativePath;
@@ -48,8 +47,26 @@ public sealed class LocalFileStorageService(
         return $"{_backendBaseUrl}/api/v1/files/{urlPath}";
     }
 
+    public Task<string> SavePreviewAsync(
+        Stream content,
+        string previewPath,
+        string contentType,
+        CancellationToken ct = default)
+        => SaveFileAsync(content, previewPath, contentType, ct);
+
     public Task<bool> ExistsAsync(string relativePath, CancellationToken ct = default)
         => Task.FromResult(File.Exists(ToFullPath(relativePath)));
+
+    public Task DeleteAsync(string relativePath, CancellationToken ct = default)
+    {
+        var fullPath = ToFullPath(relativePath);
+        if (File.Exists(fullPath))
+        {
+            File.Delete(fullPath);
+            logger.LogDebug("Deleted local file: {RelativePath}", relativePath);
+        }
+        return Task.CompletedTask;
+    }
 
     private string ToFullPath(string relativePath)
         => Path.GetFullPath(Path.Combine(_rootPath, relativePath.Replace('/', Path.DirectorySeparatorChar)));

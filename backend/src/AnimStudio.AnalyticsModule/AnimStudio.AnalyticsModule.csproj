@@ -9,10 +9,19 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AnimStudio.SharedKernel\AnimStudio.SharedKernel.csproj" />
+    <ProjectReference Include="..\AnimStudio.ContentModule\AnimStudio.ContentModule.csproj" />
+    <ProjectReference Include="..\AnimStudio.IdentityModule\AnimStudio.IdentityModule.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.9.0" />
     <PackageReference Include="MediatR" Version="12.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
   </ItemGroup>
 

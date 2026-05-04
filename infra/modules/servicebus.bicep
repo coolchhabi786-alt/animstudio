@@ -1,13 +1,17 @@
+param environment string
 param privateEndpointEnabled bool
 
+// Suffix '-sb' is reserved by Azure — using 'sbus' instead.
+var namespaceName = 'animstudio-${environment}sbus'
+
 resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' = {
-  name: 'AnimStudioServiceBus'
+  name: namespaceName
   location: resourceGroup().location
-  properties: {
-    sku: {
-      name: 'Standard'
-    }
+  sku: {
+    name: 'Standard'
+    tier: 'Standard'
   }
+  properties: {}
 }
 
 resource jobsQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' = {
@@ -38,12 +42,12 @@ resource deadletterRetryQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01
   }
 }
 
-// ── Phase 4: Character LoRA Training queue ────────────────────────────────────
+// Standard tier max lock duration is 5 min. Worker renews the lock every ~4 min for long LoRA jobs.
 resource characterTrainingQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-01-preview' = {
   name: 'character-training'
   parent: serviceBusNamespace
   properties: {
-    lockDuration: 'PT30M'    // LoRA training can take 15+ min — generous lock
+    lockDuration: 'PT5M'
     maxDeliveryCount: 3
     requiresDuplicateDetection: true
     duplicateDetectionHistoryTimeWindow: 'PT1H'
@@ -52,11 +56,11 @@ resource characterTrainingQueue 'Microsoft.ServiceBus/namespaces/queues@2022-10-
 }
 
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2022-07-01' = if (privateEndpointEnabled) {
-  name: 'AnimStudioServiceBus-pe'
+  name: '${namespaceName}-pe'
   location: resourceGroup().location
   properties: {
     subnet: {
-      id: resourceId('Microsoft.Network/virtualNetworks/subnets', 'animstudio-vnet', 'servicebus-subnet')
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', 'animstudio-${environment}-vnet', 'servicebus-subnet')
     }
     privateLinkServiceConnections: [
       {
@@ -69,4 +73,9 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2022-07-01' = if (p
   }
 }
 
-output serviceBusConnectionString string = 'Endpoint=sb://${serviceBusNamespace.name}.servicebus.windows.net/'
+var rootKey = listKeys('${serviceBusNamespace.id}/AuthorizationRules/RootManageSharedAccessKey', '2022-10-01-preview')
+
+output serviceBusNamespaceName string = serviceBusNamespace.name
+output namespaceId string = serviceBusNamespace.id
+// Full connection string required by KEDA azure-servicebus scaler (connection auth mode)
+output serviceBusConnectionString string = rootKey.primaryConnectionString

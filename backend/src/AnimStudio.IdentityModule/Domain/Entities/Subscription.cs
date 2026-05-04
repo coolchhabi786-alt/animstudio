@@ -81,6 +81,24 @@ namespace AnimStudio.IdentityModule.Domain.Entities
             UsageEpisodesThisMonth = 0;
             UsageResetAt = DateTimeOffset.UtcNow.AddMonths(1);
         }
+
+        /// <summary>
+        /// Increments episode usage and raises warning/exceeded domain events at 80% and 100% thresholds.
+        /// </summary>
+        /// <param name="quota">Monthly episode quota from the plan. Pass 0 to skip threshold checks.</param>
+        public void IncrementEpisodeUsage(int quota)
+        {
+            UsageEpisodesThisMonth++;
+
+            if (quota <= 0) return;
+
+            var percent = (int)Math.Round((double)UsageEpisodesThisMonth / quota * 100);
+
+            if (UsageEpisodesThisMonth >= quota)
+                AddDomainEvent(new SubscriptionQuotaExceededEvent(Id, TeamId, UsageEpisodesThisMonth, quota));
+            else if (percent >= 80)
+                AddDomainEvent(new SubscriptionUsageWarningEvent(Id, TeamId, percent));
+        }
     }
 
     public enum SubscriptionStatus

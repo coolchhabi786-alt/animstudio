@@ -1,3 +1,4 @@
+using AnimStudio.ContentModule.Application.DTOs;
 using AnimStudio.ContentModule.Application.Interfaces;
 using AnimStudio.ContentModule.Domain;
 using AnimStudio.ContentModule.Domain.Entities;
@@ -11,16 +12,23 @@ using System.Text.Json.Serialization;
 
 namespace AnimStudio.ContentModule.Application.Commands.HandleJobCompletion;
 
-public sealed record HandleJobCompletionCommand(Guid JobId, bool IsSuccess, string? Result, string? Error) : IRequest<Result<bool>>;
+public sealed record HandleJobCompletionCommand(
+    Guid    JobId,
+    bool    IsSuccess,
+    string? Result,
+    string? Error) : IRequest<Result<bool>>;
 
 public sealed class HandleJobCompletionHandler(
-    IJobRepository jobs,
-    IEpisodeRepository episodes,
-    ISagaStateRepository sagas,
-    IStoryboardRepository storyboards,
+    IJobRepository          jobs,
+    IEpisodeRepository      episodes,
+    ISagaStateRepository    sagas,
+    ICharacterRepository    characters,
+    IScriptRepository       scripts,
+    IStoryboardRepository   storyboards,
     IAnimationJobRepository animationJobs,
     IAnimationClipRepository animationClips,
-    IPublisher publisher,
+    IPublisher              publisher,
+    IUsageMeteringService   usageMetering,
     ILogger<HandleJobCompletionHandler> logger)
     : IRequestHandler<HandleJobCompletionCommand, Result<bool>>
 {
@@ -29,24 +37,22 @@ public sealed class HandleJobCompletionHandler(
     public async Task<Result<bool>> Handle(HandleJobCompletionCommand cmd, CancellationToken ct)
     {
         var job = await jobs.GetByIdAsync(cmd.JobId, ct);
-        if (job is null) return Result<bool>.Failure("Job not found", "NOT_FOUND");
+        if (job is null)
+        {
+            logger.LogWarning("HandleJobCompletion: job {JobId} not found", cmd.JobId);
+            return Result<bool>.Failure("Job not found", "NOT_FOUND");
+        }
 
         var episode = await episodes.GetByIdAsync(job.EpisodeId, ct);
-        if (episode is null) return Result<bool>.Failure("Episode not found", "NOT_FOUND");
+        if (episode is null)
+        {
+            logger.LogWarning("HandleJobCompletion: episode {EpisodeId} not found for job {JobId}", job.EpisodeId, cmd.JobId);
+            return Result<bool>.Failure("Episode not found", "NOT_FOUND");
+        }
 
         if (cmd.IsSuccess)
         {
-            // ── Storyboard-specific result processing ────────────────────────
-            if (job.Type == JobType.StoryboardPlan && cmd.Result is not null)
-                await HandleStoryboardPlanResultAsync(job.EpisodeId, cmd.Result, ct);
-
-            if (job.Type == JobType.StoryboardGen && cmd.Result is not null)
-                await HandleStoryboardGenResultAsync(job.EpisodeId, cmd.Result, ct);
-
-            // ── Animation-specific result processing ─────────────────────────
-            // Python result: { "clips": [{ "sceneNumber": 1, "shotIndex": 1, "clipUrl": "...", "durationSeconds": 4.5 }] }
-            if (job.Type == JobType.Animation && cmd.Result is not null)
-                await HandleAnimationResultAsync(job.EpisodeId, cmd.Result, ct);
+            await DispatchSuccessHandlerAsync(job, cmd.Result, ct);
 
             job.Complete(cmd.Result);
             await jobs.UpdateAsync(job, ct);
@@ -54,6 +60,8 @@ public sealed class HandleJobCompletionHandler(
             var nextStage = NextStageAfter(job.Type);
             episode.Advance(nextStage);
             await episodes.UpdateAsync(episode, ct);
+            // Episode domain events (EpisodeStageAdvancedEvent, EpisodeCompletedEvent) are
+            // drained by TransactionBehaviour → outbox → OutboxPublisherJob.
 
             var saga = await sagas.GetByEpisodeIdAsync(episode.Id, ct);
             if (saga is not null)
@@ -85,14 +93,183 @@ public sealed class HandleJobCompletionHandler(
         return Result<bool>.Success(true);
     }
 
-    // ── StoryboardPlan ────────────────────────────────────────────────────────
-    // Python returns: { "screenplayTitle": "...", "shots": [{ "sceneNumber": 1, "shotIndex": 1, "description": "..." }] }
+    // ── Type dispatch ──────────────────────────────────────────────────────────
 
-    private async Task HandleStoryboardPlanResultAsync(Guid episodeId, string resultJson, CancellationToken ct)
+    private Task DispatchSuccessHandlerAsync(Job job, string? resultJson, CancellationToken ct)
+        => job.Type switch
+        {
+            JobType.CharacterDesign => HandleCharacterDesignAsync(job.EpisodeId, resultJson, ct),
+            JobType.LoraTraining    => HandleLoraTrainingAsync(job.EpisodeId, resultJson, ct),
+            JobType.Script          => HandleScriptAsync(job.EpisodeId, resultJson, ct),
+            JobType.StoryboardPlan  => HandleStoryboardPlanAsync(job.EpisodeId, resultJson, ct),
+            JobType.StoryboardGen   => HandleStoryboardGenAsync(job.EpisodeId, resultJson, ct),
+            JobType.Animation       => HandleAnimationAsync(job.EpisodeId, resultJson, ct),
+            JobType.PostProd        => HandlePostProdAsync(job.EpisodeId, ct),
+            _                       => Task.CompletedTask,
+        };
+
+    // ── CharacterDesign ────────────────────────────────────────────────────────
+    // Python returns: { "imageUrl": "string" }
+    // All characters linked to the episode are advanced to TrainingQueued with the reference image.
+
+    private async Task HandleCharacterDesignAsync(Guid episodeId, string? resultJson, CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(resultJson))
+        {
+            logger.LogWarning("CharacterDesign result for episode {EpisodeId} had no payload", episodeId);
+            return;
+        }
         try
         {
-            var plan = JsonSerializer.Deserialize<StoryboardPlanResult>(resultJson, JsonOpts);
+            var result = JsonSerializer.Deserialize<CharacterDesignResult>(resultJson, JsonOpts);
+            if (result is null || string.IsNullOrWhiteSpace(result.ImageUrl))
+            {
+                logger.LogWarning("CharacterDesign result for episode {EpisodeId} had no imageUrl", episodeId);
+                return;
+            }
+
+            var episodeChars = await characters.GetByEpisodeIdAsync(episodeId, ct);
+            if (episodeChars.Count == 0)
+            {
+                logger.LogWarning("CharacterDesign: no characters found for episode {EpisodeId}", episodeId);
+                return;
+            }
+
+            foreach (var character in episodeChars)
+            {
+                // BOLA: character already verified to belong to this episode via EpisodeCharacter join
+                character.AdvanceTraining(
+                    TrainingStatus.TrainingQueued,
+                    progressPercent: 50,
+                    imageUrl: result.ImageUrl);
+                await characters.UpdateAsync(character, ct);
+
+                foreach (var evt in character.DomainEvents)
+                    await publisher.Publish(evt, ct);
+                character.ClearDomainEvents();
+            }
+
+            logger.LogInformation(
+                "CharacterDesign completed for episode {EpisodeId}: {Count} character(s) advanced to TrainingQueued",
+                episodeId, episodeChars.Count);
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "Failed to parse CharacterDesign result for episode {EpisodeId}", episodeId);
+        }
+    }
+
+    // ── LoraTraining ───────────────────────────────────────────────────────────
+    // Python returns: { "loraWeightsUrl": "string", "triggerWord": "string" }
+
+    private async Task HandleLoraTrainingAsync(Guid episodeId, string? resultJson, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(resultJson))
+        {
+            logger.LogWarning("LoraTraining result for episode {EpisodeId} had no payload", episodeId);
+            return;
+        }
+        try
+        {
+            var result = JsonSerializer.Deserialize<LoraTrainingResult>(resultJson, JsonOpts);
+            if (result is null || string.IsNullOrWhiteSpace(result.LoraWeightsUrl))
+            {
+                logger.LogWarning("LoraTraining result for episode {EpisodeId} missing loraWeightsUrl", episodeId);
+                return;
+            }
+
+            var episodeChars = await characters.GetByEpisodeIdAsync(episodeId, ct);
+            var trainingChars = episodeChars
+                .Where(c => c.TrainingStatus is TrainingStatus.TrainingQueued or TrainingStatus.Training)
+                .ToList();
+
+            if (trainingChars.Count == 0)
+            {
+                logger.LogWarning("LoraTraining: no characters in training state for episode {EpisodeId}", episodeId);
+                return;
+            }
+
+            foreach (var character in trainingChars)
+            {
+                character.AdvanceTraining(
+                    TrainingStatus.Ready,
+                    progressPercent: 100,
+                    loraWeightsUrl: result.LoraWeightsUrl,
+                    triggerWord: result.TriggerWord);
+                await characters.UpdateAsync(character, ct);
+
+                foreach (var evt in character.DomainEvents)
+                    await publisher.Publish(evt, ct);
+                character.ClearDomainEvents();
+            }
+
+            logger.LogInformation(
+                "LoraTraining completed for episode {EpisodeId}: {Count} character(s) marked Ready",
+                episodeId, trainingChars.Count);
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "Failed to parse LoraTraining result for episode {EpisodeId}", episodeId);
+        }
+    }
+
+    // ── Script ─────────────────────────────────────────────────────────────────
+    // Python returns: { "screenplay": { ...Screenplay model... } }
+
+    private async Task HandleScriptAsync(Guid episodeId, string? resultJson, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(resultJson))
+        {
+            logger.LogWarning("Script result for episode {EpisodeId} had no payload", episodeId);
+            return;
+        }
+        try
+        {
+            var result = JsonSerializer.Deserialize<ScriptResult>(resultJson, JsonOpts);
+            if (result is null)
+            {
+                logger.LogWarning("Script result for episode {EpisodeId} could not be deserialized", episodeId);
+                return;
+            }
+
+            var screenplayJson = result.Screenplay.GetRawText();
+            var title = result.Screenplay.TryGetProperty("title", out var titleProp)
+                ? titleProp.GetString() ?? "Untitled"
+                : "Untitled";
+
+            var existing = await scripts.GetByEpisodeIdAsync(episodeId, ct);
+            if (existing is not null)
+            {
+                existing.UpdateFromJob(screenplayJson, title);
+                await scripts.UpdateAsync(existing, ct);
+            }
+            else
+            {
+                var created = Script.Create(episodeId, title, screenplayJson);
+                await scripts.AddAsync(created, ct);
+            }
+
+            logger.LogInformation("Script result persisted for episode {EpisodeId}, title={Title}", episodeId, title);
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "Failed to parse Script result for episode {EpisodeId}", episodeId);
+        }
+    }
+
+    // ── StoryboardPlan ─────────────────────────────────────────────────────────
+    // Python returns: { "screenplayTitle": "...", "shots": [{ sceneNumber, shotIndex, description }] }
+
+    private async Task HandleStoryboardPlanAsync(Guid episodeId, string? resultJson, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(resultJson))
+        {
+            logger.LogWarning("StoryboardPlan result for episode {EpisodeId} had no payload", episodeId);
+            return;
+        }
+        try
+        {
+            var plan = JsonSerializer.Deserialize<StoryboardPlanJobResult>(resultJson, JsonOpts);
             if (plan?.Shots is null || plan.Shots.Count == 0)
             {
                 logger.LogWarning("StoryboardPlan result for episode {EpisodeId} had no shots", episodeId);
@@ -118,8 +295,8 @@ public sealed class HandleJobCompletionHandler(
             }
 
             logger.LogInformation(
-                "Storyboard seeded for episode {EpisodeId}: {Count} shots",
-                episodeId, plan.Shots.Count);
+                "Storyboard seeded for episode {EpisodeId}: {Count} shots, title={Title}",
+                episodeId, plan.Shots.Count, title);
         }
         catch (JsonException ex)
         {
@@ -128,32 +305,57 @@ public sealed class HandleJobCompletionHandler(
     }
 
     // ── StoryboardGen ─────────────────────────────────────────────────────────
-    // Python returns: { "shotId": "guid", "imageUrl": "https://..." }
+    // Python returns: { "shots": [{ sceneNumber, shotIndex, imageUrl }] }
 
-    private async Task HandleStoryboardGenResultAsync(Guid episodeId, string resultJson, CancellationToken ct)
+    private async Task HandleStoryboardGenAsync(Guid episodeId, string? resultJson, CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(resultJson))
+        {
+            logger.LogWarning("StoryboardGen result for episode {EpisodeId} had no payload", episodeId);
+            return;
+        }
         try
         {
-            var genResult = JsonSerializer.Deserialize<StoryboardGenResult>(resultJson, JsonOpts);
-            if (genResult is null || string.IsNullOrWhiteSpace(genResult.ImageUrl))
+            var genResult = JsonSerializer.Deserialize<StoryboardGenJobResult>(resultJson, JsonOpts);
+            if (genResult?.Shots is null || genResult.Shots.Count == 0)
             {
-                logger.LogWarning("StoryboardGen result for episode {EpisodeId} had no imageUrl", episodeId);
+                logger.LogWarning("StoryboardGen result for episode {EpisodeId} had no shots", episodeId);
                 return;
             }
 
             var storyboard = await storyboards.GetByEpisodeIdAsync(episodeId, ct);
             if (storyboard is null)
             {
-                logger.LogWarning("No storyboard found for episode {EpisodeId} when processing StoryboardGen", episodeId);
+                logger.LogWarning("StoryboardGen: no storyboard found for episode {EpisodeId}", episodeId);
                 return;
             }
 
-            storyboard.SetShotImage(genResult.ShotId, genResult.ImageUrl);
+            foreach (var shot in genResult.Shots)
+            {
+                if (string.IsNullOrWhiteSpace(shot.ImageUrl))
+                {
+                    logger.LogWarning(
+                        "StoryboardGen: skipping shot scene={Scene} index={Index} — imageUrl empty",
+                        shot.SceneNumber, shot.ShotIndex);
+                    continue;
+                }
+                try
+                {
+                    storyboard.SetShotImageByPosition(shot.SceneNumber, shot.ShotIndex, shot.ImageUrl);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    logger.LogWarning(ex,
+                        "StoryboardGen: shot scene={Scene} index={Index} not found in storyboard {Id}",
+                        shot.SceneNumber, shot.ShotIndex, storyboard.Id);
+                }
+            }
+
             await storyboards.UpdateAsync(storyboard, ct);
 
             logger.LogInformation(
-                "Shot {ShotId} image set for episode {EpisodeId}",
-                genResult.ShotId, episodeId);
+                "StoryboardGen: {Count} shot image(s) set for episode {EpisodeId}",
+                genResult.Shots.Count, episodeId);
         }
         catch (JsonException ex)
         {
@@ -161,43 +363,19 @@ public sealed class HandleJobCompletionHandler(
         }
     }
 
-    private static EpisodeStatus NextStageAfter(JobType type) => type switch
-    {
-        JobType.CharacterDesign => EpisodeStatus.LoraTraining,
-        JobType.LoraTraining    => EpisodeStatus.Script,
-        JobType.Script          => EpisodeStatus.Storyboard,
-        JobType.StoryboardPlan  => EpisodeStatus.Storyboard,
-        JobType.StoryboardGen   => EpisodeStatus.Voice,
-        JobType.Voice           => EpisodeStatus.Animation,
-        JobType.Animation       => EpisodeStatus.PostProduction,
-        JobType.PostProd        => EpisodeStatus.Done,
-        _                       => EpisodeStatus.Done,
-    };
-
-    // ── Private result DTOs ───────────────────────────────────────────────────
-
-    private sealed record StoryboardPlanResult(
-        [property: JsonPropertyName("screenplayTitle")] string? ScreenplayTitle,
-        [property: JsonPropertyName("shots")] List<PlannedShot> Shots);
-
-    private sealed record PlannedShot(
-        [property: JsonPropertyName("sceneNumber")] int SceneNumber,
-        [property: JsonPropertyName("shotIndex")] int ShotIndex,
-        [property: JsonPropertyName("description")] string? Description);
-
-    private sealed record StoryboardGenResult(
-        [property: JsonPropertyName("shotId")] Guid ShotId,
-        [property: JsonPropertyName("imageUrl")] string ImageUrl);
-
     // ── Animation ─────────────────────────────────────────────────────────────
-    // Python returns: { "clips": [{ "sceneNumber":1, "shotIndex":1, "clipUrl":"…", "durationSeconds":4.5 }],
-    //                   "actualCostUsd": 0.672 }
+    // Python returns: { "clips": [{ sceneNumber, shotIndex, clipUrl, durationSeconds }], "actualCostUsd": 0.672 }
 
-    private async Task HandleAnimationResultAsync(Guid episodeId, string resultJson, CancellationToken ct)
+    private async Task HandleAnimationAsync(Guid episodeId, string? resultJson, CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(resultJson))
+        {
+            logger.LogWarning("Animation result for episode {EpisodeId} had no payload", episodeId);
+            return;
+        }
         try
         {
-            var result = JsonSerializer.Deserialize<AnimationBatchResult>(resultJson, JsonOpts);
+            var result = JsonSerializer.Deserialize<AnimationJobResult>(resultJson, JsonOpts);
             if (result?.Clips is null || result.Clips.Count == 0)
             {
                 logger.LogWarning("Animation result for episode {EpisodeId} had no clips", episodeId);
@@ -218,23 +396,17 @@ public sealed class HandleJobCompletionHandler(
                 }
 
                 if (string.IsNullOrWhiteSpace(item.ClipUrl))
-                {
                     clip.MarkFailed();
-                }
                 else
-                {
                     clip.MarkReady(item.ClipUrl, item.DurationSeconds);
-                }
 
                 await animationClips.UpdateAsync(clip, ct);
 
-                // Dispatch domain events (ClipReady → SignalR)
                 foreach (var evt in clip.DomainEvents)
                     await publisher.Publish(evt, ct);
                 clip.ClearDomainEvents();
             }
 
-            // Update AnimationJob cost if Python provided it
             var animJob = await animationJobs.GetLatestByEpisodeIdAsync(episodeId, ct);
             if (animJob is not null && !animJob.Status.Equals(AnimationStatus.Completed))
             {
@@ -243,7 +415,7 @@ public sealed class HandleJobCompletionHandler(
             }
 
             logger.LogInformation(
-                "Animation result processed for episode {EpisodeId}: {Count} clips updated",
+                "Animation result processed for episode {EpisodeId}: {Count} clip(s) updated",
                 episodeId, result.Clips.Count);
         }
         catch (JsonException ex)
@@ -252,13 +424,28 @@ public sealed class HandleJobCompletionHandler(
         }
     }
 
-    private sealed record AnimationBatchResult(
-        [property: JsonPropertyName("clips")] List<AnimationClipResult> Clips,
-        [property: JsonPropertyName("actualCostUsd")] decimal? ActualCostUsd);
+    // ── PostProd ──────────────────────────────────────────────────────────────
 
-    private sealed record AnimationClipResult(
-        [property: JsonPropertyName("sceneNumber")] int SceneNumber,
-        [property: JsonPropertyName("shotIndex")] int ShotIndex,
-        [property: JsonPropertyName("clipUrl")] string ClipUrl,
-        [property: JsonPropertyName("durationSeconds")] double DurationSeconds);
+    private async Task HandlePostProdAsync(Guid episodeId, CancellationToken ct)
+    {
+        var episode = await episodes.GetByIdAsync(episodeId, ct);
+        if (episode is null) return;
+
+        await usageMetering.IncrementEpisodeUsageAsync(episodeId, episode.ProjectId, ct);
+    }
+
+    // ── Stage progression ─────────────────────────────────────────────────────
+
+    private static EpisodeStatus NextStageAfter(JobType type) => type switch
+    {
+        JobType.CharacterDesign => EpisodeStatus.LoraTraining,
+        JobType.LoraTraining    => EpisodeStatus.Script,
+        JobType.Script          => EpisodeStatus.Storyboard,
+        JobType.StoryboardPlan  => EpisodeStatus.Storyboard,
+        JobType.StoryboardGen   => EpisodeStatus.Voice,
+        JobType.Voice           => EpisodeStatus.Animation,
+        JobType.Animation       => EpisodeStatus.PostProduction,
+        JobType.PostProd        => EpisodeStatus.Done,
+        _                       => EpisodeStatus.Done,
+    };
 }

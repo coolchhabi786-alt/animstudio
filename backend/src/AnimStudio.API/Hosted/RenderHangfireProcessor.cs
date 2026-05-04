@@ -61,25 +61,56 @@ public sealed class RenderHangfireProcessor(
 
             if (!string.IsNullOrWhiteSpace(rootPath))
             {
-                // Look for: {rootPath}/renders/{episodeId}/{SixteenNine|NineSixteen|OneOne}.mp4
+                // Strategy 1: episode-specific render at renders/{episodeId}/{Ratio}.mp4
+                // This is where production output (or a manually placed dev file) lives.
                 var ratioFileName = $"{render.AspectRatio}.mp4";
-                var localPath = Path.GetFullPath(Path.Combine(
+                var episodePath = Path.GetFullPath(Path.Combine(
                     rootPath, "renders", render.EpisodeId.ToString(), ratioFileName));
 
-                if (File.Exists(localPath))
+                string? foundPath = null;
+                string? foundRelative = null;
+
+                if (File.Exists(episodePath))
                 {
-                    var info = new FileInfo(localPath);
-                    durationSeconds = Math.Max(1.0, info.Length / 500_000.0);
-                    var relativePath = $"renders/{render.EpisodeId}/{ratioFileName}";
-                    cdnUrl = $"{backendBase}/api/v1/files/{relativePath}";
+                    foundPath     = episodePath;
+                    foundRelative = $"renders/{render.EpisodeId}/{ratioFileName}";
+                }
+                else
+                {
+                    // Strategy 2: fall back to any .mp4 in the final/ directory.
+                    // In local dev the pipeline writes finished episodes here with
+                    // descriptive names (e.g. The_Superpowered_Shenanigans_of_Mr._Whiskers_episode.mp4).
+                    var finalDir = Path.Combine(rootPath, "final");
+                    var candidate = Directory.Exists(finalDir)
+                        ? Directory.EnumerateFiles(finalDir, "*.mp4")
+                              .OrderByDescending(f => new FileInfo(f).Length)
+                              .FirstOrDefault()
+                        : null;
+
+                    if (candidate is not null)
+                    {
+                        foundPath     = candidate;
+                        foundRelative = $"final/{Path.GetFileName(candidate)}";
+                        logger.LogInformation(
+                            "RenderHangfireProcessor: no episode-specific file at {Primary} — " +
+                            "using fallback final/ file {Fallback}", episodePath, candidate);
+                    }
+                }
+
+                if (foundPath is not null && foundRelative is not null)
+                {
+                    var info = new FileInfo(foundPath);
+                    durationSeconds = GetActualDurationSeconds(foundPath);
+                    cdnUrl = $"{backendBase}/api/v1/files/{foundRelative}";
                     logger.LogInformation(
-                        "RenderHangfireProcessor: found local render file — {Path}", localPath);
+                        "RenderHangfireProcessor: serving render from {Path} ({Dur:F1}s)", foundPath, durationSeconds);
                 }
                 else
                 {
                     logger.LogWarning(
-                        "RenderHangfireProcessor: no local render file at {Path} — completing without video",
-                        localPath);
+                        "RenderHangfireProcessor: no render file found — completing without video URL. " +
+                        "Place a file at {Expected} or add any .mp4 to {FinalDir}",
+                        episodePath, Path.Combine(rootPath, "final"));
                 }
             }
 
@@ -103,5 +134,37 @@ public sealed class RenderHangfireProcessor(
             await renders.SaveChangesAsync(ct);
             throw; // Hangfire will retry
         }
+    }
+
+    /// <summary>
+    /// Uses ffprobe to read the exact video duration. Falls back to a file-size
+    /// heuristic when ffprobe is not installed (same estimate as the old code).
+    /// </summary>
+    private static double GetActualDurationSeconds(string path)
+    {
+        try
+        {
+            using var proc = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName               = "ffprobe",
+                    Arguments              = $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"{path}\"",
+                    RedirectStandardOutput = true,
+                    UseShellExecute        = false,
+                    CreateNoWindow         = true,
+                },
+            };
+            proc.Start();
+            var output = proc.StandardOutput.ReadToEnd().Trim();
+            proc.WaitForExit();
+            if (double.TryParse(output, System.Globalization.NumberStyles.Float,
+                                System.Globalization.CultureInfo.InvariantCulture, out var secs))
+                return secs;
+        }
+        catch { /* ffprobe not available */ }
+
+        // Fallback: rough estimate from file size (500 KB/s ≈ 4 Mbps bitrate)
+        return Math.Max(1.0, new FileInfo(path).Length / 500_000.0);
     }
 }

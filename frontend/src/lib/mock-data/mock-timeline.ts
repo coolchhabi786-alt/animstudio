@@ -181,39 +181,46 @@ const videoClips: VideoClip[] = [
   },
 ];
 
-// ── Audio clips: 3 separate tracks (EACH INDEPENDENT, EASY TO DRAG) ────────────
+// ── Audio file durations (measured via ffprobe — do NOT derive from SHOT_MS) ──
+// These are the ACTUAL durations of the MP3 files in the output folder.
+// Using video shot lengths as audio durations was the prior bug.
+const AUDIO_DURATIONS = {
+  scene01MrWhiskers:    1008,  // scene_01_mr._whiskers.mp3
+  scene02ProfPaws:      1128,  // scene_02_professor_paws.mp3
+  scene03MrWhiskers:    2016,  // scene_03_mr._whiskers.mp3
+  scene01DaveTheOwner:  2880,  // scene_01_dave_the_owner.mp3
+};
+
+// ── Audio clips: 3 separate dialogue clips ────────────────────────────────────
 
 const audioClips: AudioClip[] = [
-  // Scene 1 dialogue: plays during shots 1-2 (0 to 11.28s)
   {
     type: "audio", id: "tclip-a-01", trackId: AUDIO_TRACK_ID,
     label: "Scene 1 — Mr. Whiskers",
     audioUrl: audioUrl(1, "mr._whiskers"),
-    startMs: 0,      // ← TRY DRAGGING THIS
-    durationMs: SHOT_2,  // Runs from 0 to 11.28s
-    volumePercent: 90, fadeInMs: 0, fadeOutMs: 500,
+    startMs: 0,
+    durationMs: AUDIO_DURATIONS.scene01MrWhiskers,
+    volumePercent: 90, fadeInMs: 0, fadeOutMs: 200,
   },
-  // Scene 2 dialogue: plays during shots 3-5 (11.28s to 28.2s)
   {
     type: "audio", id: "tclip-a-02", trackId: AUDIO_TRACK_ID,
     label: "Scene 2 — Professor Paws",
     audioUrl: audioUrl(2, "professor_paws"),
-    startMs: SHOT_2,     // ← TRY DRAGGING THIS
-    durationMs: SHOT_3,  // Runs from 11.28s to 28.2s (3 shots)
-    volumePercent: 90, fadeInMs: 0, fadeOutMs: 500,
+    startMs: SHOT_2,
+    durationMs: AUDIO_DURATIONS.scene02ProfPaws,
+    volumePercent: 90, fadeInMs: 0, fadeOutMs: 200,
   },
-  // Scene 3 dialogue: plays during shots 6-8 (28.2s to 45.12s)
   {
     type: "audio", id: "tclip-a-03", trackId: AUDIO_TRACK_ID,
     label: "Scene 3 — Mr. Whiskers",
     audioUrl: audioUrl(3, "mr._whiskers"),
-    startMs: SHOT_5,     // ← TRY DRAGGING THIS
-    durationMs: SHOT_3,  // Runs from 28.2s to 45.12s (3 shots)
-    volumePercent: 90, fadeInMs: 0, fadeOutMs: 1000,
+    startMs: SHOT_5,
+    durationMs: AUDIO_DURATIONS.scene03MrWhiskers,
+    volumePercent: 90, fadeInMs: 0, fadeOutMs: 200,
   },
 ];
 
-// ── Music: 1 background track (full episode) ───────────────────────────────────
+// ── Music: 1 background track ─────────────────────────────────────────────────
 
 const musicClips: AudioClip[] = [
   {
@@ -221,8 +228,8 @@ const musicClips: AudioClip[] = [
     label: "Dave The Owner — Ambience",
     audioUrl: audioUrl(1, "dave_the_owner"),
     startMs: 0,
-    durationMs: EPISODE_DUR,
-    volumePercent: 25, fadeInMs: 2000, fadeOutMs: 3000,
+    durationMs: AUDIO_DURATIONS.scene01DaveTheOwner,
+    volumePercent: 25, fadeInMs: 500, fadeOutMs: 500,
   },
 ];
 

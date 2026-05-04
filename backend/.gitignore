@@ -1,61 +1,126 @@
-# .gitignore for AnimStudio Backend (.NET 8, Visual Studio)
+# ─────────────────────────────────────────────────────────────────────────────
+# Backend (.NET 8 / Visual Studio) .gitignore
+# ─────────────────────────────────────────────────────────────────────────────
 
-# Build results
-bin/
-obj/
+# Build outputs
+[Dd]ebug/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
 
-# User-specific files
+# Visual Studio / MSBuild state
+.vs/
+*.vcxproj.filters
+*.vcxproj.user
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
-
-# Visual Studio
-.vs/
+*.sln.backup
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
 
 # Rider
 .idea/
 *.sln.iml
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# NuGet packages (restored on build; never commit)
+packages/
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
 
-# Logs
-*.log
-
-# Database
-*.mdf
-*.ldf
-*.db
+# Compiled output / binaries
+*.exe
+*.dll
+*.pdb
+*.lib
+*.exp
+*.obj
+*.iobj
+*.ipdb
+*.ilk
+*.map
+*.meta
+*.so
+*.dylib
 
 # Test results
-TestResults/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.coveragexml
+coverage*/
+*.coverage
+*.covxml
 
 # NCrunch
 *.ncrunch*
 
-# Others
+# Caches and intermediates
 *.cache
-*.pdb
 *.tmp
 *.bak
 *.swp
+*_i.c
+*_p.c
+*_h.h
+*.ilg
+*.tlog
+*.lastbuildstate
+.dtbcache*
+*.dtbcache*
 
-# Azure Pipeline
+# Publish / deploy
+publish/
+PublishProfiles/
+*.pubxml
+*.pubxml.user
 *.publishsettings
 
-# Local secrets
+# Azure Pipeline / CI
+*.publishsettings
+
+# Local secrets — keep out of source control
 secrets.json
 appsettings.Development.json
 appsettings.Production.json
 appsettings.Staging.json
+appsettings.*.local.json
 
 # Certificates & private keys
 *.pfx
 *.p12
 *.key
 *.pem
+*.cer
 
-# Ignore migrations snapshot if needed
-# src/AnimStudio.SharedKernel/Persistence/Migrations/*ModelSnapshot.cs
+# OS generated files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Database snapshots / migration backups
+*.mdf
+*.ldf
