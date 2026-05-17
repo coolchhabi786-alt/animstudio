@@ -15,10 +15,13 @@ public sealed class GetScriptHandler(
     IEpisodeRepository episodes)
     : IRequestHandler<GetScriptQuery, Result<ScriptDto?>>
 {
+    // Python stores screenplay JSON in snake_case; future writes are camelCase.
+    // SnakeCaseLower + CaseInsensitive handles both without a migration.
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNamingPolicy        = JsonNamingPolicy.SnakeCaseLower,
+        PropertyNameCaseInsensitive = true,
+        DefaultIgnoreCondition      = JsonIgnoreCondition.WhenWritingNull,
     };
 
     public async Task<Result<ScriptDto?>> Handle(GetScriptQuery query, CancellationToken ct)

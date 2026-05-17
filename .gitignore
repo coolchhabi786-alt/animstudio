@@ -23,3 +23,8 @@ Desktop.ini
 # Logs at repo root
 logs/
 *.log
+
+# ── Secrets / local dev config (NEVER commit real credentials) ────────────────
+backend/src/AnimStudio.API/appsettings.Development.json
+infra/.env.secrets.template
+infra/.env.secrets

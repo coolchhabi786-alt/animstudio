@@ -25,8 +25,16 @@ public sealed record LoraTrainingResult(
     [property: JsonPropertyName("loraWeightsUrl")] string LoraWeightsUrl,
     [property: JsonPropertyName("triggerWord")]    string TriggerWord);
 
+public sealed record IdentifiedCharacterResult(
+    [property: JsonPropertyName("name")]        string  Name,
+    [property: JsonPropertyName("role")]        string  Role,
+    [property: JsonPropertyName("description")] string  Description,
+    [property: JsonPropertyName("style_dna")]   string  StyleDna);
+
 public sealed record ScriptResult(
-    [property: JsonPropertyName("screenplay")] JsonElement Screenplay);
+    [property: JsonPropertyName("screenplay")]          JsonElement                    Screenplay,
+    [property: JsonPropertyName("characters")]          List<IdentifiedCharacterResult>? Characters = null,
+    [property: JsonPropertyName("allowNewCharacters")]  bool                           AllowNewCharacters = true);
 
 public sealed record StoryboardPlanJobResult(
     [property: JsonPropertyName("screenplayTitle")] string? ScreenplayTitle,

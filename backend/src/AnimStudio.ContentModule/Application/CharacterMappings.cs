@@ -23,6 +23,7 @@ public static class CharacterMappings
             c.TrainingStatus,
             c.TrainingProgressPercent,
             c.CreditsCost,
+            c.DatasetImageCount,
             c.CreatedAt,
             c.UpdatedAt);
 }

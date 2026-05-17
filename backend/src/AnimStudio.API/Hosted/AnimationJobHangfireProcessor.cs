@@ -5,6 +5,7 @@ using AnimStudio.ContentModule.Domain.Enums;
 using AnimStudio.SharedKernel.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace AnimStudio.API.Hosted;
@@ -34,9 +35,8 @@ public sealed class AnimationJobHangfireProcessor(
     IAnimationJobRepository  animationJobs,
     IAnimationClipRepository animationClips,
     IJobRepository           jobs,
-    IEpisodeRepository       episodes,
     IStoryboardRepository    storyboards,
-    ICharacterRepository     characters,
+    IScriptRepository        scripts,
     IFileStorageService      fileStorage,
     IServiceBusPublisher     serviceBusPublisher,
     IMediator                mediator,
@@ -205,100 +205,92 @@ public sealed class AnimationJobHangfireProcessor(
 
     // ── Kling / Service Bus dispatch ────────────────────────────────────────
 
+    private static readonly JsonSerializerOptions JsonOpts =
+        new(JsonSerializerDefaults.Web) { WriteIndented = false };
+
     private async Task ProcessKlingAsync(AnimationJob animJob, CancellationToken ct)
     {
         var episodeId = animJob.EpisodeId;
 
         // Find the generic Job row — its ID is echoed back by Python in the completion message.
-        var allJobs  = await jobs.GetByEpisodeIdAsync(episodeId, ct);
+        var allJobs   = await jobs.GetByEpisodeIdAsync(episodeId, ct);
         var workerJob = allJobs
             .Where(j => j.Type == JobType.Animation)
             .MaxBy(j => j.CreatedAt);
 
-        var episode   = await episodes.GetByIdAsync(episodeId, ct);
         var storyboard = await storyboards.GetByEpisodeIdAsync(episodeId, ct);
+        var script     = await scripts.GetByEpisodeIdAsync(episodeId, ct);
 
-        // Only Ready characters carry LoRA weights usable by the renderer.
-        var episodeChars = (await characters.GetByEpisodeIdAsync(episodeId, ct))
-            .Where(c => c.TrainingStatus == TrainingStatus.Ready
-                     && !string.IsNullOrWhiteSpace(c.LoraWeightsUrl))
-            .ToList();
-
-        var pendingClips = await animationClips.GetByEpisodeIdAsync(episodeId, ct);
-        pendingClips = pendingClips.Where(c => c.Status == ClipStatus.Pending).ToList();
-
-        if (pendingClips.Count == 0)
+        if (storyboard is null)
         {
-            logger.LogWarning("ProcessKling: no Pending clips found for episode {EpisodeId}", episodeId);
+            logger.LogWarning("ProcessKling: no storyboard found for episode {EpisodeId} — aborting", episodeId);
+            animJob.MarkFailed();
+            await animationJobs.UpdateAsync(animJob, ct);
             return;
         }
 
-        // Index storyboard shots by (sceneNumber, shotIndex) for O(1) lookup.
-        var shotsByPosition = storyboard?.Shots
-            .ToDictionary(s => (s.SceneNumber, s.ShotIndex))
-            ?? new Dictionary<(int, int), StoryboardShot>();
+        if (script is null)
+        {
+            logger.LogWarning("ProcessKling: no script found for episode {EpisodeId} — aborting", episodeId);
+            animJob.MarkFailed();
+            await animationJobs.UpdateAsync(animJob, ct);
+            return;
+        }
 
-        var triggerWords = episodeChars
-            .Select(c => c.TriggerWord!)
-            .Where(t => !string.IsNullOrWhiteSpace(t))
-            .ToList();
-
-        var loraWeightsUrls = episodeChars
-            .ToDictionary(c => c.Id.ToString(), c => c.LoraWeightsUrl!);
-
-        var clipPayloads = pendingClips
-            .Select(c =>
+        // Rebuild the Storyboard model JSON that Python's execute_animation expects.
+        // Python: Storyboard { screenplay_title, prompts: [{ scene_number, prompt,
+        //   character_description, background_description, image_urls }] }
+        var promptsByScene = storyboard.Shots
+            .GroupBy(s => s.SceneNumber)
+            .OrderBy(g => g.Key)
+            .Select(g =>
             {
-                shotsByPosition.TryGetValue((c.SceneNumber, c.ShotIndex), out var shot);
-                return new AnimationClipPayload(
-                    SceneNumber:          c.SceneNumber,
-                    ShotIndex:            c.ShotIndex,
-                    StoryboardShotId:     c.StoryboardShotId,
-                    StoryboardImageUrl:   shot?.ImageUrl,
-                    Style:                shot?.StyleOverride ?? episode?.Style ?? "cartoon",
-                    DurationSeconds:      (int)Math.Ceiling(c.DurationSeconds ?? 5.0),
-                    CharacterTriggerWords: triggerWords);
+                var orderedShots = g.OrderBy(s => s.ShotIndex).ToList();
+                return new
+                {
+                    scene_number            = g.Key,
+                    prompt                  = orderedShots.FirstOrDefault()?.Description ?? string.Empty,
+                    character_description   = string.Empty,
+                    background_description  = string.Empty,
+                    image_urls              = orderedShots
+                                                 .Select(s => s.ImageUrl ?? string.Empty)
+                                                 .ToList(),
+                };
             })
             .ToList();
+
+        var storyboardJson = JsonSerializer.Serialize(new
+        {
+            screenplay_title = storyboard.ScreenplayTitle,
+            prompts          = promptsByScene,
+        }, JsonOpts);
 
         var message = new AnimationJobMessage(
             JobId:       workerJob?.Id ?? Guid.NewGuid(),
             EpisodeId:   episodeId,
             JobType:     "Animation",
             RequestedAt: DateTimeOffset.UtcNow,
-            Payload:     new AnimationJobPayload(
-                Clips:           clipPayloads,
-                EpisodeStyle:    episode?.Style ?? "cartoon",
-                LoraWeightsUrls: loraWeightsUrls));
+            Payload: new
+            {
+                storyboardJson,
+                screenplayJson               = script.RawJson,
+                animationDurationInstruction = "Use '5' for simple scenes, '10' for complex scenes.",
+            });
 
         await serviceBusPublisher.PublishAsync(
             JobsQueue, message, sessionId: episodeId.ToString(), ct: ct);
 
         logger.LogInformation(
-            "ProcessKling: published {ClipCount} clip(s) to '{Queue}' — episode={EpisodeId}, jobId={JobId}",
-            clipPayloads.Count, JobsQueue, episodeId, message.JobId);
+            "ProcessKling: dispatched Animation job to '{Queue}' — episode={EpisodeId}, jobId={JobId}, scenes={SceneCount}",
+            JobsQueue, episodeId, message.JobId, promptsByScene.Count);
     }
 
-    // ── Message DTOs (private — serialised to Service Bus only) ─────────────
+    // ── Message DTO ───────────────────────────────────────────────────────────
 
     private sealed record AnimationJobMessage(
-        [property: JsonPropertyName("jobId")]      Guid               JobId,
-        [property: JsonPropertyName("episodeId")]  Guid               EpisodeId,
-        [property: JsonPropertyName("jobType")]    string             JobType,
-        [property: JsonPropertyName("requestedAt")] DateTimeOffset    RequestedAt,
-        [property: JsonPropertyName("payload")]    AnimationJobPayload Payload);
-
-    private sealed record AnimationJobPayload(
-        [property: JsonPropertyName("clips")]            List<AnimationClipPayload>      Clips,
-        [property: JsonPropertyName("episodeStyle")]     string                          EpisodeStyle,
-        [property: JsonPropertyName("loraWeightsUrls")]  Dictionary<string, string>      LoraWeightsUrls);
-
-    private sealed record AnimationClipPayload(
-        [property: JsonPropertyName("sceneNumber")]          int           SceneNumber,
-        [property: JsonPropertyName("shotIndex")]            int           ShotIndex,
-        [property: JsonPropertyName("storyboardShotId")]     Guid?         StoryboardShotId,
-        [property: JsonPropertyName("storyboardImageUrl")]   string?       StoryboardImageUrl,
-        [property: JsonPropertyName("style")]                string        Style,
-        [property: JsonPropertyName("durationSeconds")]      int           DurationSeconds,
-        [property: JsonPropertyName("characterTriggerWords")] List<string> CharacterTriggerWords);
+        [property: JsonPropertyName("jobId")]       Guid           JobId,
+        [property: JsonPropertyName("episodeId")]   Guid           EpisodeId,
+        [property: JsonPropertyName("jobType")]     string         JobType,
+        [property: JsonPropertyName("requestedAt")] DateTimeOffset RequestedAt,
+        [property: JsonPropertyName("payload")]     object         Payload);
 }

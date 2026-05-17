@@ -1,25 +1,47 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { TrainingBadge } from "./training-badge";
 import type { CharacterDto } from "@/types";
 
 interface CharacterCardProps {
   character: CharacterDto;
   onDelete?: (id: string) => void;
+  onRetry?: (id: string) => void;
+  onRegenerateDataset?: (id: string) => void;
   className?: string;
 }
 
-/**
- * CharacterCard — displays a character's thumbnail, name, training status badge,
- * training progress bar, and credit cost. Used in the character gallery grid.
- */
-export function CharacterCard({ character, onDelete, className }: CharacterCardProps) {
+export function CharacterCard({
+  character,
+  onDelete,
+  onRetry,
+  onRegenerateDataset,
+  className,
+}: CharacterCardProps) {
+  const [pendingRegen, setPendingRegen] = useState(false);
+
   const isTraining =
     character.trainingStatus === "Training" ||
     character.trainingStatus === "PoseGeneration" ||
     character.trainingStatus === "TrainingQueued";
+
+  const isReady  = character.trainingStatus === "Ready";
+  const isFailed = character.trainingStatus === "Failed";
+  const isDraft  = character.trainingStatus === "Draft";
+  // Dataset generated but LoRA never dispatched (draft with image, or failed after dataset gen)
+  const canStartLora = !isTraining && !isReady && !!character.imageUrl;
 
   return (
     <div
@@ -94,10 +116,29 @@ export function CharacterCard({ character, onDelete, className }: CharacterCardP
           <TrainingBadge status={character.trainingStatus} />
         </div>
 
+        {/* Training complete banner */}
+        {isReady && (
+          <div className="flex items-center gap-1.5 rounded-md bg-green-50 border border-green-200 px-2.5 py-1.5">
+            <svg
+              className="h-3.5 w-3.5 text-green-600 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-xs font-medium text-green-700">Training Complete</span>
+          </div>
+        )}
+
         {/* Training progress bar */}
         {isTraining && (
-          <div role="progressbar" aria-valuenow={character.trainingProgressPercent}
-            aria-valuemin={0} aria-valuemax={100}
+          <div
+            role="progressbar"
+            aria-valuenow={character.trainingProgressPercent}
+            aria-valuemin={0}
+            aria-valuemax={100}
             aria-label={`Training progress: ${character.trainingProgressPercent}%`}
           >
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
@@ -112,11 +153,88 @@ export function CharacterCard({ character, onDelete, className }: CharacterCardP
           </div>
         )}
 
+        {/* Dataset image count */}
+        {character.datasetImageCount > 0 && (
+          <p className="text-xs text-gray-400">
+            <span className="font-medium text-gray-600">{character.datasetImageCount}</span>/15 dataset images
+          </p>
+        )}
+
         {/* Credit cost */}
         <p className="mt-auto text-xs text-gray-400">
           <span className="font-medium text-gray-600">{character.creditsCost}</span>{" "}
           credits
         </p>
+
+        {/* Start / Retry LoRA Training button */}
+        {canStartLora && onRetry && (
+          <Button
+            size="sm"
+            variant="outline"
+            className={
+              isFailed
+                ? "w-full text-xs border-red-200 text-red-600 hover:bg-red-50"
+                : "w-full text-xs border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+            }
+            onClick={() => onRetry(character.id)}
+          >
+            {isFailed ? "Retry LoRA Training" : "Start LoRA Training"}
+          </Button>
+        )}
+
+        {/* Retry full design (Failed with no dataset) */}
+        {isFailed && !character.imageUrl && onRetry && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full text-xs border-red-200 text-red-600 hover:bg-red-50"
+            onClick={() => onRetry(character.id)}
+          >
+            Retry Training
+          </Button>
+        )}
+
+        {/* Regenerate Dataset button */}
+        {character.imageUrl && !isTraining && onRegenerateDataset && (
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full text-xs"
+              onClick={() => setPendingRegen(true)}
+            >
+              Regenerate Dataset
+            </Button>
+
+            <Dialog open={pendingRegen} onOpenChange={setPendingRegen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Regenerate dataset images?</DialogTitle>
+                  <DialogDescription>
+                    This will re-generate all 15 pose images for &ldquo;{character.name}&rdquo; and
+                    restart LoRA training. This costs{" "}
+                    <strong>{character.creditsCost} credits</strong>. Existing images and LoRA
+                    weights will be discarded.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setPendingRegen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                    onClick={() => {
+                      onRegenerateDataset(character.id);
+                      setPendingRegen(false);
+                    }}
+                  >
+                    Confirm &amp; Regenerate
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
       </div>
     </div>
   );

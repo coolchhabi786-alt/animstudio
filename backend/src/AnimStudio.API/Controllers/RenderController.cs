@@ -43,9 +43,14 @@ public sealed class RenderController(
         if (!result.IsSuccess)
             return BadRequest(new { error = result.Error, code = result.ErrorCode });
 
-        // Enqueue Hangfire job to process the render asynchronously.
+        // Local dev: resolve pre-rendered MP4 from disk.
         backgroundJobs.Enqueue<RenderHangfireProcessor>(
             x => x.ProcessAsync(result.Value!.Id, CancellationToken.None));
+
+        // Production: dispatch PostProd job to the Python worker via Service Bus.
+        // In local dev this is a no-op (NoOpServiceBusPublisher is registered).
+        backgroundJobs.Enqueue<EpisodeJobDispatchHangfireProcessor>(
+            x => x.DispatchPostProdAsync(result.Value!.Id, CancellationToken.None));
 
         return StatusCode(StatusCodes.Status202Accepted, result.Value);
     }

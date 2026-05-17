@@ -37,11 +37,23 @@ export function useScript(episodeId: string | undefined) {
 export function useGenerateScript(episodeId: string) {
   const qc = useQueryClient();
 
-  return useMutation<JobDto, Error, { directorNotes?: string }>({
+  return useMutation<JobDto, Error, {
+    directorNotes?: string;
+    existingCharacterIds?: string[];
+    allowNewCharacters?: boolean;
+    newCharacterCount?: number;
+    newCharacterNames?: string[];
+  }>({
     mutationFn: (body) =>
       apiFetch<JobDto>(`/api/v1/episodes/${episodeId}/script`, {
         method: "POST",
-        body: JSON.stringify({ directorNotes: body.directorNotes ?? null }),
+        body: JSON.stringify({
+          directorNotes: body.directorNotes ?? null,
+          existingCharacterIds: body.existingCharacterIds ?? [],
+          allowNewCharacters: body.allowNewCharacters ?? true,
+          newCharacterCount: body.newCharacterCount ?? null,
+          newCharacterNames: body.newCharacterNames ?? [],
+        }),
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.detail(episodeId) });

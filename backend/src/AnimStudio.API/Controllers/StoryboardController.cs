@@ -1,9 +1,11 @@
+using AnimStudio.API.Hosted;
 using AnimStudio.ContentModule.Application.Commands.GenerateStoryboard;
 using AnimStudio.ContentModule.Application.Commands.RegenerateShot;
 using AnimStudio.ContentModule.Application.Commands.UpdateShotStyle;
 using AnimStudio.ContentModule.Application.DTOs;
 using AnimStudio.ContentModule.Application.Queries.GetStoryboard;
 using Asp.Versioning;
+using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +19,7 @@ namespace AnimStudio.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Authorize(Policy = "RequireTeamMember")]
-public sealed class StoryboardController(ISender mediator) : ControllerBase
+public sealed class StoryboardController(ISender mediator, IBackgroundJobClient backgroundJobs) : ControllerBase
 {
     // ── POST /api/v1/episodes/{id}/storyboard ── Enqueue storyboard planning ──
 
@@ -42,6 +44,9 @@ public sealed class StoryboardController(ISender mediator) : ControllerBase
                 _ => BadRequest(new { error = result.Error, code = result.ErrorCode }),
             };
         }
+
+        backgroundJobs.Enqueue<EpisodeJobDispatchHangfireProcessor>(
+            x => x.DispatchStoryboardPlanJobAsync(result.Value!.Id, CancellationToken.None));
 
         return StatusCode(StatusCodes.Status202Accepted, result.Value);
     }
@@ -88,6 +93,9 @@ public sealed class StoryboardController(ISender mediator) : ControllerBase
             };
         }
 
+        backgroundJobs.Enqueue<EpisodeJobDispatchHangfireProcessor>(
+            x => x.DispatchShotRegenJobAsync(result.Value!.Id, CancellationToken.None));
+
         return StatusCode(StatusCodes.Status202Accepted, result.Value);
     }
 
@@ -113,6 +121,9 @@ public sealed class StoryboardController(ISender mediator) : ControllerBase
                 _ => BadRequest(new { error = result.Error, code = result.ErrorCode }),
             };
         }
+
+        backgroundJobs.Enqueue<EpisodeJobDispatchHangfireProcessor>(
+            x => x.DispatchShotRegenJobAsync(result.Value!.Id, CancellationToken.None));
 
         return StatusCode(StatusCodes.Status202Accepted, result.Value);
     }

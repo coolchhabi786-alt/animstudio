@@ -18,6 +18,7 @@ export default auth((req) => {
     pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/accept-invite") ||
+    pathname.startsWith("/review") ||
     pathname.startsWith("/api/auth"); // next-auth internal endpoints
 
   if (!isAuthenticated && !isPublicRoute) {

@@ -14,6 +14,7 @@ namespace AnimStudio.ContentModule.Application.DTOs;
 /// <param name="TrainingStatus">Current training lifecycle stage.</param>
 /// <param name="TrainingProgressPercent">0–100 percent for current stage.</param>
 /// <param name="CreditsCost">Credits reserved for training.</param>
+/// <param name="DatasetImageCount">Number of pose dataset images generated so far (target 15).</param>
 /// <param name="CreatedAt">UTC creation timestamp.</param>
 /// <param name="UpdatedAt">UTC last-updated timestamp.</param>
 public sealed record CharacterDto(
@@ -28,6 +29,7 @@ public sealed record CharacterDto(
     TrainingStatus TrainingStatus,
     int TrainingProgressPercent,
     int CreditsCost,
+    int DatasetImageCount,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 

@@ -23,6 +23,10 @@ export default function NewEpisodePage() {
   // Form state
   const [name, setName] = useState("");
   const [idea, setIdea] = useState("");
+  const [charCount, setCharCount] = useState<string>("");
+  const [charNames, setCharNames] = useState<string[]>([]);
+  const [charNameInput, setCharNameInput] = useState("");
+  const [sceneCount, setSceneCount] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateDto | undefined>(undefined);
   const [selectedStyle, setSelectedStyle] = useState<Style | undefined>(undefined);
 
@@ -53,14 +57,24 @@ export default function NewEpisodePage() {
     }
 
     try {
-      await createEpisode.mutateAsync({
+      const characterPreferences =
+        charCount || charNames.length > 0 || sceneCount
+          ? JSON.stringify({
+              ...(charCount ? { count: parseInt(charCount, 10) } : {}),
+              ...(charNames.length > 0 ? { names: charNames } : {}),
+              ...(sceneCount ? { sceneCount: parseInt(sceneCount, 10) } : {}),
+            })
+          : undefined;
+
+      const episode = await createEpisode.mutateAsync({
         name: name.trim(),
         idea: idea.trim(),
         style: selectedStyle ?? "",
         templateId: selectedTemplate?.id,
+        characterPreferences,
       });
-      toast.success("Episode created!");
-      router.push(`/projects/${projectId}`);
+      toast.success("Episode created! Starting Script Workshop…");
+      router.push(`/projects/${projectId}/episodes/${episode.id}/script`);
     } catch {
       // apiFetch already toasts the error
     }
@@ -119,6 +133,105 @@ export default function NewEpisodePage() {
                 onChange={(e) => setIdea(e.target.value)}
               />
               <p className="text-xs text-muted-foreground text-right">{idea.length}/5000</p>
+            </div>
+
+            {/* Scene count */}
+            <div className="flex flex-col gap-1.5 w-40">
+              <Label htmlFor="scene-count">
+                Scenes{" "}
+                <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              <Input
+                id="scene-count"
+                type="number"
+                min={1}
+                max={20}
+                placeholder="Auto (3)"
+                value={sceneCount}
+                onChange={(e) => setSceneCount(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">How many scenes in the screenplay?</p>
+            </div>
+
+            {/* Character preferences */}
+            <div className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold">
+                Characters{" "}
+                <span className="text-muted-foreground font-normal">(optional)</span>
+              </h2>
+              <p className="text-xs text-muted-foreground -mt-1">
+                Names you specify will be used in the story. Leave blank to let the AI decide.
+              </p>
+              <div className="flex gap-3">
+                <div className="flex flex-col gap-1.5 w-32">
+                  <Label htmlFor="char-count">How many?</Label>
+                  <Input
+                    id="char-count"
+                    type="number"
+                    min={1}
+                    max={10}
+                    placeholder="Auto"
+                    value={charCount}
+                    onChange={(e) => setCharCount(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <Label htmlFor="char-name-input">Add names</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="char-name-input"
+                      type="text"
+                      placeholder="e.g. Mia, Rex…"
+                      value={charNameInput}
+                      onChange={(e) => setCharNameInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if ((e.key === "Enter" || e.key === ",") && charNameInput.trim()) {
+                          e.preventDefault();
+                          const newName = charNameInput.trim().replace(/,$/, "");
+                          if (newName && !charNames.includes(newName)) {
+                            setCharNames((prev) => [...prev, newName]);
+                          }
+                          setCharNameInput("");
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newName = charNameInput.trim();
+                        if (newName && !charNames.includes(newName)) {
+                          setCharNames((prev) => [...prev, newName]);
+                        }
+                        setCharNameInput("");
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              {charNames.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {charNames.map((n) => (
+                    <span
+                      key={n}
+                      className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 px-2.5 py-0.5 text-xs text-blue-700 dark:text-blue-300"
+                    >
+                      {n}
+                      <button
+                        type="button"
+                        onClick={() => setCharNames((prev) => prev.filter((x) => x !== n))}
+                        className="ml-0.5 opacity-60 hover:opacity-100"
+                        aria-label={`Remove ${n}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Template picker */}

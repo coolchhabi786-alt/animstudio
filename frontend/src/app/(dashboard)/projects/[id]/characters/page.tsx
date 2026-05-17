@@ -6,7 +6,13 @@ import { useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CharacterForm } from "@/components/character/character-form";
 import { CharacterCard } from "@/components/character/character-card";
-import { useCharacters, useCharacterTrainingUpdates, useDeleteCharacter } from "@/hooks/use-characters";
+import {
+  useCharacters,
+  useCharacterTrainingUpdates,
+  useDeleteCharacter,
+  useRetryCharacterTraining,
+  useRegenerateDataset,
+} from "@/hooks/use-characters";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
@@ -29,6 +35,8 @@ export default function CharactersPage() {
 
   const { data: pagedData, isLoading } = useCharacters(1, 50);
   const deleteMutation = useDeleteCharacter();
+  const retryMutation = useRetryCharacterTraining();
+  const regenerateMutation = useRegenerateDataset();
 
   const [showForm, setShowForm] = useState(true);
 
@@ -131,6 +139,8 @@ export default function CharactersPage() {
                   key={character.id}
                   character={character}
                   onDelete={handleDelete}
+                  onRetry={(id) => retryMutation.mutate(id)}
+                  onRegenerateDataset={(id) => regenerateMutation.mutate(id)}
                 />
               ))}
             </div>

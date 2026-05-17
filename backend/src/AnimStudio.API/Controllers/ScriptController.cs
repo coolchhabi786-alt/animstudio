@@ -1,9 +1,11 @@
+using AnimStudio.API.Hosted;
 using AnimStudio.ContentModule.Application.Commands.GenerateScript;
 using AnimStudio.ContentModule.Application.Commands.RegenerateScript;
 using AnimStudio.ContentModule.Application.Commands.SaveScript;
 using AnimStudio.ContentModule.Application.DTOs;
 using AnimStudio.ContentModule.Application.Queries.GetScript;
 using Asp.Versioning;
+using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +18,7 @@ namespace AnimStudio.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Authorize(Policy = "RequireTeamMember")]
-public sealed class ScriptController(ISender mediator) : ControllerBase
+public sealed class ScriptController(ISender mediator, IBackgroundJobClient backgroundJobs) : ControllerBase
 {
     // ── POST /api/v1/episodes/{id}/script ── Enqueue script generation ─────────
 
@@ -30,7 +32,13 @@ public sealed class ScriptController(ISender mediator) : ControllerBase
         [FromBody] GenerateScriptRequest req,
         CancellationToken ct)
     {
-        var result = await mediator.Send(new GenerateScriptCommand(id, req.DirectorNotes), ct);
+        var result = await mediator.Send(new GenerateScriptCommand(
+            id,
+            req.DirectorNotes,
+            req.ExistingCharacterIds,
+            req.AllowNewCharacters,
+            req.NewCharacterCount,
+            req.NewCharacterNames), ct);
 
         if (!result.IsSuccess)
         {
@@ -41,6 +49,9 @@ public sealed class ScriptController(ISender mediator) : ControllerBase
                 _ => BadRequest(new { error = result.Error, code = result.ErrorCode }),
             };
         }
+
+        backgroundJobs.Enqueue<EpisodeJobDispatchHangfireProcessor>(
+            x => x.DispatchScriptJobAsync(result.Value!.Id, CancellationToken.None));
 
         return StatusCode(StatusCodes.Status202Accepted, result.Value);
     }
@@ -117,6 +128,9 @@ public sealed class ScriptController(ISender mediator) : ControllerBase
                 _ => BadRequest(new { error = result.Error, code = result.ErrorCode }),
             };
         }
+
+        backgroundJobs.Enqueue<EpisodeJobDispatchHangfireProcessor>(
+            x => x.DispatchScriptJobAsync(result.Value!.Id, CancellationToken.None));
 
         return StatusCode(StatusCodes.Status202Accepted, result.Value);
     }

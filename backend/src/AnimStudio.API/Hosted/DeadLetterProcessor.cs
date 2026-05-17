@@ -16,9 +16,9 @@ public sealed class DeadLetterProcessor(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Listen on the dead-letter sub-queue of the "completions" queue
+        // Listen on the dead-letter sub-queue of the "completions-queue" queue
         _processor = serviceBusClient.CreateProcessor(
-            "completions",
+            "completions-queue",
             new ServiceBusProcessorOptions
             {
                 SubQueue = SubQueue.DeadLetter,

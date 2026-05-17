@@ -2,6 +2,7 @@
 
 import { apiFetch } from "@/lib/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { ProjectDto, PagedResult } from "@/types";
 
 export function useProjects() {
@@ -11,6 +12,7 @@ export function useProjects() {
       const result = await apiFetch<PagedResult<ProjectDto>>("/api/v1/projects");
       return result.items;
     },
+    staleTime: 30_000,
     enabled: true,
   });
 }
@@ -20,6 +22,7 @@ export function useProject(id: string) {
     queryKey: ["projects", id],
     queryFn: () => apiFetch<ProjectDto>(`/api/v1/projects/${id}`),
     enabled: !!id,
+    staleTime: 30_000,
   });
 }
 
@@ -44,6 +47,10 @@ export function useDeleteProject() {
       apiFetch<void>(`/api/v1/projects/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Project deleted.");
+    },
+    onError: () => {
+      toast.error("Failed to delete project. Please try again.");
     },
   });
 }

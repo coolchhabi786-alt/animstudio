@@ -1,8 +1,11 @@
+using AnimStudio.ContentModule.Application.Commands.CompleteCharacterJob;
 using AnimStudio.ContentModule.Application.Commands.HandleJobCompletion;
 using AnimStudio.ContentModule.Application.DTOs;
 using AnimStudio.DeliveryModule.Application.Commands.CompleteRenderFromJob;
 using Azure.Messaging.ServiceBus;
+using Hangfire;
 using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 
 namespace AnimStudio.API.Hosted;
@@ -17,8 +20,9 @@ namespace AnimStudio.API.Hosted;
 /// Not registered in local development (no ServiceBusClient connection string).
 /// </summary>
 public sealed class CompletionMessageProcessor(
-    ServiceBusClient serviceBusClient,
-    ISender          mediator,
+    ServiceBusClient     serviceBusClient,
+    IServiceScopeFactory scopeFactory,
+    IBackgroundJobClient backgroundJobs,
     ILogger<CompletionMessageProcessor> logger) : BackgroundService, IAsyncDisposable
 {
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
@@ -29,7 +33,7 @@ public sealed class CompletionMessageProcessor(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _processor = serviceBusClient.CreateProcessor("completions", new ServiceBusProcessorOptions
+        _processor = serviceBusClient.CreateProcessor("completions-queue", new ServiceBusProcessorOptions
         {
             MaxConcurrentCalls    = 5,
             AutoCompleteMessages  = false,
@@ -39,7 +43,7 @@ public sealed class CompletionMessageProcessor(
         _processor.ProcessErrorAsync   += OnErrorAsync;
 
         await _processor.StartProcessingAsync(stoppingToken);
-        logger.LogInformation("CompletionMessageProcessor started — listening on 'completions'");
+        logger.LogInformation("CompletionMessageProcessor started — listening on 'completions-queue'");
 
         await Task.Delay(Timeout.Infinite, stoppingToken).ContinueWith(_ => { }, CancellationToken.None);
     }
@@ -48,6 +52,12 @@ public sealed class CompletionMessageProcessor(
     {
         var ct = args.CancellationToken;
         JobCompletionMessageDto? dto = null;
+
+        // BackgroundService runs in the root (singleton) scope.  MediatR pipeline
+        // behaviours depend on scoped services (ICorrelationIdProvider etc.), so we
+        // must create a fresh DI scope per message rather than using the injected ISender.
+        await using var scope   = scopeFactory.CreateAsyncScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<ISender>();
 
         try
         {
@@ -67,6 +77,33 @@ public sealed class CompletionMessageProcessor(
             var isSuccess  = string.Equals(dto.Status, "Completed", StringComparison.OrdinalIgnoreCase);
             var resultJson = dto.Result?.GetRawText();
 
+            // ── Character training jobs are team-scoped, not episode-scoped ──────────
+            // jobId == characterId (episodeId is repurposed the same way).
+            if (dto.JobType is "CharacterDesign" or "LoraTraining")
+            {
+                var charId = dto.JobId; // jobId == characterId for character training jobs
+
+                logger.LogInformation(
+                    "Received {JobType} completion for character {CharId} — status={Status}",
+                    dto.JobType, charId, dto.Status);
+
+                var charResult = await mediator.Send(
+                    new CompleteCharacterJobCommand(charId, isSuccess, resultJson, dto.ErrorMessage, dto.JobType), ct);
+
+                if (!charResult.IsSuccess)
+                    logger.LogWarning(
+                        "CompleteCharacterJob returned failure for {CharId}: {Error}",
+                        charId, charResult.Error);
+
+                // After CharacterDesign succeeds, enqueue LoRA training dispatch
+                if (isSuccess && dto.JobType == "CharacterDesign")
+                    backgroundJobs.Enqueue<CharacterTrainingHangfireProcessor>(
+                        x => x.DispatchLoraTrainingAsync(charId, CancellationToken.None));
+
+                await args.CompleteMessageAsync(args.Message, ct);
+                return;
+            }
+
             logger.LogInformation(
                 "Received {JobType} completion for episode {EpisodeId} — job={JobId}, status={Status}, " +
                 "pipelineDuration={PipelineMs:N0}ms, deliveryCount={DeliveryCount}",
@@ -85,19 +122,34 @@ public sealed class CompletionMessageProcessor(
                     dto.JobId, contentResult.Error);
             }
 
-            // ── Step 2: for PostProd success, update the Render aggregate (DeliveryModule) ──
-            if (isSuccess
-                && string.Equals(dto.JobType, "PostProd", StringComparison.OrdinalIgnoreCase)
-                && resultJson is not null)
+            // ── Step 2: auto-dispatch the next stage where needed ─────────────────────
+            if (isSuccess)
             {
-                var renderResult = await mediator.Send(
-                    new CompleteRenderFromJobCommand(dto.EpisodeId, resultJson), ct);
-
-                if (!renderResult.IsSuccess)
+                // After StoryboardPlan completes, automatically dispatch StoryboardGen
+                // so the user doesn't have to trigger a second API call.
+                if (string.Equals(dto.JobType, "StoryboardPlan", StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogWarning(
-                        "CompleteRenderFromJob returned failure for episode {EpisodeId}: {Error}",
-                        dto.EpisodeId, renderResult.Error);
+                    backgroundJobs.Enqueue<EpisodeJobDispatchHangfireProcessor>(
+                        x => x.DispatchStoryboardGenJobAsync(dto.EpisodeId, CancellationToken.None));
+
+                    logger.LogInformation(
+                        "StoryboardPlan completed — enqueued StoryboardGen dispatch for episode {EpisodeId}",
+                        dto.EpisodeId);
+                }
+
+                // After PostProd completes, update the Render aggregate (DeliveryModule).
+                if (string.Equals(dto.JobType, "PostProd", StringComparison.OrdinalIgnoreCase)
+                    && resultJson is not null)
+                {
+                    var renderResult = await mediator.Send(
+                        new CompleteRenderFromJobCommand(dto.EpisodeId, resultJson), ct);
+
+                    if (!renderResult.IsSuccess)
+                    {
+                        logger.LogWarning(
+                            "CompleteRenderFromJob returned failure for episode {EpisodeId}: {Error}",
+                            dto.EpisodeId, renderResult.Error);
+                    }
                 }
             }
 

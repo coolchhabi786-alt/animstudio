@@ -42,6 +42,10 @@ export async function apiFetch<T>(
       throw new Error(await response.text());
     }
 
+    if (response.status === 204 || response.headers.get("content-length") === "0") {
+      return undefined as T;
+    }
+
     return response.json();
   } catch (error) {
     toast.error(error instanceof Error ? error.message : "An error occurred.");

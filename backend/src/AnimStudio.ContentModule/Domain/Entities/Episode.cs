@@ -19,9 +19,22 @@ public sealed class Episode : AggregateRoot<Guid>
     public string? DirectorNotes { get; private set; }
     public DateTimeOffset? RenderedAt { get; private set; }
 
+    /// <summary>
+    /// Optional JSON blob capturing character preferences set at episode creation
+    /// (e.g. <c>{ "count": 2, "names": ["Mia", "Rex"] }</c>).
+    /// Forwarded to the Script job so the agent can honour name/count constraints.
+    /// </summary>
+    public string? CharacterPreferences { get; private set; }
+
     private Episode() { }
 
-    public static Episode Create(Guid projectId, string name, string idea, string style, Guid? templateId = null)
+    public static Episode Create(
+        Guid projectId,
+        string name,
+        string idea,
+        string style,
+        Guid? templateId = null,
+        string? characterPreferences = null)
     {
         var episode = new Episode
         {
@@ -31,6 +44,7 @@ public sealed class Episode : AggregateRoot<Guid>
             Idea = idea,
             Style = style,
             TemplateId = templateId,
+            CharacterPreferences = characterPreferences,
             Status = EpisodeStatus.Idle,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
@@ -79,6 +93,14 @@ public sealed class Episode : AggregateRoot<Guid>
         RenderedAt = DateTimeOffset.UtcNow;
         UpdatedAt = DateTimeOffset.UtcNow;
         AddDomainEvent(new EpisodeCompletedEvent(Id));
+    }
+
+    public void UpdateDetails(string idea, string? style = null, string? characterPreferences = null)
+    {
+        Idea = idea;
+        if (style is not null) Style = style;
+        if (characterPreferences is not null) CharacterPreferences = characterPreferences;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     public void SoftDelete(Guid deletedByUserId)

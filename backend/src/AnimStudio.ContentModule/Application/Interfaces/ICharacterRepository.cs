@@ -26,6 +26,9 @@ public interface ICharacterRepository
     /// </summary>
     Task<List<Character>> GetByEpisodeIdAsync(Guid episodeId, CancellationToken ct = default);
 
+    /// <summary>Returns characters matching the given IDs (skips soft-deleted ones).</summary>
+    Task<List<Character>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken ct = default);
+
     /// <summary>Persists a new character record.</summary>
     Task AddAsync(Character character, CancellationToken ct = default);
 

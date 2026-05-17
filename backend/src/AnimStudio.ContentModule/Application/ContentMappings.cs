@@ -13,7 +13,8 @@ internal static class ContentMappings
     public static EpisodeDto ToDto(this Episode e) => new(
         e.Id, e.ProjectId, e.Name, e.Idea, e.Style,
         e.Status.ToString(), e.TemplateId, e.DirectorNotes,
-        e.CreatedAt, e.UpdatedAt, e.RenderedAt);
+        e.CreatedAt, e.UpdatedAt, e.RenderedAt,
+        e.CharacterPreferences);
 
     public static JobDto ToDto(this Job j) => new(
         j.Id, j.EpisodeId,

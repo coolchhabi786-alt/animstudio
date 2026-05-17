@@ -5,6 +5,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useProjects, useCreateProject, useDeleteProject } from "@/hooks/use-projects";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -14,6 +22,8 @@ export default function ProjectsPage() {
   const deleteProject = useDeleteProject();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const pendingDeleteProject = projects?.find((p) => p.id === pendingDeleteId);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -89,8 +99,7 @@ export default function ProjectsPage() {
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:text-destructive"
-                    onClick={() => deleteProject.mutate(project.id)}
-                    disabled={deleteProject.isPending}
+                    onClick={() => setPendingDeleteId(project.id)}
                   >
                     Delete
                   </Button>
@@ -100,6 +109,37 @@ export default function ProjectsPage() {
           ))}
         </div>
       )}
+
+      <Dialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete project?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete &ldquo;{pendingDeleteProject?.name}&rdquo; and all its
+              episodes. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPendingDeleteId(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteProject.isPending}
+              onClick={async () => {
+                if (!pendingDeleteId) return;
+                await deleteProject.mutateAsync(pendingDeleteId);
+                setPendingDeleteId(null);
+              }}
+            >
+              {deleteProject.isPending ? "Deleting…" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

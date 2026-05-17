@@ -27,6 +27,13 @@ param acrLoginServer string = 'animstudio${environment}acr.azurecr.io'
 // Override via parameters file if your subscription has capacity elsewhere.
 param sqlLocation string = 'westus'
 
+// Deployment mode:
+//   'full'    — deploys everything (default; use for full cloud dev or prod)
+//   'minimal' — deploys only Service Bus + Storage Account (use during local dev
+//                to keep costs at ~$12/month while still supporting the Python worker)
+@allowed(['full', 'minimal'])
+param deployMode string = 'full'
+
 // Service Bus namespace name — must match the var in servicebus.bicep.
 // Azure reserves the '-sb' suffix; 'sbus' is used instead.
 var serviceBusNamespaceName = 'animstudio-${environment}sbus'
@@ -38,7 +45,7 @@ var containerAppEnvName = 'animstudio-${environment}-env'
 // Networking & Container App Environment
 // ─────────────────────────────────────────────────────────────────────────────
 
-module containerAppEnvModule './modules/containerapp-env.bicep' = {
+module containerAppEnvModule './modules/containerapp-env.bicep' = if (deployMode == 'full') {
   name: 'deployContainerAppEnv'
   params: {
     containerAppEnvironmentName: containerAppEnvName
@@ -63,7 +70,7 @@ var workerImage = workerImageTag == 'placeholder'
   ? 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
   : '${acrLoginServer}/cartoon-automation:${workerImageTag}'
 
-module apiContainerApp './modules/containerapp.bicep' = {
+module apiContainerApp './modules/containerapp.bicep' = if (deployMode == 'full') {
   name: 'deployApiContainerApp'
   params: {
     environment: environment
@@ -83,7 +90,7 @@ module apiContainerApp './modules/containerapp.bicep' = {
 // Deploy token is added to GitHub Secrets after first `az staticwebapp show`.
 // ─────────────────────────────────────────────────────────────────────────────
 
-module swaModule './modules/staticwebapp.bicep' = {
+module swaModule './modules/staticwebapp.bicep' = if (deployMode == 'full') {
   name: 'deployStaticWebApp'
   params: {
     environment: environment
@@ -107,7 +114,7 @@ module serviceBusModule './modules/servicebus.bicep' = {
   }
 }
 
-module workerContainerApp './modules/containerapp-worker.bicep' = {
+module workerContainerApp './modules/containerapp-worker.bicep' = if (deployMode == 'full') {
   name: 'deployWorkerContainerApp'
   params: {
     environment: environment
@@ -143,7 +150,7 @@ module workerContainerApp './modules/containerapp-worker.bicep' = {
 // Data stores
 // ─────────────────────────────────────────────────────────────────────────────
 
-module sqlModule './modules/sql.bicep' = {
+module sqlModule './modules/sql.bicep' = if (deployMode == 'full') {
   name: 'deploySql'
   params: {
     environment: environment
@@ -154,11 +161,13 @@ module sqlModule './modules/sql.bicep' = {
   }
 }
 
-module hangfireSqlModule './modules/hangfire-sql.bicep' = {
+// Prod only: HangfireDB lives on the same animstudio-prod-sql server as AnimStudioDB.
+// Dev: Hangfire falls back to DefaultConnection (AnimStudioDB) via Program.cs line 111 fallback.
+module hangfireSqlModule './modules/hangfire-sql.bicep' = if (deployMode == 'full' && environment == 'prod') {
   name: 'deployHangfireSql'
   params: {
-    environment: environment
     location: sqlLocation
+    sqlServerName: sqlModule.outputs.sqlServerName
   }
 }
 
@@ -174,7 +183,7 @@ module storageModule './modules/storage.bicep' = {
 // Messaging & real-time
 // ─────────────────────────────────────────────────────────────────────────────
 
-module signalRModule './modules/signalr.bicep' = {
+module signalRModule './modules/signalr.bicep' = if (deployMode == 'full') {
   name: 'deploySignalR'
   params: {
     environment: environment
@@ -186,7 +195,7 @@ module signalRModule './modules/signalr.bicep' = {
 // Security & secrets
 // ─────────────────────────────────────────────────────────────────────────────
 
-module keyVaultModule './modules/keyvault.bicep' = {
+module keyVaultModule './modules/keyvault.bicep' = if (deployMode == 'full') {
   name: 'deployKeyVault'
   params: {
     environment: environment
@@ -196,7 +205,7 @@ module keyVaultModule './modules/keyvault.bicep' = {
   }
 }
 
-module acrModule './modules/acr.bicep' = {
+module acrModule './modules/acr.bicep' = if (deployMode == 'full') {
   name: 'deployAcr'
   params: {
     environment: environment
@@ -210,14 +219,14 @@ module acrModule './modules/acr.bicep' = {
 // depended on the ACR login server.
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
-resource acrForRbac 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
+resource acrForRbac 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = if (deployMode == 'full') {
   name: 'animstudio${environment}acr'
 }
 
 // BCP120: role assignment name must be calculable at deployment start, so we seed guid() with
 // resource names (known) rather than module output values (runtime). principalId itself is
 // still a runtime value and is legal in properties — just not in the name field.
-resource apiAcrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource apiAcrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployMode == 'full') {
   name: guid(resourceId('Microsoft.ContainerRegistry/registries', 'animstudio${environment}acr'), 'animstudio-${environment}-api', acrPullRoleId)
   scope: acrForRbac
   dependsOn: [acrModule]
@@ -228,7 +237,7 @@ resource apiAcrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
-resource workerAcrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource workerAcrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployMode == 'full') {
   name: guid(resourceId('Microsoft.ContainerRegistry/registries', 'animstudio${environment}acr'), 'animstudio-${environment}-worker', acrPullRoleId)
   scope: acrForRbac
   dependsOn: [acrModule]
@@ -258,7 +267,7 @@ resource serviceBusForRbac 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' 
 }
 
 // API MSI → Storage Blob Data Contributor
-resource apiStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource apiStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployMode == 'full') {
   name: guid(resourceId('Microsoft.Storage/storageAccounts', 'animstudio${environment}stor'), 'animstudio-${environment}-api', storageBlobDataContributorRoleId)
   scope: storageForRbac
   dependsOn: [storageModule]
@@ -270,7 +279,7 @@ resource apiStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 }
 
 // Worker MSI → Storage Blob Data Contributor
-resource workerStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource workerStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployMode == 'full') {
   name: guid(resourceId('Microsoft.Storage/storageAccounts', 'animstudio${environment}stor'), 'animstudio-${environment}-worker', storageBlobDataContributorRoleId)
   scope: storageForRbac
   dependsOn: [storageModule]
@@ -282,7 +291,7 @@ resource workerStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' 
 }
 
 // API MSI → Azure Service Bus Data Owner
-resource apiServiceBusRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource apiServiceBusRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployMode == 'full') {
   name: guid(resourceId('Microsoft.ServiceBus/namespaces', 'animstudio-${environment}sbus'), 'animstudio-${environment}-api', serviceBusDataOwnerRoleId)
   scope: serviceBusForRbac
   dependsOn: [serviceBusModule]
@@ -294,7 +303,7 @@ resource apiServiceBusRole 'Microsoft.Authorization/roleAssignments@2022-04-01' 
 }
 
 // Worker MSI → Azure Service Bus Data Owner
-resource workerServiceBusRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource workerServiceBusRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployMode == 'full') {
   name: guid(resourceId('Microsoft.ServiceBus/namespaces', 'animstudio-${environment}sbus'), 'animstudio-${environment}-worker', serviceBusDataOwnerRoleId)
   scope: serviceBusForRbac
   properties: {
@@ -310,7 +319,7 @@ resource workerServiceBusRole 'Microsoft.Authorization/roleAssignments@2022-04-0
 
 // CDN profile over the public Blob Storage assets container (all environments).
 // Caches images + videos for 7 days; busting is by content-hash filename.
-module cdnModule './modules/cdn.bicep' = {
+module cdnModule './modules/cdn.bicep' = if (deployMode == 'full') {
   name: 'deployCdn'
   params: {
     environment: environment
@@ -318,7 +327,7 @@ module cdnModule './modules/cdn.bicep' = {
   }
 }
 
-module frontDoorModule './modules/frontdoor.bicep' = if (environment == 'prod') {
+module frontDoorModule './modules/frontdoor.bicep' = if (deployMode == 'full' && environment == 'prod') {
   name: 'deployFrontDoor'
   params: {
     wafPolicyMode: 'Prevention'
@@ -331,7 +340,7 @@ module frontDoorModule './modules/frontdoor.bicep' = if (environment == 'prod') 
 // Outputs
 // ─────────────────────────────────────────────────────────────────────────────
 
-output apiUrl string = 'https://${apiContainerApp.outputs.containerAppFqdn}'
-output swaUrl string = 'https://${swaModule.outputs.swaDefaultHostname}'
-output swaName string = swaModule.outputs.swaName
-output cdnUrl string = cdnModule.outputs.cdnEndpointUrl
+output apiUrl string = deployMode == 'full' ? 'https://${apiContainerApp.outputs.containerAppFqdn}' : '(local — run dotnet run)'
+output swaUrl string = deployMode == 'full' ? 'https://${swaModule.outputs.swaDefaultHostname}' : '(local — run npm run dev)'
+output swaName string = deployMode == 'full' ? swaModule.outputs.swaName : ''
+output cdnUrl string = deployMode == 'full' ? cdnModule.outputs.cdnEndpointUrl : '(local — file storage)'

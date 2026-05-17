@@ -15,7 +15,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Bell, LogOut, Settings, User } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { Menu, LogOut, Settings, User } from "lucide-react";
 
 const Header = () => {
   const { setSidebarOpen } = useUiStore();
@@ -52,9 +53,7 @@ const Header = () => {
           aria-label="Search input"
         />
 
-        <Button variant="ghost" size="icon" aria-label="Notifications">
-          <Bell className="h-5 w-5" />
-        </Button>
+        <NotificationBell />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

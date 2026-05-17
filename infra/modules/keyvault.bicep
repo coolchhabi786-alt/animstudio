@@ -7,9 +7,8 @@ param workerPrincipalId string
 // OPT-3: 'RedisConnectionString' intentionally absent.
 // The API falls back to IMemoryCache when this secret is not present (Program.cs:131-136).
 // Re-add it here when the redis module is re-enabled in main.bicep.
-var secretNames = [
+var baseSecrets = [
   'SqlConnectionString'
-  'HangfireSqlConnectionString'
   'StripeSecretKey'
   'StripeWebhookSecret'
   'ServiceBusConnectionString'
@@ -20,6 +19,12 @@ var secretNames = [
   'ElevenLabsApiKey'
   'AzureCommunicationServicesConnectionString'
 ]
+
+// Prod only: HangfireDB is a separate database — needs its own connection string.
+// Dev: Hangfire uses DefaultConnection fallback (Program.cs:111), no separate secret needed.
+var secretNames = environment == 'prod'
+  ? concat(baseSecrets, ['HangfireSqlConnectionString'])
+  : baseSecrets
 
 // Built-in Key Vault Secrets User role (read secrets, no write/admin)
 var kvSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'

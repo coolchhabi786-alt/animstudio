@@ -1,21 +1,16 @@
-param environment string = 'dev'
-// East US and East US 2 block SQL on some subscriptions; West US has broader availability.
+// Must match the region of the main SQL server (eastasia for dev via dev.json, westus default for prod).
+// Always passed in from main.bicep as sqlLocation — never rely on the default.
 param location string = 'westus'
+// Name of the main animstudio-{env}-sql server — HangfireDB is added as a second database on it.
+param sqlServerName string
 
-var serverName = 'animstudio-${environment}-hangfire-sql'
-
-resource hangfireSqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
-  name: serverName
-  location: location
-  properties: {
-    administratorLogin: 'hangfireAdmin'
-    administratorLoginPassword: 'secureHangfirePa$$word123'
-  }
+resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' existing = {
+  name: sqlServerName
 }
 
 resource hangfireDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
   name: 'HangfireDB'
-  parent: hangfireSqlServer
+  parent: sqlServer
   location: location
   sku: {
     name: 'Basic'
@@ -27,4 +22,5 @@ resource hangfireDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' =
   }
 }
 
-output hangfireConnectionString string = 'Server=${hangfireSqlServer.name}.database.windows.net;Database=${hangfireDatabase.name};User ID=hangfireAdmin;Password=secureHangfirePa$$word123;'
+// Uses the same sqlAdmin credentials as the main SQL server (same server = same admin)
+output hangfireConnectionString string = 'Server=${sqlServer.name}.database.windows.net;Database=${hangfireDatabase.name};User ID=sqlAdmin;Password=securePa$$word123;'

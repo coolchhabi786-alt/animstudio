@@ -68,6 +68,27 @@ export interface ProjectDto {
   updatedAt: string;
 }
 
+export interface CharacterPreferencesDto {
+  count?: number;
+  names?: string[];
+  sceneCount?: number;
+}
+
+/** Captures the user's character choices on the Script Workshop page before generation. */
+export interface CharacterSelection {
+  existingCharacterIds: string[];
+  allowNewCharacters: boolean;
+  newCharacterCount?: number;
+  newCharacterNames?: string[];
+}
+
+export interface IdentifiedCharacterDto {
+  name: string;
+  role: "lead" | "side" | "other";
+  description: string;
+  styleDna: string;
+}
+
 export interface EpisodeDto {
   id: string;
   projectId: string;
@@ -78,6 +99,8 @@ export interface EpisodeDto {
   templateId?: string;
   characterIds?: string[];
   directorNotes?: string;
+  /** JSON string: { count?: number; names?: string[] } */
+  characterPreferences?: string;
   createdAt: string;
   updatedAt: string;
   renderedAt?: string;
@@ -202,6 +225,7 @@ export interface CharacterDto {
   trainingStatus: TrainingStatus;
   trainingProgressPercent: number;
   creditsCost: number;
+  datasetImageCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -498,4 +522,66 @@ export interface RenderFailedEvent {
   renderId: string;
   episodeId: string;
   errorMessage: string;
+}
+
+// ── Phase 11 — Review Links & Sharing ────────────────────────────────────────
+
+export interface ReviewLink {
+  id: string;
+  token: string;
+  shareUrl: string;
+  episodeId: string;
+  expiresAt: string | null;
+  isRevoked: boolean;
+  viewCount: number;
+  createdAt: string;
+}
+
+export interface ReviewComment {
+  id: string;
+  authorName: string;
+  text: string;
+  timestampSeconds: number;
+  isResolved: boolean;
+  createdAt: string;
+}
+
+export interface BrandKit {
+  id: string;
+  teamId: string;
+  logoUrl: string | null;
+  primaryColor: string;
+  secondaryColor: string;
+  watermarkPosition: "TopLeft" | "TopRight" | "BottomLeft" | "BottomRight" | "Center";
+  watermarkOpacity: number;
+}
+
+// ── Phase 12 — Analytics, Notifications & Admin ───────────────────────────────
+
+export interface EpisodeAnalytics {
+  episodeId: string;
+  viewCount: number;
+  uniqueViewers: number;
+  renderCount: number;
+  shareCount: number;
+}
+
+export interface TeamAnalytics {
+  totalEpisodes: number;
+  totalViews: number;
+  usagePercent: number;
+  subscriptionTier: string;
+}
+
+export type NotificationType = "EpisodeComplete" | "JobFailed" | "UsageWarning" | "SystemAlert";
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  isRead: boolean;
+  readAt: string | null;
+  relatedEntityId: string | null;
+  createdAt: string;
 }

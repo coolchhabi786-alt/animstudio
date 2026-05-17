@@ -2,6 +2,27 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  images: {
+    remotePatterns: [
+      // Azure Blob Storage — character images, storyboard shots, etc.
+      {
+        protocol: "https",
+        hostname: "*.blob.core.windows.net",
+      },
+      // Azure CDN / Front Door endpoints (when CDN is active)
+      {
+        protocol: "https",
+        hostname: "*.azureedge.net",
+      },
+      // Local dev API asset proxy  (http://localhost:5001/api/assets/...)
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "5001",
+      },
+    ],
+  },
+
   webpack(config, { isServer }) {
     // konva/react-konva require the 'canvas' npm package for server-side rendering.
     // We don't use SSR for the timeline canvas (it's client-only via dynamic(ssr:false)).

@@ -17,7 +17,7 @@ namespace AnimStudio.ContentModule.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -223,6 +223,9 @@ namespace AnimStudio.ContentModule.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(50);
 
+                    b.Property<int>("DatasetImageCount")
+                        .HasColumnType("int");
+
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -293,6 +296,9 @@ namespace AnimStudio.ContentModule.Migrations
 
                     b.Property<string>("CharacterIds")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CharacterPreferences")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset>("CreatedAt")

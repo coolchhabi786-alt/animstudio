@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 
 const STAGES = [
   { key: "Idle", label: "Idle" },
+  { key: "Script", label: "Script" },
   { key: "CharacterDesign", label: "Characters" },
   { key: "LoraTraining", label: "LoRA Train" },
-  { key: "Script", label: "Script" },
   { key: "Storyboard", label: "Storyboard" },
   { key: "Voice", label: "Voice" },
   { key: "Animation", label: "Animation" },
@@ -20,14 +20,15 @@ interface ProgressStepperProps {
 }
 
 export function ProgressStepper({ currentStage, isCompensating }: ProgressStepperProps) {
-  const currentIndex = STAGES.findIndex((s) => s.key === currentStage);
+  const rawIndex = STAGES.findIndex((s) => s.key === currentStage);
+  const currentIndex = rawIndex === -1 ? 0 : rawIndex;
 
   return (
     <div className="flex items-center gap-1 w-full overflow-x-auto py-2">
       {STAGES.map((stage, idx) => {
-        const isDone = idx < currentIndex;
-        const isCurrent = idx === currentIndex;
-        const isPending = idx > currentIndex;
+        const isDone = currentStage === "Done" ? idx <= currentIndex : idx < currentIndex;
+        const isCurrent = idx === currentIndex && currentStage !== "Done";
+        const isPending = !isDone && !isCurrent;
 
         return (
           <div key={stage.key} className="flex items-center gap-1 flex-1 min-w-0">

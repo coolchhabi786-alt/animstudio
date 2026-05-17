@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as signalR from "@microsoft/signalr";
+import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import type {
   CharacterDto,
@@ -61,8 +62,13 @@ export function useCharacter(id: string | undefined) {
 export function useEpisodeCharacters(episodeId: string | undefined) {
   return useQuery<CharacterDto[]>({
     queryKey: KEYS.episodeRoster(episodeId ?? ""),
-    queryFn: () =>
-      apiFetch<CharacterDto[]>(`/api/v1/episodes/${episodeId}/characters`),
+    queryFn: async () => {
+      const items = await apiFetch<CharacterDto[]>(`/api/v1/episodes/${episodeId}/characters`);
+      return items.map((c) => ({
+        ...c,
+        trainingStatus: normaliseTrainingStatus(c.trainingStatus as any),
+      }));
+    },
     enabled: !!episodeId,
     staleTime: 30_000,
   });
@@ -99,6 +105,15 @@ export function useDeleteCharacter() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["characters", "list"] });
     },
+    onError: (error: unknown) => {
+      const msg = error instanceof Error ? error.message : String(error);
+      const isInUse = msg.toLowerCase().includes("in use") || msg.includes("CHARACTER_IN_USE");
+      toast.error(
+        isInUse
+          ? "Character is used in an episode and cannot be deleted."
+          : "Failed to delete character. Please try again."
+      );
+    },
   });
 }
 
@@ -114,6 +129,52 @@ export function useAttachCharacter(episodeId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: KEYS.episodeRoster(episodeId) });
     },
+  });
+}
+
+/**
+ * Advances all Draft characters in an episode to TrainingQueued and dispatches
+ * design jobs. Called by the "Approve & Start Training" button on the script page.
+ */
+export function useApproveCharactersForTraining(episodeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<{ approved: number }>(
+        `/api/v1/episodes/${episodeId}/characters/approve-training`,
+        { method: "POST" }
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEYS.episodeRoster(episodeId) });
+    },
+  });
+}
+
+/** Retries character training (restarts CharacterDesign or LoRA-only depending on state). */
+export function useRetryCharacterTraining() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (characterId: string) =>
+      apiFetch(`/api/v1/characters/${characterId}/retry-training`, { method: "POST" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["characters", "list"] });
+      toast.success("Training restarted.");
+    },
+    onError: () => toast.error("Failed to restart training. Please try again."),
+  });
+}
+
+/** Re-generates all dataset pose images for a character, restarting LoRA training from scratch. */
+export function useRegenerateDataset() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (characterId: string) =>
+      apiFetch(`/api/v1/characters/${characterId}/regenerate-dataset`, { method: "POST" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["characters", "list"] });
+      toast.success("Dataset regeneration started.");
+    },
+    onError: () => toast.error("Failed to start regeneration. Please try again."),
   });
 }
 

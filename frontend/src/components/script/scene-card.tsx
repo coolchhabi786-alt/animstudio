@@ -25,7 +25,8 @@ const TONE_COLORS: Record<string, string> = {
   tense: "bg-red-100 text-red-800",
 };
 
-function getToneColor(tone: string): string {
+function getToneColor(tone: string | null | undefined): string {
+  if (!tone) return "bg-gray-100 text-gray-800";
   return TONE_COLORS[tone.toLowerCase()] ?? "bg-gray-100 text-gray-800";
 }
 
@@ -33,7 +34,7 @@ export function SceneCard({ scene, isEditMode, characters, onDialogueChange }: S
   const [isExpanded, setIsExpanded] = useState(true);
 
   function handleLineChange(index: number, updated: DialogueLineDto) {
-    const newLines = scene.dialogue.map((line, i) => (i === index ? updated : line));
+    const newLines = (scene.dialogue ?? []).map((line, i) => (i === index ? updated : line));
     onDialogueChange(scene.sceneNumber, newLines);
   }
 
@@ -62,7 +63,7 @@ export function SceneCard({ scene, isEditMode, characters, onDialogueChange }: S
           </span>
         </div>
         <Badge variant="outline" className="text-xs shrink-0">
-          {scene.dialogue.length} line{scene.dialogue.length !== 1 ? "s" : ""}
+          {(scene.dialogue ?? []).length} line{(scene.dialogue ?? []).length !== 1 ? "s" : ""}
         </Badge>
       </button>
 
@@ -75,7 +76,7 @@ export function SceneCard({ scene, isEditMode, characters, onDialogueChange }: S
           </p>
 
           {/* Dialogue table */}
-          {scene.dialogue.length === 0 ? (
+          {(scene.dialogue ?? []).length === 0 ? (
             <p className="text-xs text-gray-400">No dialogue lines in this scene.</p>
           ) : (
             <div className="overflow-x-auto -mx-4 px-4">
@@ -89,7 +90,7 @@ export function SceneCard({ scene, isEditMode, characters, onDialogueChange }: S
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {scene.dialogue.map((line, i) => (
+                  {(scene.dialogue ?? []).map((line, i) => (
                     <DialogueRow
                       key={i}
                       line={line}

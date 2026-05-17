@@ -40,6 +40,14 @@ public sealed class CharacterRepository(ContentDbContext db) : ICharacterReposit
             .Select(ec => ec.Character)
             .ToListAsync(ct);
 
+    public async Task<List<Character>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
+    {
+        var idList = ids.ToList();
+        return await db.Characters
+            .Where(c => idList.Contains(c.Id))
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(Character character, CancellationToken ct = default)
     {
         await db.Characters.AddAsync(character, ct);

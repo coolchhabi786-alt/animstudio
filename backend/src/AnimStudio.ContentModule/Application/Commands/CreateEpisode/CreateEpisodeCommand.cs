@@ -12,7 +12,8 @@ public sealed record CreateEpisodeCommand(
     string Name,
     string Idea,
     string Style,
-    Guid? TemplateId = null) : IRequest<Result<EpisodeDto>>;
+    Guid? TemplateId = null,
+    string? CharacterPreferences = null) : IRequest<Result<EpisodeDto>>;
 
 public sealed class CreateEpisodeValidator : AbstractValidator<CreateEpisodeCommand>
 {
@@ -22,6 +23,8 @@ public sealed class CreateEpisodeValidator : AbstractValidator<CreateEpisodeComm
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Idea).MaximumLength(5000);
         RuleFor(x => x.Style).MaximumLength(500);
+        RuleFor(x => x.CharacterPreferences).MaximumLength(2000)
+            .When(x => x.CharacterPreferences is not null);
     }
 }
 
@@ -33,7 +36,9 @@ public sealed class CreateEpisodeHandler(IEpisodeRepository episodes, IProjectRe
         var project = await projects.GetByIdAsync(cmd.ProjectId, ct);
         if (project is null) return Result<EpisodeDto>.Failure("Project not found", "NOT_FOUND");
 
-        var episode = Episode.Create(cmd.ProjectId, cmd.Name, cmd.Idea, cmd.Style, cmd.TemplateId);
+        var episode = Episode.Create(
+            cmd.ProjectId, cmd.Name, cmd.Idea, cmd.Style,
+            cmd.TemplateId, cmd.CharacterPreferences);
         await episodes.AddAsync(episode, ct);
 
         return Result<EpisodeDto>.Success(episode.ToDto());

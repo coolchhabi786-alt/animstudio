@@ -1,12 +1,11 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useProject } from "@/hooks/use-projects";
-import { useEpisodes, useCreateEpisode } from "@/hooks/use-episodes";
-import { Input } from "@/components/ui/input";
+import { useEpisodes } from "@/hooks/use-episodes";
 import Link from "next/link";
-import { useState } from "react";
+import { PlusCircle } from "lucide-react";
 
 interface Props {
   params: { id: string };
@@ -16,17 +15,6 @@ export default function ProjectDetailPage({ params }: Props) {
   const { id } = params;
   const { data: project, isLoading: projectLoading } = useProject(id);
   const { data: episodes, isLoading: episodesLoading } = useEpisodes(id);
-  const createEpisode = useCreateEpisode(id);
-  const [showForm, setShowForm] = useState(false);
-  const [name, setName] = useState("");
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) return;
-    await createEpisode.mutateAsync({ name: name.trim() });
-    setName("");
-    setShowForm(false);
-  }
 
   if (projectLoading || episodesLoading) {
     return (
@@ -52,28 +40,27 @@ export default function ProjectDetailPage({ params }: Props) {
             <p className="text-gray-500 text-sm mt-1">{project.description}</p>
           )}
         </div>
-        <Button onClick={() => setShowForm((v) => !v)}>New Episode</Button>
+        <Button asChild className="gap-2">
+          <Link href={`/episodes/new?projectId=${id}`}>
+            <PlusCircle className="h-4 w-4" />
+            New Episode
+          </Link>
+        </Button>
       </div>
 
-      {showForm && (
-        <form onSubmit={handleCreate} className="mb-6 flex gap-2">
-          <Input
-            placeholder="Episode name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-          />
-          <Button type="submit" disabled={createEpisode.isPending}>
-            {createEpisode.isPending ? "Creating…" : "Create"}
-          </Button>
-          <Button variant="ghost" type="button" onClick={() => setShowForm(false)}>
-            Cancel
-          </Button>
-        </form>
-      )}
-
       {!episodes?.length ? (
-        <p className="text-gray-500">No episodes yet. Create your first one!</p>
+        <div className="rounded-xl border border-dashed border-gray-300 py-16 flex flex-col items-center gap-3 text-center">
+          <p className="font-medium text-gray-700">No episodes yet</p>
+          <p className="text-sm text-gray-500">
+            Create your first episode to start writing scripts and producing animations.
+          </p>
+          <Button asChild className="mt-2 gap-2">
+            <Link href={`/episodes/new?projectId=${id}`}>
+              <PlusCircle className="h-4 w-4" />
+              New Episode
+            </Link>
+          </Button>
+        </div>
       ) : (
         <div className="divide-y border rounded-lg">
           {episodes.map((ep) => (
@@ -87,6 +74,9 @@ export default function ProjectDetailPage({ params }: Props) {
                 </Link>
                 <p className="text-xs text-gray-400 mt-0.5">
                   Status: <span className="font-semibold">{ep.status}</span>
+                  {ep.idea && (
+                    <span className="ml-2 text-gray-400">· {ep.idea.slice(0, 60)}{ep.idea.length > 60 ? "…" : ""}</span>
+                  )}
                 </p>
               </div>
               <span className="text-xs text-gray-400">

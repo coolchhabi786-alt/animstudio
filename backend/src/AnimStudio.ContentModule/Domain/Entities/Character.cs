@@ -47,6 +47,9 @@ public sealed class Character : AggregateRoot<Guid>
     /// <summary>Credits consumed (or reserved) for training. Set at creation time.</summary>
     public int CreditsCost { get; private set; }
 
+    /// <summary>Number of dataset pose images generated so far (target: 15).</summary>
+    public int DatasetImageCount { get; private set; }
+
     // ── Navigation ──────────────────────────────────────────────────────────
     private readonly List<EpisodeCharacter> _episodeCharacters = new();
 
@@ -119,6 +122,25 @@ public sealed class Character : AggregateRoot<Guid>
 
         if (newStatus == TrainingStatus.Ready)
             AddDomainEvent(new CharacterReadyEvent(Id, TeamId, LoraWeightsUrl!, TriggerWord!));
+    }
+
+    /// <summary>Records how many dataset pose images have been generated.</summary>
+    public void SetDatasetImageCount(int count)
+    {
+        DatasetImageCount = Math.Max(0, count);
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>Resets all training artefacts so dataset generation can be re-run from scratch.</summary>
+    public void ResetForDatasetRegeneration()
+    {
+        TrainingStatus = TrainingStatus.PoseGeneration;
+        TrainingProgressPercent = 0;
+        DatasetImageCount = 0;
+        ImageUrl = null;
+        LoraWeightsUrl = null;
+        TriggerWord = null;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     /// <summary>Marks the character training as failed.</summary>

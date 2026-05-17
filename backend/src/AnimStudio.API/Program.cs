@@ -438,9 +438,17 @@ try
     builder.Services.AddScoped<AnimStudio.API.Hosted.TrackVideoViewHangfireProcessor>();
 
     // ── File Storage — Local (dev) or Azure Blob (prod) ────────────────────────
-    // Toggle with FileStorage:Provider in appsettings. LocalFileStorageService serves
-    // files via FileStorageController; AzureBlobFileStorageService returns SAS URLs.
-    var fileStorageProvider = builder.Configuration["FileStorage:Provider"] ?? "AzureBlob";
+    // LocalDevMode=true (AnimStudio:LocalDevMode in appsettings) forces "Local" so
+    // flipping one JSON key switches the whole infra mode. Set false + Provider="AzureBlob"
+    // when full cloud dev infra is running (provision-cloud-dev.ps1).
+    var localDevMode = builder.Configuration.GetValue<bool>("AnimStudio:LocalDevMode");
+    if (localDevMode)
+        Log.Information("AnimStudio: LocalDevMode=true — local file storage + built-in SignalR (minimal Azure: SB + Storage only)");
+
+    var fileStorageProvider = localDevMode
+        ? "Local"
+        : (builder.Configuration["FileStorage:Provider"] ?? "AzureBlob");
+
     if (string.Equals(fileStorageProvider, "Local", StringComparison.OrdinalIgnoreCase))
     {
         builder.Services.AddSingleton<AnimStudio.ContentModule.Application.Interfaces.IFileStorageService,
@@ -459,21 +467,100 @@ try
     if (!app.Environment.IsProduction())
     {
         await using var scope = app.Services.CreateAsyncScope();
+
+        // Resolve all DbContexts upfront so each section can use them independently.
+        var identityDb  = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var sharedDb    = scope.ServiceProvider.GetRequiredService<SharedDbContext>();
+        var contentDb   = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
+        var analyticsDb = scope.ServiceProvider
+            .GetRequiredService<AnimStudio.AnalyticsModule.Infrastructure.Persistence.AnalyticsDbContext>();
+        var deliveryDb  = scope.ServiceProvider.GetRequiredService<DeliveryDbContext>();
+
+        // ── Migrations — each in its own try/catch so one failure never blocks others ──
+        try { await identityDb.Database.MigrateAsync(); }
+        catch (Exception ex) { Log.Warning(ex, "Identity migration skipped: {Message}", ex.Message); }
+
+        try { await sharedDb.Database.MigrateAsync(); }
+        catch (Exception ex) { Log.Warning(ex, "Shared migration skipped: {Message}", ex.Message); }
+
+        try { await contentDb.Database.MigrateAsync(); }
+        catch (Exception ex) { Log.Warning(ex, "Content migration skipped: {Message}", ex.Message); }
+
+        try { await analyticsDb.Database.MigrateAsync(); }
+        catch (Exception ex) { Log.Warning(ex, "Analytics migration skipped — DDL guard will provision: {Message}", ex.Message); }
+
+        // ── Analytics DDL guard — completely isolated, always runs ──────────────────
         try
         {
-            var identityDb = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
-            await identityDb.Database.MigrateAsync();
-            var sharedDb = scope.ServiceProvider.GetRequiredService<SharedDbContext>();
-            await sharedDb.Database.MigrateAsync();
-            var contentDb = scope.ServiceProvider.GetRequiredService<ContentDbContext>();
-            await contentDb.Database.MigrateAsync();
-            var analyticsDb = scope.ServiceProvider
-                .GetRequiredService<AnimStudio.AnalyticsModule.Infrastructure.Persistence.AnalyticsDbContext>();
-            await analyticsDb.Database.MigrateAsync();
+            await analyticsDb.Database.ExecuteSqlRawAsync("""
+                IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'analytics')
+                    EXEC('CREATE SCHEMA [analytics]');
+                """);
+            await analyticsDb.Database.ExecuteSqlRawAsync("""
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.tables t
+                    JOIN sys.schemas s ON t.schema_id = s.schema_id
+                    WHERE t.name = 'Notifications' AND s.name = 'analytics')
+                BEGIN
+                    CREATE TABLE [analytics].[Notifications] (
+                        [Id]                UNIQUEIDENTIFIER NOT NULL,
+                        [UserId]            UNIQUEIDENTIFIER NOT NULL,
+                        [Type]              NVARCHAR(30)     NOT NULL,
+                        [Title]             NVARCHAR(200)    NOT NULL,
+                        [Body]              NVARCHAR(2000)   NOT NULL,
+                        [IsRead]            BIT              NOT NULL DEFAULT 0,
+                        [ReadAt]            DATETIMEOFFSET   NULL,
+                        [RelatedEntityId]   UNIQUEIDENTIFIER NULL,
+                        [RelatedEntityType] NVARCHAR(100)    NULL,
+                        [CreatedAt]         DATETIMEOFFSET   NOT NULL,
+                        [UpdatedAt]         DATETIMEOFFSET   NOT NULL,
+                        [IsDeleted]         BIT              NOT NULL DEFAULT 0,
+                        [DeletedAt]         DATETIMEOFFSET   NULL,
+                        [DeletedByUserId]   UNIQUEIDENTIFIER NULL,
+                        [RowVersion]        ROWVERSION       NOT NULL,
+                        CONSTRAINT [PK_Notifications] PRIMARY KEY ([Id])
+                    );
+                    CREATE INDEX [IX_Notifications_UserId]
+                        ON [analytics].[Notifications] ([UserId]);
+                    CREATE INDEX [IX_Notifications_UserId_IsRead]
+                        ON [analytics].[Notifications] ([UserId], [IsRead]);
+                END
+                """);
+            await analyticsDb.Database.ExecuteSqlRawAsync("""
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.tables t
+                    JOIN sys.schemas s ON t.schema_id = s.schema_id
+                    WHERE t.name = 'VideoViews' AND s.name = 'analytics')
+                BEGIN
+                    CREATE TABLE [analytics].[VideoViews] (
+                        [Id]             UNIQUEIDENTIFIER NOT NULL,
+                        [EpisodeId]      UNIQUEIDENTIFIER NOT NULL,
+                        [RenderId]       UNIQUEIDENTIFIER NOT NULL,
+                        [ViewerIpHash]   NVARCHAR(128)    NULL,
+                        [Source]         NVARCHAR(30)     NOT NULL,
+                        [ReviewLinkId]   UNIQUEIDENTIFIER NULL,
+                        [ViewedAt]       DATETIMEOFFSET   NOT NULL,
+                        CONSTRAINT [PK_VideoViews] PRIMARY KEY ([Id])
+                    );
+                    CREATE INDEX [IX_VideoViews_EpisodeId]
+                        ON [analytics].[VideoViews] ([EpisodeId]);
+                    CREATE INDEX [IX_VideoViews_RenderId]
+                        ON [analytics].[VideoViews] ([RenderId]);
+                    CREATE INDEX [IX_VideoViews_ReviewLinkId]
+                        ON [analytics].[VideoViews] ([ReviewLinkId])
+                        WHERE [ReviewLinkId] IS NOT NULL;
+                END
+                """);
+            Log.Information("Analytics DDL guard complete");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Analytics DDL guard FAILED — run backend/scripts/create-analytics-tables.sql manually: {Message}", ex.Message);
+        }
 
-            // Phase 9 — Delivery module: raw DDL because EnsureCreatedAsync is a no-op when
-            // the AnimStudio DB already exists (Identity/Content migrations created it first).
-            var deliveryDb = scope.ServiceProvider.GetRequiredService<DeliveryDbContext>();
+        // ── Delivery DDL guard ───────────────────────────────────────────────────
+        try
+        {
             await deliveryDb.Database.ExecuteSqlRawAsync("""
                 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'delivery')
                     EXEC('CREATE SCHEMA [delivery]');
@@ -507,7 +594,16 @@ try
                     CREATE INDEX [IX_Renders_Status]    ON [delivery].[Renders] ([Status]);
                 END
                 """);
-            // Phase 10 — Timeline schema + tables (raw DDL, idempotent)
+            Log.Information("Delivery DDL guard complete");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Delivery DDL guard FAILED: {Message}", ex.Message);
+        }
+
+        // ── Timeline DDL guard ───────────────────────────────────────────────────
+        try
+        {
             await contentDb.Database.ExecuteSqlRawAsync("""
                 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'timeline')
                     EXEC('CREATE SCHEMA [timeline]');
@@ -632,22 +728,30 @@ try
                     CREATE INDEX [IX_TimelineTextOverlays_TimelineId] ON [timeline].[TimelineTextOverlays] ([TimelineId]);
                 END
                 """);
-
-            Log.Information("Database migrations applied and delivery/timeline schemas provisioned");
-
-            if (app.Environment.IsDevelopment())
-            {
-                await SeedDevDataAsync(identityDb);
-                await SeedDevContentAsync(contentDb);
-                await SeedDevDeliveryAsync(deliveryDb);
-                var mediaRoot = app.Configuration["FileStorage:LocalRootPath"] ?? @"C:\Users\Vaibhav\cartoon_automation\output";
-                await SeedDevTimelineAsync(contentDb, mediaRoot);
-            }
+            Log.Information("Timeline DDL guard complete");
         }
         catch (Exception ex)
         {
-            // Log at Error so startup failures are visible in the console even in dev.
-            Log.Error(ex, "DB startup failed — migrations/seed/DDL error: {Message}", ex.Message);
+            Log.Error(ex, "Timeline DDL guard FAILED: {Message}", ex.Message);
+        }
+
+        Log.Information("Database migrations applied and schemas provisioned");
+
+        // ── Dev seeding — each in its own try/catch so duplicate-key on restart never blocks ──
+        if (app.Environment.IsDevelopment())
+        {
+            try { await SeedDevDataAsync(identityDb); }
+            catch (Exception ex) { Log.Warning(ex, "SeedDevData skipped (data may already exist): {Message}", ex.Message); }
+
+            try { await SeedDevContentAsync(contentDb); }
+            catch (Exception ex) { Log.Warning(ex, "SeedDevContent skipped: {Message}", ex.Message); }
+
+            try { await SeedDevDeliveryAsync(deliveryDb); }
+            catch (Exception ex) { Log.Warning(ex, "SeedDevDelivery skipped: {Message}", ex.Message); }
+
+            var mediaRoot = app.Configuration["FileStorage:LocalRootPath"] ?? @"C:\Users\Vaibhav\cartoon_automation\output";
+            try { await SeedDevTimelineAsync(contentDb, mediaRoot); }
+            catch (Exception ex) { Log.Warning(ex, "SeedDevTimeline skipped: {Message}", ex.Message); }
         }
     }
 
@@ -686,6 +790,7 @@ try
     app.MapControllers().RequireRateLimiting("authenticated");
     app.MapHub<ProgressHub>("/hubs/progress").RequireAuthorization();
     app.MapHub<CharacterProgressHub>("/hubs/character-training").RequireAuthorization();
+    app.MapHub<NotificationsHub>("/hubs/notifications").RequireAuthorization();
     app.MapHealthChecks("/health/live",  new() { Predicate = _ => false }).AllowAnonymous();
     app.MapHealthChecks("/health/ready", new() { Predicate = c => c.Tags.Contains("ready") }).AllowAnonymous();
     app.MapHealthChecks("/health").AllowAnonymous();
@@ -709,47 +814,59 @@ finally
 /// </summary>
 static async Task SeedDevDataAsync(IdentityDbContext db)
 {
-    // These GUIDs are the fixed dev identities — keep in sync with DevAuthHandler
     var devUserId     = Guid.Parse("00000000-0000-0000-0000-000000000001");
     var devTeamId     = Guid.Parse("00000000-0000-0000-0000-000000000002");
     var starterPlanId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
-    if (!await db.Users.AnyAsync(u => u.Id == devUserId))
+    // Auto-registration (first login) creates a user with a random internal Id but the
+    // DevUserId as ExternalId. Look up by email or Id to get the actual DB Id — that
+    // is what must be used as Team.OwnerId to satisfy the FK constraint.
+    var existingUser = await db.Users
+        .IgnoreQueryFilters()
+        .FirstOrDefaultAsync(u => u.Id == devUserId || u.Email == DevAuthHandler.DevUserEmail);
+
+    var ownerUserId = devUserId;
+    if (existingUser == null)
     {
-        var user = User.Create(devUserId, "dev-001", DevAuthHandler.DevUserEmail, "Dev User");
+        var user = User.Create(devUserId, devUserId.ToString(), DevAuthHandler.DevUserEmail, "Dev User");
         db.Users.Add(user);
-    }
-
-    if (!await db.Teams.AnyAsync(t => t.Id == devTeamId))
-    {
-        // Team.Create also adds the owner as a TeamMember — EF tracks it automatically
-        var team = Team.Create(devTeamId, "Dev Team", devUserId);
-        db.Teams.Add(team);
-    }
-
-    if (!await db.Subscriptions.AnyAsync(s => s.TeamId == devTeamId))
-    {
-        db.Subscriptions.Add(Subscription.Create(
-            id: Guid.NewGuid(),
-            teamId: devTeamId,
-            planId: starterPlanId));
+        await db.SaveChangesAsync();
+        Log.Information("Dev seed: User created");
     }
     else
     {
-        // If an existing subscription is in a non-active state (e.g., Cancelled from a previous
-        // test run), reset it to Active so all API endpoints pass the subscription gate.
-        var existingSub = await db.Subscriptions.FirstAsync(s => s.TeamId == devTeamId);
-        if (existingSub.Status != SubscriptionStatus.Active &&
-            existingSub.Status != SubscriptionStatus.Trialing)
-        {
-            existingSub.Status = SubscriptionStatus.Active;
-            existingSub.CurrentPeriodEnd = DateTimeOffset.UtcNow.AddMonths(1);
-            existingSub.CancelAtPeriodEnd = false;
-        }
+        ownerUserId = existingUser.Id;
+        Log.Information("Dev seed: User exists (Id={Id})", ownerUserId);
     }
 
-    await db.SaveChangesAsync();
-    Log.Information("Dev seed data applied (User / Team / Subscription)");
+    if (!await db.Teams.IgnoreQueryFilters().AnyAsync(t => t.Id == devTeamId))
+    {
+        var team = Team.Create(devTeamId, "Dev Team", ownerUserId);
+        db.Teams.Add(team);
+        await db.SaveChangesAsync();
+        Log.Information("Dev seed: Team created (OwnerId={Id})", ownerUserId);
+    }
+
+    if (!await db.Subscriptions.IgnoreQueryFilters().AnyAsync(s => s.TeamId == devTeamId))
+    {
+        db.Subscriptions.Add(Subscription.Create(
+            id: Guid.Parse("d0000001-0000-0000-0000-000000000001"),
+            teamId: devTeamId,
+            planId: starterPlanId));
+        await db.SaveChangesAsync();
+        Log.Information("Dev seed: Subscription created");
+    }
+    else
+    {
+        var existingSub = await db.Subscriptions
+            .IgnoreQueryFilters()
+            .FirstAsync(s => s.TeamId == devTeamId);
+        existingSub.Status = SubscriptionStatus.Active;
+        existingSub.CurrentPeriodEnd = DateTimeOffset.UtcNow.AddMonths(1);
+        existingSub.CancelAtPeriodEnd = false;
+        await db.SaveChangesAsync();
+        Log.Information("Dev seed: Subscription refreshed (Active, period extended)");
+    }
 }
 
 /// <summary>

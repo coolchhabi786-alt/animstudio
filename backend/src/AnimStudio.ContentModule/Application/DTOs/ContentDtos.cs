@@ -20,7 +20,8 @@ public sealed record EpisodeDto(
     string? DirectorNotes,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    DateTimeOffset? RenderedAt);
+    DateTimeOffset? RenderedAt,
+    string? CharacterPreferences = null);
 
 public sealed record JobDto(
     Guid Id,

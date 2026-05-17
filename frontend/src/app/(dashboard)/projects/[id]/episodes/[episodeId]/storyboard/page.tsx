@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { RefreshCw, Sparkles, Wifi, WifiOff } from "lucide-react";
+import { RefreshCw, Sparkles, Wifi, WifiOff, AlertTriangle, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SceneGroup } from "@/components/storyboard/scene-group";
@@ -18,6 +19,7 @@ import {
 } from "@/hooks/use-storyboard";
 import { useScript } from "@/hooks/use-script";
 import { useTeam } from "@/hooks/useTeam";
+import { useEpisodeCharacters } from "@/hooks/use-characters";
 import type { StoryboardShotDto } from "@/types";
 
 interface Props {
@@ -30,9 +32,11 @@ const API_BASE_URL =
 export default function StoryboardStudioPage({ params }: Props) {
   const { episodeId } = params;
 
+  const { id: projectId } = params;
   const { team } = useTeam();
   const { data: script } = useScript(episodeId);
   const { data: storyboard, isLoading } = useStoryboard(episodeId);
+  const { data: episodeCharacters = [] } = useEpisodeCharacters(episodeId);
 
   const generate = useGenerateStoryboard(episodeId);
   const regenerateShot = useRegenerateShot(episodeId);
@@ -66,6 +70,12 @@ export default function StoryboardStudioPage({ params }: Props) {
   }, [storyboard]);
 
   const hasScript = !!script;
+
+  const notReadyChars = episodeCharacters.filter((c) => c.trainingStatus !== "Ready");
+  const failedChars   = episodeCharacters.filter((c) => c.trainingStatus === "Failed");
+  const trainingChars = episodeCharacters.filter((c) =>
+    c.trainingStatus === "Training" || c.trainingStatus === "TrainingQueued" || c.trainingStatus === "PoseGeneration"
+  );
 
   async function handleGenerate(directorNotes: string) {
     try {
@@ -152,6 +162,45 @@ export default function StoryboardStudioPage({ params }: Props) {
           )}
         </div>
       </div>
+
+      {/* ── Character training status banner ──────────────────────────────────── */}
+      {episodeCharacters.length > 0 && notReadyChars.length > 0 && (
+        <div className="space-y-2">
+          {trainingChars.length > 0 && (
+            <div className="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-200 px-4 py-3">
+              <Users className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-blue-900">
+                  {trainingChars.length} character{trainingChars.length !== 1 ? "s" : ""} still training
+                </p>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  Storyboard planning is ready to go. Shot images for these characters will be generated
+                  automatically once their LoRA training completes.{" "}
+                  <Link href={`/projects/${projectId}/characters`} className="underline hover:text-blue-900">
+                    Monitor training progress
+                  </Link>
+                </p>
+              </div>
+            </div>
+          )}
+          {failedChars.length > 0 && (
+            <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3">
+              <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-900">
+                  {failedChars.length} character{failedChars.length !== 1 ? "s" : ""} failed training
+                </p>
+                <p className="text-xs text-red-700 mt-0.5">
+                  These characters won&apos;t appear correctly in shot images.{" "}
+                  <Link href={`/projects/${projectId}/characters`} className="underline hover:text-red-900">
+                    Go to Character Studio to retry training
+                  </Link>
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Empty state ──────────────────────────────────────────────────────── */}
       {isLoading && (

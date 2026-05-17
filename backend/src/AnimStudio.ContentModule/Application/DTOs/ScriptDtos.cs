@@ -36,7 +36,12 @@ public sealed record ScriptDto(
 
 // ── Request bodies ─────────────────────────────────────────────────────────────
 
-public sealed record GenerateScriptRequest(string? DirectorNotes = null);
+public sealed record GenerateScriptRequest(
+    string? DirectorNotes = null,
+    List<Guid>? ExistingCharacterIds = null,
+    bool AllowNewCharacters = true,
+    int? NewCharacterCount = null,
+    List<string>? NewCharacterNames = null);
 
 public sealed record SaveScriptRequest(ScreenplayDto Screenplay);
 

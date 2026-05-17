@@ -1,4 +1,5 @@
 using AnimStudio.ContentModule.Application.Commands.CreateEpisode;
+using AnimStudio.ContentModule.Application.Commands.UpdateEpisode;
 using Asp.Versioning;
 using AnimStudio.ContentModule.Application.Commands.DispatchEpisodeJob;
 using AnimStudio.ContentModule.Application.Queries;
@@ -19,7 +20,7 @@ public sealed class EpisodesController(ISender mediator) : ControllerBase
     public async Task<IActionResult> Create(Guid projectId, [FromBody] CreateEpisodeRequest req, CancellationToken ct)
     {
         var result = await mediator.Send(
-            new CreateEpisodeCommand(projectId, req.Name, req.Idea ?? "", req.Style ?? "", req.TemplateId), ct);
+            new CreateEpisodeCommand(projectId, req.Name, req.Idea ?? "", req.Style ?? "", req.TemplateId, req.CharacterPreferences), ct);
         if (!result.IsSuccess) return BadRequest(result.Error);
         return StatusCode(201, result.Value);
     }
@@ -58,14 +59,24 @@ public sealed class EpisodesController(ISender mediator) : ControllerBase
         return Accepted(result.Value);
     }
 
+    [HttpPatch("api/v{version:apiVersion}/episodes/{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateEpisodeRequest req, CancellationToken ct)
+    {
+        var result = await mediator.Send(
+            new UpdateEpisodeCommand(id, req.Idea, req.Style, req.CharacterPreferences), ct);
+        if (!result.IsSuccess)
+            return result.ErrorCode == "NOT_FOUND" ? NotFound(result.Error) : BadRequest(result.Error);
+        return Ok(result.Value);
+    }
+
     [HttpDelete("api/v{version:apiVersion}/episodes/{id:guid}")]
     [Authorize(Policy = "RequireTeamEditor")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    public IActionResult Delete()
     {
-        // Soft-delete handled at the Episode aggregate. Not yet exposed as a separate command — Phase 3.
         return StatusCode(501, "Episode deletion will be available in Phase 3.");
     }
 
-    public sealed record CreateEpisodeRequest(string Name, string? Idea, string? Style, Guid? TemplateId);
+    public sealed record CreateEpisodeRequest(string Name, string? Idea, string? Style, Guid? TemplateId, string? CharacterPreferences = null);
+    public sealed record UpdateEpisodeRequest(string Idea, string? Style = null, string? CharacterPreferences = null);
     public sealed record DispatchRequest(string JobType);
 }

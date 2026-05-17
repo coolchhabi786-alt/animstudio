@@ -28,7 +28,8 @@ $kvName = $KeyVaultName ? $KeyVaultName : "animstudio-$Environment-kv"
 
 $secrets = @(
     'SqlConnectionString'
-    'HangfireSqlConnectionString'
+    # Prod only: dev uses DefaultConnection fallback (Program.cs:111), no separate Hangfire secret needed
+    if ($Environment -eq 'prod') { 'HangfireSqlConnectionString' }
     'StripeSecretKey'
     'StripeWebhookSecret'
     'ServiceBusConnectionString'
